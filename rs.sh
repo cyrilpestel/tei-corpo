@@ -1,1 +1,1 @@
-rsync -auv /Users/cp/OneDrive/workspace/ortolang/src src
+rsync -auv /Users/cp/OneDrive/workspace/ortolang/src .
