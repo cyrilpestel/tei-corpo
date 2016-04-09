@@ -62,6 +62,7 @@ public class TeiToPartition {
 				ratio = -1.0;
 				System.err.println("unité inconnue pour la timeline: " + prev_time_units + " pas de réajustement");
 			}
+			// System.out.printf("ratio: %s %f %n", prev_time_units, ratio);
 			for(int i = 0; i<nodes.getLength(); i++){
 				String val = "";
 				try {
@@ -74,7 +75,7 @@ public class TeiToPartition {
 						else if (!val.isEmpty()) {
 							double vald;
 								vald = Double.parseDouble(val);
-								vald *= ratio;
+								vald /= ratio;
 								timeline.put(id, vald);
 								if (vald > xmaxTime)
 									xmaxTime = vald;
@@ -135,8 +136,11 @@ public class TeiToPartition {
 			Element annotGrp = (Element) annotationGrps.item(i);
 			NodeList annotGrpElmts = annotGrp.getChildNodes();
 			String name = annotGrp.getAttribute("who");
-			String start = annotGrp.getAttribute("start").substring(1);
-			String end = annotGrp.getAttribute("end").substring(1);
+			if (!Utils.isNotEmptyOrNull(name)) continue; // this is a note and not an utterance
+			String start = Utils.refID(annotGrp.getAttribute("start"));
+			start = Double.toString(timeline.get(start));
+			String end = Utils.refID(annotGrp.getAttribute("end"));
+			end = Double.toString(timeline.get(end));
 			String id = annotGrp.getAttribute("xml:id");
 			String timeSG = (start.isEmpty() || end.isEmpty()) ? "ref" : "time";
 			for(int j = 0; j<annotGrpElmts.getLength(); j++){
@@ -145,8 +149,8 @@ public class TeiToPartition {
 					if(annotElmt.getNodeName().equals("u")){
 						Annot annot = new Annot();
 						annot.content = annotElmt.getTextContent().trim();
-						annot.start = Double.toString(timeline.get(start));
-						annot.end = Double.toString(timeline.get(end));
+						annot.start = start;
+						annot.end = end;
 						annot.id = id;
 						annot.name = name;
 						annot.timereftype = timeSG;
@@ -186,10 +190,11 @@ public class TeiToPartition {
 		if (spans == null) return;
 		Double timelength = -1.0;
 		try {
-			timelength = (timeline.get(end) - timeline.get(start)) / spans.getLength();
+			timelength = (Double.parseDouble(end) - Double.parseDouble(start)) / spans.getLength();
 		} catch(Exception e) {
 			timelength = -1.0;
 		}
+		// System.out.printf("XX: %s %s %f %n", start, end, timelength);
 		for(int z=0; z<spans.getLength(); z++) {
 			Node nodespan = spans.item(z);
 			// System.out.printf("%d %s %d %n", z, nodespan.getNodeName(), nodespan.getNodeType());
@@ -217,9 +222,10 @@ public class TeiToPartition {
 				/*
 				 * add equivalence in time in case it is necessary
 				 */
+				// System.out.printf("++ %d %s %n", z, annot);
 				if (timelength > 0.0) {
-					Double refstart = z * timelength + timeline.get(start);
-					Double refend = (z+1) * timelength + timeline.get(start);
+					Double refstart = z * timelength + Double.parseDouble(start);
+					Double refend = (z+1) * timelength + Double.parseDouble(start);
 					// System.out.printf("-- %d %f %f %n", z, refstart, refend);
 					annot.start = Double.toString(refstart);
 					annot.end = Double.toString(refend);
@@ -228,12 +234,13 @@ public class TeiToPartition {
 			} else {
 				annot.timereftype = "time";
 				String tstart = span.getAttribute("from");
-				if(Utils.isNotEmptyOrNull(tstart)){
-					annot.start = Double.toString(timeline.get(tstart));
-				}
 				String tend = span.getAttribute("to");
+				// System.out.printf("YY: %s %s %n", tstart, tend);
+				if(Utils.isNotEmptyOrNull(tstart)){
+					annot.start = Double.toString(timeline.get(Utils.refID(tstart)));
+				}
 				if(Utils.isNotEmptyOrNull(tend)){
-					annot.end = Double.toString(timeline.get(tend));
+					annot.end = Double.toString(timeline.get(Utils.refID(tend)));
 				}
 				// System.out.printf("time %s %s %n", annot.start, annot.end);
 			}
@@ -256,14 +263,14 @@ public class TeiToPartition {
 		}
 	}
 
-	void addElementToMap(TreeMap<String, ArrayList<Annot>> map, String type, Annot annot, String lingType, String parent) {
+	void addElementToMap(TreeMap<String, ArrayList<Annot>> map, String type, Annot annot, String lingType, String topparent) {
 		// Créer le nouveau nom du tier
 		// stocker la référence du type ling de ce nom.
 		String truename;
-		if (!parent.isEmpty() && !parent.equals("-")) {
-			truename = parent + "-" + type;
-			NewTier nt = new NewTier(truename, type, type, parent);
-			// System.out.printf("-: %s %s %s %n", truename, lingType, parent);
+		if (!topparent.isEmpty() && !topparent.equals("-")) {
+			truename = topparent + "-" + type;
+			NewTier nt = new NewTier(truename, type, lingType, topparent);
+			// System.out.printf("-: %s %s %s %s %n", truename, type, lingType, topparent);
 			newTiers.put(truename, nt);
 		} else
 			truename = type;

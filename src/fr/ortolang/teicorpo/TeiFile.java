@@ -421,7 +421,7 @@ public class TeiFile {
 		//Situation principale
 		public String sit;
 		//Autres info
-		public ArrayList<String> infos = new ArrayList<String> ();
+		// public ArrayList<String> infos = new ArrayList<String> ();
 
 		public Trans(Element text, TeiFile tf) {
 			//Liste d'éléments contenus dans la transcription (élément text)

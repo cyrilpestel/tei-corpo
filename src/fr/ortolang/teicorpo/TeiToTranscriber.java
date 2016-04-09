@@ -1,12 +1,13 @@
 /**
  * @author Myriam Majdoub
- * TeiToTranscriber: convertit un fichier teiml en un fichier au format Transcriber, conform�ment � la dtd trans-14.dtd.
+ * TeiToTranscriber: convertit un fichier teiml en un fichier au format Transcriber, conformément à la dtd trans-14.dtd.
  */
 
 package fr.ortolang.teicorpo;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -35,13 +36,20 @@ public class TeiToTranscriber extends TeiConverter {
 	Element trans;
 	//Element Episode: contient la transcription de l'enregistrement
 	Element episode;
+	// temporary variables used to construct the sections and turns
+	String speakers;
+	Element section;
+	ArrayList<TranscriberTurn> turns;
+	String oldEndTime;
 
 	//Extension du fichier de sortie: .trs
 	final static String EXT = ".trs";
 
 	public TeiToTranscriber(String inputName, String outputName) {
 		super(inputName, outputName);
-
+		speakers = null; // name of current speaker for turns
+		section = null; // is a section opened ?
+		oldEndTime = ""; // last end time of a turn
 	}
 
 	//Création du document trs
@@ -75,12 +83,12 @@ public class TeiToTranscriber extends TeiConverter {
 	//Mise à jour des attributs de l'élément Trans
 	public void setTransAttributes(){
 		//Attributs trans : audio_filename, scribe, xml:lang, version, version_date, elapsed_time
-		setAttr(trans, "audio_filename", tf.transInfo.medianame, false);
+		setAttr(trans, "audio_filename", Utils.basename(tf.transInfo.medianame), false);
 		setAttr(trans, "scribe", tf.transInfo.transcriber, false);
 		setAttr(trans, "xml:lang", tf.language, false);
 		setAttr(trans, "version", tf.transInfo.version, false);
 		setAttr(trans, "version_date", tf.transInfo.date, false);
-		setAttr(trans, "elapsed_time", tf.transInfo.timeDuration, false);		
+		setAttr(trans, "elapsed_time", tf.transInfo.timeDuration, false);
 	}
 
 	//Construction de l'élément Speakers
@@ -96,7 +104,7 @@ public class TeiToTranscriber extends TeiConverter {
 
 	//Ajout d'un speaker
 	public void addSpk(Element spks, Participant p){
-		//Attributs speaker: id, name, check, type, dialect, accent, scope		
+		//Attributs speaker: id, name, check, type, dialect, accent, scope
 		//Problème: transcriber ne prend que les informations citées ci-dessus, pas de possibilité de commentaires dans
 		//un élément Speaker, donc si autres infos, sont perdues ...
 		Element spk = trsDoc.createElement("Speaker");
@@ -108,7 +116,7 @@ public class TeiToTranscriber extends TeiConverter {
 		else{
 			setAttr(spk, "name", p.id, true);
 		}
-		
+
 		//Attribut check : 2 valeurs possibles "yes" ou "no"
 		String val = p.adds.get("check");
 		if (Utils.isNotEmptyOrNull(val)) {
@@ -119,10 +127,12 @@ public class TeiToTranscriber extends TeiConverter {
 		}
 
 		//Si rôle = child ou children, va dans l'attribut type
-		if(p.role.equals("child") || p.role.equals("children")){
-			setAttr(spk, "type", "child", false);
+		if (Utils.isNotEmptyOrNull(p.role)) {
+			if(p.role.equals("child") || p.role.equals("children")){
+				setAttr(spk, "type", "child", false);
+			}
 		}
-		
+
 		//Attribut dialect: liste prédéfinies de valeurs: native | nonnative
 		val = p.adds.get("dialect");
 		if (Utils.isNotEmptyOrNull(val)) {
@@ -168,154 +178,219 @@ public class TeiToTranscriber extends TeiConverter {
 		//Attributs topic : "id", "desc"
 		Element topic = trsDoc.createElement("Topic");
 		setAttr(topic, "id", setting.getAttribute("xml:id"), true);
-		setAttr(topic, "desc", setting.getTextContent().trim(), true);
+		setAttr(topic, "desc", setting.getTextContent().replaceAll("\\s+", " ").trim(), true);
 		topics.appendChild(topic);
 	}
 
 	//Construction de l'élément Episode (contient la transcription)
 	public void buildText(){
 		//Mise à jour des attributs de l'élément Episode
-		setEpisodeAttr();
-		//Sections:attributs
-		//type, topic, startTime, endTime
-		NodeList divs = tf.teiDoc.getElementsByTagName("div");
-		for (int i = 0; i<divs.getLength(); i++){
-			Element d = (Element)divs.item(i);
-			Element section = trsDoc.createElement("Section");
-			setSectionAttr(d, section);
-			episode.appendChild(section);
-			buildSection(d, section);
-		}
-		//Turns: speaker, startTime, endTime, mode, fidelity, channel. Contient texte + sync (attribut time (secondes))
-	}
-
-	//Mise à jour des attributs de l'élément Episode
-	public void setEpisodeAttr(){
 		//Episode : attributs "program" et "air_date"
 		episode = trsDoc.createElement("Episode");
-		for(String info : tf.trans.infos){
+		trans.appendChild(episode);
+		/*
+		 * the episode is the first div or it does not exists
+		 */
+		Element body = (Element)(tf.teiDoc.getElementsByTagName("body").item(0));
+		// TEST if there is only one div
+		NodeList bodyChildren = body.getChildNodes();
+		int first = -1;
+		for (int i=0; i < bodyChildren.getLength(); i++) {
+			Node n = bodyChildren.item(i);
+			if (Utils.isElement(n)) {
+				if (n.getNodeName().equals("div")) {
+					if (first != -1) {
+						// more than one div: no episode
+						first = -2;
+						break;
+					}
+					first = i;
+				} else {
+					// no only divs
+					first = -2;
+					break;
+				}
+			}
+		}
+
+		if (first >= 0) {
+			Element ep = (Element)bodyChildren.item(first);
+			// only one div so it's the episode
+			// un seul div c'est l'épisode
+			// on cherche les infos program et air_date
+			// sinon on met type + substype dans program
+			/*
 			String infoType = Utils.getInfoType(info);
-			String infoContent = Utils.getInfo(info);
+			String infoContent = Utils.getInfo(info).replaceAll("\\s+", " ");
 			if(info.startsWith("program") || info.startsWith("air_date")){
 				episode.setAttribute(infoType, infoContent);
 			}
+			 */
+			bodyChildren = ep.getChildNodes();
 		}
-		trans.appendChild(episode);
+		processDivAndAnnotation(bodyChildren, true);
 	}
 
 	//Mise à jour des attributs de l'élément Section
-	public void setSectionAttr(Element d, Element section){
-		String startTime = timeSimplification(tf.getTimeValue(d.getAttribute("start")));
-		String endTime = timeSimplification(tf.getTimeValue(d.getAttribute("end")));
-		setAttr(section, "startTime", startTime, true);
-		setAttr(section, "endTime", endTime, true);
-		if(d.getAttribute("type")=="report" || d.getAttribute("type")=="nontrans" || d.getAttribute("type")=="filler"){
-			section.setAttribute("type", d.getAttribute("type"));
+	//Lancement de la création des turns
+	public void processDivAndAnnotation(NodeList elts, boolean realdivs) {
+		/*
+		 * il faut le diviser en bout de annotationBloc et en div
+		 */
+		for (int ptr = 0; ptr < elts.getLength(); ptr++) {
+			Node nd = elts.item(ptr);
+			// System.out.printf("%d %d %s%n", ptr, nd.getNodeType(), nd);
+			if (!Utils.isElement(nd)) continue;
+			Element d = (Element)nd;
+			if (d.getTagName().equals("div")) {
+				// clore la section en cours si elle existe
+				if (section != null) {
+					addTurnsToSection(section, turns);
+					section = null;
+				}
+				if (realdivs) {
+					// creer une nouvelle section
+					Element section = trsDoc.createElement("Section");
+					episode.appendChild(section);
+					String startTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "start")));
+					String endTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "end")));
+					setAttr(section, "startTime", startTime, true);
+					setAttr(section, "endTime", endTime, true);
+					if(d.getAttribute("type")=="report" || d.getAttribute("type")=="nontrans" || Utils.getDivHeadAttr(d, "type")=="filler"){
+						section.setAttribute("type", Utils.getDivHeadAttr(d, "type"));
+					} else {
+						section.setAttribute("type", "report");
+					}
+					setAttr(section, "topic", Utils.getDivHeadAttr(d, "subtype"), false);
+					NodeList dChilds = d.getChildNodes();
+					processDivAndAnnotation(dChilds, false);
+				} else {
+					// this div is not at the first level so it cannot be converted to a section element of transcriber
+					// convert it to a note
+					// this an annotatedU
+					if (section == null) {
+						section = trsDoc.createElement("Section");
+						section.setAttribute("type", "report");
+						episode.appendChild(section);
+						turns = new ArrayList<TranscriberTurn>();
+					}
+					String startTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "start")));
+					String endTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "end")));
+					String typediv = Utils.getDivHeadAttr(d, "type");
+					String subtypediv = Utils.getDivHeadAttr(d, "type");
+					String tc = "";
+					if (Utils.isNotEmptyOrNull(startTime)) tc += "START: " + startTime + " ";
+					if (Utils.isNotEmptyOrNull(endTime)) tc += "END: " + endTime + " ";
+					if (Utils.isNotEmptyOrNull(typediv)) tc += "TYPE: " + typediv + " ";
+					if (Utils.isNotEmptyOrNull(subtypediv)) tc += "SUBTYPE: " + subtypediv + " ";
+					TranscriberTurn tt = new TranscriberTurn(startTime, endTime, "subsection");
+					tt.add(TranscriberTurn.Comment, tc);
+					turns.add(tt);
+				}
+			} else if (d.getTagName().equals(Utils.ANNOTATIONBLOC)) {
+				// this an annotatedU
+				if (section == null) {
+					section = trsDoc.createElement("Section");
+					section.setAttribute("type", "report");
+					episode.appendChild(section);
+					turns = new ArrayList<TranscriberTurn>();
+				}
+				buildTurn(d);
+			}
 		}
-		else{
-			section.setAttribute("type", "report");
-		}
-		setAttr(section, "topic", d.getAttribute("subtype"), false);
+		addTurnsToSection(section, turns);
 	}
 
-	//Construction d'un élément section
-	public void buildSection(Element d, Element section){
-		NodeList annotUtterances = d.getElementsByTagName(Utils.ANNOTATIONBLOC);
-		String currentSpk = "";
-		Element firstAu = (Element)d.getElementsByTagName(Utils.ANNOTATIONBLOC).item(0);
-		if(d.getElementsByTagName(Utils.ANNOTATIONBLOC).getLength()>0){ currentSpk = firstAu.getAttribute("who");}
-		Element turn = trsDoc.createElement("Turn");
-		//Parcours utterance
-		for(int i = 0; i<annotUtterances.getLength(); i++){
-			Element annotU = (Element) annotUtterances.item(i);
-			//Element link = getLinkElement(annotU);
-			String spk = ((Element)annotUtterances.item(i)).getAttribute("who");
-			//if (!spk.equals(currentSpk)){
-			turn = trsDoc.createElement("Turn");
-			//currentSpk = spk;
-			//}
-			setTurnAttributes(turn, annotU);
-			turn.setAttribute("speaker", annotU.getAttribute("who"));
-			NodeList uChildNodes = annotU.getChildNodes();
-			boolean syncAnnots = false;
-			if(i<d.getElementsByTagName(Utils.ANNOTATIONBLOC).getLength()-1){
-				syncAnnots = syncAnnots(annotU,(Element)d.getElementsByTagName(Utils.ANNOTATIONBLOC).item(i+1));
-			}
-			//Traitement des links
-			/*if(link != null){
-				turn = trsDoc.createElement("Turn");
-				setTurnAttributes(turn, annotU);
-				int nbAtt = 1;
-				setSpkAttribute(turn, annotU);
-				addWhoElement(turn, nbAtt);
-				setTurn(turn, uChildNodes);				
-				int nbLinks = link.getAttribute("target").split(" ").length;
-				for(int lk = 0; lk<nbLinks; lk++){
-					if(nbAtt>turn.getAttribute("speaker").split(" ").length){
-						nbAtt = 1;
+	private void addTurnsToSection(Element sec, ArrayList<TranscriberTurn> turns) {
+		if (turns.size() < 1) return;
+		ArrayList<TranscriberTurn> overlaps = new ArrayList<TranscriberTurn>();
+		overlaps.add(turns.get(0));
+		int ioverlap = 0, iturns = 1;
+		while(iturns < turns.size()) {
+			TranscriberTurn tprev = overlaps.get(ioverlap), tnext = turns.get(iturns);
+			if (time1InfTime2(tnext.startTime, tprev.endTime)) {
+				// si le suivant commence avant la fin du précédent
+				if (tprev.speaker.size() <= 1) {
+					// le précédent n'était pas déjà un overlap
+					// donc il faut insérer un champ who
+					String spkprev = tprev.speakersToString();
+					String spknext = tnext.speakersToString();
+					if (spkprev.equals(spknext)) {
+						// this is a real overlap but an error.
+						// update a single speaker turn
+						tprev.endTime = tnext.endTime;
+						tprev.add(TranscriberTurn.Sync, tnext.startTime);
+						tprev.copyFrom(tnext, 1);
+					} else {
+						TranscriberTurn over1 = new TranscriberTurn(tprev.startTime, tnext.endTime, spkprev);
+						over1.add(TranscriberTurn.Sync, tprev.startTime);
+						over1.add(TranscriberTurn.Who, "1");
+						over1.copyFrom(tprev, 1);
+						over1.add(TranscriberTurn.Sync, tnext.startTime);
+						over1.add(TranscriberTurn.Who, "2");
+						over1.addSpeaker(spknext);
+						over1.copyFrom(tnext, 1);
+						overlaps.remove(ioverlap);
+						overlaps.add(over1);
 					}
-					else{
-						nbAtt++;
-					}
-					i++;
-					annotU = (Element)annotUtterances.item(i);
-					addWhoElement(turn, nbAtt);
-					setTurn(turn, annotU.getChildNodes());
-					setSpkAttribute(turn, annotU);
+				} else {
+					// ajout du tnext
+					tprev.endTime = tnext.endTime;
+					tprev.add(TranscriberTurn.Sync, tnext.startTime);
+					String spk = tnext.speakersToString();
+					String nspk = tprev.addSpeaker(spk);
+					tprev.add(TranscriberTurn.Who, nspk);
+					tprev.copyFrom(tnext, 1);
 				}
-			}else*/
-			if(syncAnnots){
-				//System.out.println(annotU.getTextContent());
-				turn = trsDoc.createElement("Turn");
-				setTurnAttributes(turn, annotU);
-				Element sync = trsDoc.createElement("Sync");
-				int nbAtt = 1;
-				setSpkAttribute(turn, annotU);
-				addWhoElement(turn, nbAtt);
-				setTurn(turn, uChildNodes);
-
-				while(syncAnnots){
-					i++;
-					annotU = (Element) annotUtterances.item(i);
-					setSpkAttribute(turn, annotU);
-					sync = trsDoc.createElement("Sync");
-					sync.setAttribute("time", timeSimplification(tf.getTimeValue(annotU.getAttribute("start"))));
-					turn.appendChild(sync);
-					if(nbAtt>turn.getAttribute("speaker").split(" ").length){
-						nbAtt = 1;
-					}
-					else{
-						nbAtt++;
-					}
-					addWhoElement(turn, nbAtt);
-					setTurn(turn, annotU.getChildNodes());
-					syncAnnots = syncAnnots(annotU,(Element)d.getElementsByTagName(Utils.ANNOTATIONBLOC).item(i+1));						
-				}
-				///*****///
-				//System.out.println(turn.getAttribute("startTime") + " - " + turn.getAttribute("endTime") + " -> " + turn.getTextContent());
-				turn.setAttribute("endTime", timeSimplification(tf.getTimeValue(annotU.getAttribute("end"))));
-				///*****///
+				iturns ++;
+			} else {
+				overlaps.add(tnext);
+				ioverlap++;
+				iturns++;
 			}
-			else{
-				setTurn(turn, uChildNodes);
-				//Traitement des commentaires supplémentaires:
-				//=tiers
-				Element au = (Element) annotUtterances.item(i);
-				NodeList coms = au.getElementsByTagName("span");
-				for(int y = 0; y<coms.getLength(); y++){
-					Element com = (Element)coms.item(y);
-					String name = com.getAttribute("type");
-					String value =com.getTextContent();
-					Element comment = trsDoc.createElement("Comment");
-					comment.setAttribute("desc", "@" + name + "\t" + value);
-					turn.appendChild(comment);
-				}
+		}
+		// second pass to group the same speakers together
+		int current = 0, next = 1;
+		while(next < overlaps.size()) {
+			TranscriberTurn tcurrent = overlaps.get(current), tnext = overlaps.get(next);
+			String spkcurrent = tcurrent.speakersToString();
+			String spknext = tnext.speakersToString();
+			if (spkcurrent.equals(spknext)) {
+				// si le suivant est ajouté au courant
+				tcurrent.endTime = tnext.endTime;
+				tcurrent.copyFrom(tnext, 0);
+				overlaps.remove(next);
+			} else {
+				current++;
+				next++;
 			}
-			section.appendChild(turn);
+		}
+		for (TranscriberTurn t: overlaps) {
+			Element e = t.toElement(trsDoc);
+			sec.appendChild(e);
 		}
 	}
-	
-	public String timeSimplification (String firstVal){
+
+	//Construction d'un élément turn pour la première fois
+	//Les turns seront modifiés et compactés dans addTurnsToSectin
+	public void buildTurn(Element elt) {
+		String spk = Utils.getAttrAnnotationBloc(elt, "who");
+		String startTime = timeSimplification(tf.getTimeValue(Utils.getAttrAnnotationBloc(elt, "start")));
+		String endTime = timeSimplification(tf.getTimeValue(Utils.getAttrAnnotationBloc(elt, "end")));
+		if (startTime.isEmpty() || endTime.isEmpty()) {
+			startTime = oldEndTime;
+			endTime = oldEndTime;
+		}
+		TranscriberTurn tt = new TranscriberTurn(startTime, endTime, spk);
+		turns.add(tt);
+		setTurnAttributes(tt, elt);
+		oldEndTime = endTime;
+		NodeList uChildNodes = elt.getChildNodes();
+		tt.add(TranscriberTurn.Sync, startTime);
+		setTurn(tt, uChildNodes);
+	}
+
+	public String timeSimplification (String firstVal) {
 		try{
 			String [] valTimeSplit = firstVal.split("\\.");
 			String startApresVirgule = valTimeSplit[1];
@@ -327,39 +402,34 @@ public class TeiToTranscriber extends TeiConverter {
 		return firstVal;
 	}
 
-	public boolean syncAnnots(Element annot1, Element annot2){
-		try{		
-			return Float.parseFloat(tf.getTimeValue(annot2.getAttribute("start"))) < Float.parseFloat(tf.getTimeValue(annot1.getAttribute("end")));
+	public boolean time1InfTime2(String time1, String time2) {
+		try{
+			return Float.parseFloat(time1) < Float.parseFloat(time2);
 		}
 		catch(Exception e){
 			return false;
-		}		
+		}
 	}
 
-	//Mise à jour des attributs de Turn 
-	public void setTurnAttributes(Element turn, Element annotU){
-		//System.out.println(tf.getTimeValue(annotU.getAttribute("start")) + " :::: " + annotU.getAttribute("xml:id") + "  -->  " + annotU.getTextContent());
-		String start = timeSimplification(tf.getTimeValue(annotU.getAttribute("start")));
-		String end = timeSimplification(tf.getTimeValue(annotU.getAttribute("end")));
-		setAttr(turn, "startTime", start, true);
-		setAttr(turn, "endTime", end, true);
-		Element sync = trsDoc.createElement("Sync");
-		sync.setAttribute("time", start);
-		turn.appendChild(sync);
-		if(annotU.getAttribute("mode")=="spontaneous" ||  annotU.getAttribute("mode")=="planned"){
-			setAttr(turn, "mode", annotU.getAttribute("mode"), false);
+	//Mise à jour des attributs de Turn
+	public void setTurnAttributes(TranscriberTurn turn, Element annotU){
+		String e = Utils.getAttrAnnotationBloc(annotU, "mode");
+		if(Utils.isNotEmptyOrNull(e) && (e.equals("spontaneous") || e.equals("planned"))) {
+			turn.mode = e;
 		}
 		else{
 			//Add comment
 		}
-		if(annotU.getAttribute("fidelity")=="high" ||  annotU.getAttribute("fidelity")=="medium" || annotU.getAttribute("fidelity")=="low"){
-			setAttr(turn, "fidelity", annotU.getAttribute("fidelity"), false);
+		e = Utils.getAttrAnnotationBloc(annotU, "fidelity");
+		if(Utils.isNotEmptyOrNull(e) && (e.equals("high") ||  e.equals("medium") || e.equals("low"))) {
+			turn.fidelity = e;
 		}
 		else{
 			//Add comment
 		}
-		if(annotU.getAttribute("channel")=="telephone" ||  annotU.getAttribute("channel")=="studio"){
-			setAttr(turn, "channel", annotU.getAttribute("channel"), false);
+		e = Utils.getAttrAnnotationBloc(annotU, "channel");
+		if(Utils.isNotEmptyOrNull(e) && (e.equals("telephone") ||  e.equals("studio"))) {
+			turn.channel = e;
 		}
 		else{
 			//Add comment
@@ -380,7 +450,7 @@ public class TeiToTranscriber extends TeiConverter {
 	}
 
 	//Mise à jour de l'élément Turn: ajout des tiers en tant que commentaires
-	public void setTurn(Element turn, NodeList uChildNodes){
+	public void setTurn(TranscriberTurn turn, NodeList uChildNodes){
 		for(int j = 0; j<uChildNodes.getLength(); j++){
 			if(Utils.isElement(uChildNodes.item(j))){
 				Element annotUChild = (Element)uChildNodes.item(j);
@@ -390,37 +460,37 @@ public class TeiToTranscriber extends TeiConverter {
 					//Traitement des noeuds contenus dans: g, incident, vocal ou comment
 					addU(turn, annotUChild);
 				}
-				/*else if (nodeName.equals("spanGrp")){
+				else if (nodeName.equals("spanGrp")){
 					NodeList spans = annotUChild.getElementsByTagName("span");
 					for (int h = 0; h<spans.getLength(); h++){
 						Element span = (Element) spans.item(h);
 						addComment(turn, annotUChild.getAttribute("type"), span.getTextContent());
 					}
-				}*/
+				}
 			}
 		}
 	}
-
+/*
 	//Ajout des éléments Who dans Turn
 	public void addWhoElement(Element turn, int nb){
 		Element who = trsDoc.createElement("Who");
 		who.setAttribute("nb", Integer.toString(nb));
 		turn.appendChild(who);
 	}
-
+*/
 	//Traitement de l'élément u provenant du fichier teiml:
 	//les éléments seg deviennent des éléments texte, leur temps de début et de fin correspondent aux éléments Sync dans Transcriber
 	//Les éléments incident deviennent des éléments Event ou des Background selon leur type
 	//Les éléments comment restent des éléments comment, idem dans Transcriber
 	//Les éléments vocal restent des éléments vocal, idem dans Transcriber
-	public void addU(Element turn, Element u){
+	public void addU(TranscriberTurn turn, Element u){
 		NodeList uChildNodes = u.getChildNodes();
 		for(int t=0; t<uChildNodes.getLength(); t++){
 			if(Utils.isElement(uChildNodes.item(t))){
 				Element uChild = (Element)uChildNodes.item(t);
 				String uChildName = uChild.getNodeName();
-				String uChildContent = uChild.getTextContent();
-				if(uChildName.equals("seg")){					
+				String uChildContent = uChild.getTextContent().replaceAll("\\s+", " ");
+				if(uChildName.equals("seg")){
 					NodeList segChildNodes = uChild.getChildNodes();
 					for (int d = 0 ; d<segChildNodes.getLength(); d++){
 						Node segChild = segChildNodes.item(d);
@@ -428,139 +498,119 @@ public class TeiToTranscriber extends TeiConverter {
 							Element segChildEl = (Element)segChild;
 							String segChildElName = segChildEl.getNodeName();
 							if(segChildElName.equals("pause")){
-								addPause(turn, segChildEl); 
+								addPause(turn, segChildEl);
 							}
 							else if(segChildElName.equals("incident")){
 								addIncident(turn, segChildEl);
 							}
 							else if(segChildElName.equals("vocal")){
-								Element vocal = trsDoc.createElement("Vocal");
-								vocal.setAttribute("desc", segChildEl.getTextContent().trim());
-								turn.appendChild(vocal);
+								turn.add(TranscriberTurn.Vocal, segChildEl.getTextContent().replaceAll("\\s+", " ").trim());
 							}
 						}
 						else if (segChild.getNodeName().equals("#text")){
-							turn.appendChild(trsDoc.createTextNode(segChild.getTextContent()));
+							turn.addText(segChild.getTextContent().replaceAll("\\s+", " "));
 						}
 					}
-				}
-				else if(uChildName.equals("anchor") && uChild.getNodeValue() != null){
+				} else if(uChildName.equals("anchor") && uChild.getNodeValue() != null){
 					//System.out.println(uChild.getNodeValue());
-					if(!tf.getTimeValue(uChild.getAttribute("synch")).equals(turn.getAttribute("startTime"))){
-						Element sync = trsDoc.createElement("Sync");
-						turn.appendChild(sync);
-						sync.setAttribute("time", timeSimplification(tf.getTimeValue(uChild.getAttribute("synch"))));
+					if(!tf.getTimeValue(uChild.getAttribute("synch")).equals(turn.startTime)){
+						turn.add(TranscriberTurn.Sync, timeSimplification(tf.getTimeValue(uChild.getAttribute("synch"))));
 					}
-				}
-				else if(uChildName.equals("comment")){
-					Element comment = trsDoc.createElement("comment");
-					comment.setAttribute("desc", uChildContent);
-					turn.appendChild(comment);
+				} else if(uChildName.equals("comment")) {
+					turn.add(TranscriberTurn.Comment, uChildContent);
 				}
 			}
 		}
 	}
 
 	//Conversion d'un élément incident provenant du fichier teiml, devient un élément Event ou Background
-	public void addIncident(Element turn, Element incident){
+	public void addIncident(TranscriberTurn turn, Element incident){
 		//L'élément incident a pour attributs type et subtype, contient des noeuds desc (type + textContent)
 		String type = incident.getAttribute("type");
 		if(type.equals("Event")){
-			Element event = createEventElement(incident);
-			turn.appendChild(event);
+			createEventElement(turn, incident);
 		}
 		else if(type.equals("Background")){
-			Element background = createBackgroundElement(incident);
-			turn.appendChild(background);
+			createBackgroundElement(turn, incident);
 		}
 	}
 
-	public void addPause(Element turn, Element pause){
+	public void addPause(TranscriberTurn turn, Element pause){
 		if(pause.getAttribute("type").equals("verylong")){
-			turn.appendChild(trsDoc.createTextNode(" /// "));
+			turn.addText(" /// ");
 		}
 		else if(pause.getAttribute("type").equals("long")){
-			turn.appendChild(trsDoc.createTextNode(" ++ "));
+			turn.addText(" ++ ");
 		}
 		else{
-			turn.appendChild(trsDoc.createTextNode(" + "));
+			turn.addText(" + ");
 		}
 	}
 
 	//Ajout d'un commentaire correspondant à un tier dans teiml => syntaxe =
 	//On utilise la syntaxe suivante: nomDuTier:\tDescriptionDuTier
-	public void addComment(Element turn, String type, String commentContent){
-		Element comment = trsDoc.createElement("Comment");
-		comment.setAttribute("desc", type + ":\t" + commentContent);
-		turn.appendChild(comment);
+	public void addComment(TranscriberTurn turn, String type, String commentContent){
+		turn.add(TranscriberTurn.Comment, type + ":\t" + commentContent);
 	}
 
 	//Création d'un élément Event et mise à jour de ses attributs à partir d'un élément incident
-	public Element createEventElement(Element incident){
+	public void createEventElement(TranscriberTurn turn, Element incident){
+		String econtent = "";
+		String etype = "";
+		String eextent = "";
 		Element event = trsDoc.createElement("Event");
 		if(Utils.isNotEmptyOrNull(incident.getAttribute("subtype"))){
-			setAttr(event, "type",incident.getAttribute("subtype"), false);
+			etype = incident.getAttribute("subtype");
+		} else {
+			etype = "noise";
 		}
-		else{
-			event.setAttribute("type", "noise");
-		}		
 		NodeList descs = incident.getElementsByTagName("desc");
 		for(int l=0; l<descs.getLength(); l++){
 			Element desc = (Element)descs.item(l);
 			String type = desc.getAttribute("type");
-			String content = desc.getTextContent();
+			String content = desc.getTextContent().replaceAll("\\s+", " ");
 			if(type.equals("type") || type.equals("extent") || type.equals("desc")){
 				if(type.equals("type")){
 					if(content.equals("noise") || content.equals("lexical") || content.equals("pronounce") || content.equals("language") || content.equals("entities")){
-						event.setAttribute("type", content);
+						etype = content;
 					}
 					else{
-						event.setAttribute("type", "noise");
+						etype = "noise";
 					}
-				}
-				else if(type.equals("extent")){
+				} else if(type.equals("extent")){
 					if(content.equals("begin") || content.equals("end") || content.equals("previous") || content.equals("next")){
-						event.setAttribute("extent", content);
+						eextent = content;
+					} else {
+						eextent = "instantaneous";
 					}
-					else{
-						event.setAttribute("extent", "instantaneous");
-					}
+				} else {
+					econtent = content;
 				}
-				else{
-					event.setAttribute("desc", content);
-				}
-			}
-			else{
-				event.setAttribute("desc", event.getAttribute("desc") + ", " + type + ": " + content);
+			} else {
+				econtent = event.getAttribute("desc") + ", " + type + ": " + content;
 			}
 		}
-		return event;
+		turn.addEvent(econtent, etype, eextent);
 	}
 
 	//Création d'un élément Background et mise à jour de ses attributs à partir d'un élément incident
-	public Element createBackgroundElement(Element incident){
-		Element background = trsDoc.createElement("Background");
-		setAttr(background, "type", incident.getAttribute("subtype"), false);
+	public void createBackgroundElement(TranscriberTurn turn, Element incident){
+		String type = incident.getAttribute("subtype");
+		if (type == null) type = "";
+		String time = "";
+		String level = "";
 		NodeList descs = incident.getElementsByTagName("desc");
 		for(int l=0; l<descs.getLength(); l++){
 			Element desc = (Element)descs.item(l);
-			String type = desc.getAttribute("type");
-			if(type.equals("type") || type.equals("time") || type.equals("level")){
-				setAttr(background, type, desc.getTextContent(), true);
-			}
+			String what = desc.getAttribute("type");
+			if(what.equals("type"))
+				type = desc.getTextContent().replaceAll("\\s+", " ");
+			if(what.equals("time"))
+				time = desc.getTextContent().replaceAll("\\s+", " ");
+			if(what.equals("level"))
+				level = desc.getTextContent().replaceAll("\\s+", " ");
 		}
-		return background;
-	}
-
-	//Renvoie l'élément link contenu dans l'élément u si il en a un, renvoie null sinon
-	public Element getLinkElement(Element annotU){
-		Element link = null;
-		//Il ne peut y avoir qu'un élément link par utterance
-		NodeList links = annotU.getElementsByTagName("link");
-		if(links.getLength() != 0){
-			link = (Element) links.item(0);
-		}
-		return link;
+		turn.addBackground(time, type, level);
 	}
 
 	//Mise à jour de l'attribut d'un élément: si la valeur de l'attribut est nulle, l'attribut n'est pas ajouté.
@@ -635,7 +685,7 @@ public class TeiToTranscriber extends TeiConverter {
 		System.err.println("	     	si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockés dans le même dossier que l'entrée.\"");
 		System.err.println("	     :-usage ou -help = affichage ce message");
 		System.exit(1);
-	}	
+	}
 
 	//Programme principal
 

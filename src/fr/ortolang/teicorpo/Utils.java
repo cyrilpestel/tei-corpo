@@ -2,17 +2,21 @@ package fr.ortolang.teicorpo;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -25,6 +29,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 public class Utils {
 	
@@ -468,5 +473,56 @@ public class Utils {
 			return (el.getNodeName().equals(Utils.ANNOTATIONBLOC)) ? true : false;
 		}
 	}
-	
+
+	public static String refID(String refid) {
+		if (refid.startsWith("#"))
+			return refid.substring(1);
+		return refid;
+	}
+
+	public static void main(String[] args) {
+        final String xmlStr = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"+
+                                "<Emp id=\"1\"><name>Pankaj</name><age>25</age>\n"+
+                                "<role>Developer</role><gen>Male</gen></Emp>";
+        Document doc = convertStringToDocument(args.length<1 ? xmlStr : args[0]);
+         
+        String str = convertDocumentToString(doc, false);
+        System.out.println(str);
+    }
+ 
+    public static String convertDocumentToString(Document doc, boolean withHeader) {
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer;
+        try {
+            transformer = tf.newTransformer();
+            // below code to remove XML declaration
+            // transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            String output = writer.getBuffer().toString();
+            if (withHeader)
+            	return output;
+            else
+            	return output.replaceFirst("<.*?>", "");
+        } catch (TransformerException e) {
+            e.printStackTrace();
+        }
+         
+        return null;
+    }
+ 
+    public static Document convertStringToDocument(String xmlStr) {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();  
+        DocumentBuilder builder;  
+        try 
+        {  
+            builder = factory.newDocumentBuilder();  
+            Document doc = builder.parse( new InputSource( new StringReader( xmlStr ) ) ); 
+            return doc;
+        } catch (Exception e) {  
+            e.printStackTrace();  
+        } 
+        return null;
+    }
+
 }

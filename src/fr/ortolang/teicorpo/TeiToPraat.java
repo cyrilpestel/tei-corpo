@@ -106,7 +106,7 @@ public class TeiToPraat {
 			    }
 			});
 			ttp = new TeiToPartition(xpath, teiDoc);
-		}catch(Exception e){
+		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		this.inputName = inputName;
@@ -169,6 +169,7 @@ public class TeiToPraat {
 			
 			double kmax = 0.0;
 			for(Annot a : entry.getValue()) {
+				// System.out.println(a.toString());
 				double start = Double.parseDouble(a.start);
 				if (start > kmax) kmax = start;
 				double end = Double.parseDouble(a.end);

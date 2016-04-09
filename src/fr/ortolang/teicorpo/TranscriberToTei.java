@@ -471,23 +471,21 @@ public class TranscriberToTei {
 	 * Contient la transcription.
 	 */
 	public void setTextElement() {
-		Element text = (Element) this.docTEI.getElementsByTagName("text").item(0);
+		Element body = (Element) this.docTEI.getElementsByTagName("body").item(0);
 		Element episode = (Element) this.docTRS.getElementsByTagName("Episode").item(0);
-		Element annotatedU = Utils.createAnnotationBloc(this.docTEI);
+		Element divEpisode = Utils.createDivHead(this.docTEI);
+		body.appendChild(divEpisode);
 		NamedNodeMap attrs = episode.getAttributes();
-		if(attrs.getLength() != 0){
-			for (int i = 0; i<attrs.getLength(); i++){
-				Element note = docTEI.createElement("note");
-				note.setAttribute("type", attrs.item(i).getNodeName());
-				note.setTextContent(attrs.item(i).getNodeValue());
-				annotatedU.appendChild(note);
+		if(attrs.getLength() != 0) {
+			for (int i = 0; i<attrs.getLength(); i++) {
+				Utils.setDivHeadAttr(this.docTEI, divEpisode, attrs.item(i).getNodeName(), attrs.item(i).getNodeValue());
 			}
 		}
 		NodeList textContent = episode.getChildNodes();
 		for (int i = 0; i < textContent.getLength(); i++) {
 			Node section = textContent.item(i);
 			if (section.getNodeName() == "Section") {
-				this.addDivElement((Element)text.getElementsByTagName("body").item(0), section, annotatedU);
+				this.addDivElement(divEpisode, section);
 			}
 		}
 		setDurDate();
@@ -505,13 +503,9 @@ public class TranscriberToTei {
 	 * @param section
 	 *            Le noeud <strong>section</strong> issu du document Transcriber
 	 */
-	public void addDivElement(Element body, Node section, Element annotatedU) {
+	public void addDivElement(Element top, Node section) {
 		Element div = Utils.createDivHead(docTEI);
-		body.appendChild(div);
-		//Informations supplémentaires (attributs de l'élément "episode")
-		if(this.docTEI.getElementsByTagName("div").getLength() == 1 && annotatedU.getChildNodes().getLength() != 0){
-			this.docTEI.getElementsByTagName("div").item(0).appendChild(annotatedU);
-		}
+		top.appendChild(div);
 		NamedNodeMap attributes = section.getAttributes();
 		for (int i = 0; i < attributes.getLength(); i++) {
 			Node att = attributes.item(i);

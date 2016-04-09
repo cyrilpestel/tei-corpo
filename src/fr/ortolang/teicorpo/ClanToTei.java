@@ -351,7 +351,7 @@ public class ClanToTei {
 
 		if (cf.lang != null) {
 			ChatLine cl = new ChatLine(cf.lang);
-			rootTEI.setAttribute("xml:lang", cl.tail);
+			rootTEI.setAttribute("xml:lang", cl.tail.trim());
 		}
 
 		if (cf.location != null) {
@@ -679,9 +679,9 @@ public class ClanToTei {
 		utteranceId++;
 		// tiersNames.add(Utils.ANNOTATIONBLOC);
 		if (extension.equals("xmor") || extension.equals("mor"))
-			splitWcontent(cl.tail, annotatedU, tiers, extension);
+			splitWcontent(cl.tail.replaceAll("\\s+", " "), annotatedU, tiers, extension);
 		else if (extension.equals("xmorext") || extension.equals("morext"))
-			splitWcontentWithRepetition(cl.tail, annotatedU, tiers, extension);
+			splitWcontentWithRepetition(cl.tail.replaceAll("\\s+", " "), annotatedU, tiers, extension);
 		Utils.setAttrAnnotationBloc(docTEI, annotatedU, "who", cl.head.substring(1));
 		if (!startTime.equals("-1")) {
 			String startId = addTimeToTimeline(toSeconds(startTime));
@@ -717,7 +717,7 @@ public class ClanToTei {
 					spanGrp.setAttribute("type", cl.head.substring(1));
 					// Element seg = docTEI.createElement("seg");
 					// span.setAttribute("type", tierType);
-					span.setTextContent(cl.tail);
+					span.setTextContent(cl.tail.replaceAll("\\s+", " "));
 					spanGrp.appendChild(span);
 					// span.appendChild(seg);
 				}
@@ -1306,7 +1306,7 @@ public class ClanToTei {
 				uContent += el += " ";
 			}
 		}
-		uContent = convTerm(uContent);// deleteControlChars(convTerm(uContent));
+		uContent = convTerm(uContent).replaceAll("\\s+", " ");// deleteControlChars(convTerm(uContent));
 		Node content = docTEI.createTextNode(uContent);
 		seg.appendChild(content);
 		seg.appendChild(content);

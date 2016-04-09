@@ -286,44 +286,18 @@ public class TeiToElan {
 	//Remplissage de la timeline à partir de la timeline au format TEI : copie exacte: mêmes identifiants et valeurs
 	void buildTimeline(Element time_order){
 		try {
-			//besoin units et time
-			String prev_time_units = (String)this.xpath.compile("/TEI/text/timeline/@unit").evaluate(this.teiDoc, XPathConstants.STRING);
-			double ratio = 1.0;
-			String time_units;
-			if (prev_time_units.equals("s")) {
-				ratio = 1000.0;
-				time_units = "milliseconds";
-			} else if (prev_time_units.equals("ms")) {
-				ratio = 1.0;
-				time_units = "milliseconds";
-			} else {
-				ratio = -1.0;
-				System.err.println("unité inconnue pour la timeline: " + prev_time_units + " pas de réajustement");
-				time_units = prev_time_units;
-			}
 			// initializes all values in the timeline
 			for(Map.Entry<String, ArrayList<Annot>> entry: ttp.tiers.entrySet()){
 				for(Annot a : entry.getValue()){
 					if(a.timereftype.equals("time")){
-						if (ratio == 1.0 || ratio < 0.0) {
-							Double start = Double.parseDouble(a.start);
-							Double end = Double.parseDouble(a.end);
-							String s = Integer.toString((int)Math.round(start));
-							String e = Integer.toString((int)Math.round(end));
-							a.start = s;
-							a.end = e;
-							timelineValueOf(s);
-							timelineValueOf(e);
-						} else {
-							Double start = Double.parseDouble(a.start) * ratio;
-							Double end = Double.parseDouble(a.end) * ratio;
-							String s = Integer.toString((int)Math.round(start));
-							String e = Integer.toString((int)Math.round(end));
-							a.start = s;
-							a.end = e;
-							timelineValueOf(s);
-							timelineValueOf(e);
-						}
+						Double start = Double.parseDouble(a.start) * 1000.0;
+						Double end = Double.parseDouble(a.end) * 1000.0;
+						String s = Integer.toString((int)Math.round(start));
+						String e = Integer.toString((int)Math.round(end));
+						a.start = s;
+						a.end = e;
+						timelineValueOf(s);
+						timelineValueOf(e);
 					}
 					// else if (a.timereftype.equals("ref")){}
 				}
@@ -451,8 +425,18 @@ public class TeiToElan {
 				if(Utils.isNotEmptyOrNull(ti.lang)) tier.setAttribute("DEFAULT_LOCALE", ti.lang);
 				if(Utils.isNotEmptyOrNull(ti.annotator)) tier.setAttribute("ANNOTATOR", ti.annotator);
 				if(Utils.isNotEmptyOrNull(ti.lang_ref)) tier.setAttribute("LANG_REF", ti.lang_ref);
-				if(Utils.isNotEmptyOrNull(ti.type.lgq_type_id)) tier.setAttribute("LINGUISTIC_TYPE_REF", newTier.lingType);
-				tier.setAttribute("PARENT_REF", newTier.parent);
+				if(Utils.isNotEmptyOrNull(newTier.lingType)) tier.setAttribute("LINGUISTIC_TYPE_REF", newTier.lingType);
+				if(Utils.isNotEmptyOrNull(ti.parent)) {
+					// s'il n'y en a pas (même nom)
+					tier.setAttribute("PARENT_REF", ti.parent);
+					// chercher dans newTiers le nouveau nom du parent
+					for (Map.Entry<String, NewTier> entry: ttp.newTiers.entrySet()) {
+						if (entry.getValue().oldID.equals(ti.parent)) {
+							tier.setAttribute("PARENT_REF", entry.getValue().newID);
+							// on change l'ancien
+						}
+					}
+				}
 				return ti.type.cv_ref;
 			}
 		}

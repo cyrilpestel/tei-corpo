@@ -138,7 +138,7 @@ public class TeiToClan extends TeiConverter{
 	}
 	
 	private String medtype(String mediatype) {
-		System.out.println("XXX: " + mediatype);
+		// System.out.println("XXX: " + mediatype);
 		if (mediatype.indexOf("audio") >= 0)
 			return "audio";
 		else if (mediatype.indexOf("video") >= 0)
@@ -350,7 +350,7 @@ public class TeiToClan extends TeiConverter{
 			}
 
 			//Ecriture de l'énoncé
-			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end);
+			writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
 
 		}
 		// écriture des tiers
@@ -425,8 +425,8 @@ public class TeiToClan extends TeiConverter{
 	public void writeTier(Annot tier){
 		String type = tier.name;
 		String tierContent = tier.content;
-		String tierLine = "%"+type+":\t"+tierContent.trim();
-		out.println(tierLine.trim());
+		String tierLine = "%"+type+":\t"+tierContent.replaceAll("\\s+", " ").trim();
+		out.println(tierLine);
 	}
 
 	/**
