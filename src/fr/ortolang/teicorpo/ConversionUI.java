@@ -241,7 +241,7 @@ public class ConversionUI extends JFrame {
 			if(!inputName.endsWith(Utils.EXT)){
 				//Création des fichiers TEI
 				if(inputName.toLowerCase().endsWith(".cha")){
-					ClanToTei cf = new ClanToTei(inputAbsPath, "");
+					ClanToTei cf = new ClanToTei(inputAbsPath, "", false);
 					Utils.createFile(outputTeiFileName, cf.docTEI);
 					if(formats.contains("tei")){
 						nbConv++;
@@ -308,7 +308,7 @@ public class ConversionUI extends JFrame {
 
 		try{
 			for(String f : formats){
-				if(f.equals("chat") || f.equals("trs")  || f.equals("eaf")){
+				if(f.equals("chat") || f.equals("trs") || f.equals("eaf") || f.equals("textgrid")){
 					File teiFile;
 					if(inputName.endsWith(Utils.EXT)){
 						teiFile = inputFile;

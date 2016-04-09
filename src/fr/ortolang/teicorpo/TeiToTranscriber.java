@@ -324,10 +324,10 @@ public class TeiToTranscriber extends TeiConverter {
 					} else {
 						TranscriberTurn over1 = new TranscriberTurn(tprev.startTime, tnext.endTime, spkprev);
 						over1.add(TranscriberTurn.Sync, tprev.startTime);
-						over1.add(TranscriberTurn.Who, "1");
+						over1.add(TranscriberTurn.Who, spkprev);
 						over1.copyFrom(tprev, 1);
 						over1.add(TranscriberTurn.Sync, tnext.startTime);
-						over1.add(TranscriberTurn.Who, "2");
+						over1.add(TranscriberTurn.Who, spknext);
 						over1.addSpeaker(spknext);
 						over1.copyFrom(tnext, 1);
 						overlaps.remove(ioverlap);
@@ -338,8 +338,8 @@ public class TeiToTranscriber extends TeiConverter {
 					tprev.endTime = tnext.endTime;
 					tprev.add(TranscriberTurn.Sync, tnext.startTime);
 					String spk = tnext.speakersToString();
-					String nspk = tprev.addSpeaker(spk);
-					tprev.add(TranscriberTurn.Who, nspk);
+					tprev.addSpeaker(spk);
+					tprev.add(TranscriberTurn.Who, spk);
 					tprev.copyFrom(tnext, 1);
 				}
 				iturns ++;

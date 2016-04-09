@@ -109,14 +109,25 @@ public class TranscriberTurn {
 	}
 
 	/*
-	 * add a speaker if necessary and return the speaker number (numbers start from 1)
+	 * add a speaker if necessary and sort list
 	 */
-	public String addSpeaker(String s) {
-		for (int i = 0; i < speaker.size(); i++)
-			if (speaker.get(i).equals(s))
-				return Integer.toString(i+1);
+	public void addSpeaker(String s) {
+		int p = speaker.indexOf(s);
+		if (p != -1)
+			return;
 		speaker.add(s);
-		return Integer.toString(speaker.size());
+		speaker.sort(null);
+	}
+
+	/*
+	 * get a speaker number (numbers start from 1)
+	 */
+	public String getSpeaker(String s) {
+		int p = speaker.indexOf(s);
+		if (p != -1)
+			return Integer.toString(p+1);
+		else
+			return "";
 	}
 
 	public Element toElement(Document doc) {
@@ -140,7 +151,7 @@ public class TranscriberTurn {
 				t.appendChild(e);
 			} else if (td.type.equals(TranscriberTurn.Who)) {
 				Element e = doc.createElement("Who");
-				e.setAttribute("nb", td.data1);
+				e.setAttribute("nb", getSpeaker(td.data1));
 				t.appendChild(e);
 			} else if (td.type.equals(TranscriberTurn.Vocal)) {
 				Element e = doc.createElement("Vocal");

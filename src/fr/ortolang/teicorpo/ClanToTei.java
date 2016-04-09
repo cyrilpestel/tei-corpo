@@ -79,7 +79,7 @@ public class ClanToTei {
 	 * @throws Exception
 	 */
 	// Constructeur: initialise le ChatFile et le docTEI
-	public ClanToTei(String chatFileName, String options) throws Exception {
+	public ClanToTei(String chatFileName, String options, boolean nospreadtime) throws Exception {
 		descID = 0;
 		utteranceId = 0;
 		whenId = 0;
@@ -89,7 +89,7 @@ public class ClanToTei {
 		cf.load(chatFileName);
 		cf.findInfo(false);
 		// ajouter paramètre
-		cf.cleantime_inmemory(1);
+		if (!nospreadtime) cf.cleantime_inmemory(1);
 		timeElements = new ArrayList<Element>();
 		DocumentBuilderFactory factory = null;
 
@@ -1550,6 +1550,7 @@ public class ClanToTei {
 		// %xmor avec extension des répétitions (attention: résultats à
 		// contrôler)");
 		System.err.println("	     :--pure - do not use special tags but only classic tei tags");
+		System.err.println("	     :--nospreadtime - do not try to ajust time for unaligned utterances");
 		System.err.println("	     :-usage ou -help = affichage de ce message");
 		System.exit(1);
 	}
@@ -1558,6 +1559,7 @@ public class ClanToTei {
 		String input = null;
 		String output = null;
 		String options = "";
+		boolean nospreadtime = false;
 		// parcours des arguments
 		if (args.length == 0) {
 			System.err.println("Vous n'avez spécifié aucun argument.\n");
@@ -1575,6 +1577,8 @@ public class ClanToTei {
 						if (i >= args.length)
 							usage();
 						output = args[i];
+					} else if (args[i].equals("--nospreadtime")) {
+						nospreadtime = true;
 					} else if (args[i].equals("--pure")) {
 						Utils.teiStylePure = true;
 					} else if (args[i].equals("-f")) {
@@ -1635,7 +1639,7 @@ public class ClanToTei {
 				if (file.getName().toLowerCase().endsWith(Utils.EXT_PUBLISH + EXT)) {
 					System.out.printf("-- ignoré: %s%n", file.getName());
 				} else if (file.getName().endsWith(EXT)) {
-					ClanToTei tr = new ClanToTei(file.getAbsolutePath(), options);
+					ClanToTei tr = new ClanToTei(file.getAbsolutePath(), options, nospreadtime);
 					String outputFileName = Utils.basename(file) + Utils.EXT;
 					System.out.println(output + outputFileName);
 					Utils.createFile(output + outputFileName, tr.docTEI);
@@ -1662,7 +1666,7 @@ public class ClanToTei {
 			}
 
 			System.out.println("Reading " + input);
-			ClanToTei tr = new ClanToTei(input, options);
+			ClanToTei tr = new ClanToTei(input, options, nospreadtime);
 			Utils.createFile(output, tr.docTEI);
 			System.out.println("New file TEI created: " + output);
 		}
