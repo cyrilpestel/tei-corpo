@@ -39,6 +39,8 @@ public class TeiToSrt extends TeiConverter{
 	 */
 	public TeiToSrt(String inputName, String outputName) {
 		super(inputName, outputName);
+		outputWriter();
+		conversion();
 	}
 
 	/**

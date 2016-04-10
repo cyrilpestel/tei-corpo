@@ -163,13 +163,15 @@ public class ElanToHT {
 				annotElName = "REF_ANNOTATION";
 			}
 			NodeList annotsNodes = tierElement.getElementsByTagName(annotElName);
-			//Cas où un tier ne contient aucune annotation : création d'un tier vide
 			if(annotsNodes.getLength() == 0){
+				//Cas où un tier ne contient aucune annotation : on supprime le tier
+				/*
 				Annot annot = new Annot();
 				annot.name = name;
 				annot.timereftype = "time";
 				annots.add(annot);
 				addAnnot(name, annots);
+				*/
 				continue;
 			}
 			for(int i = 0; i<annotsNodes.getLength(); i++){

@@ -328,7 +328,7 @@ public class ConversionUI extends JFrame {
 						else if(f.equals("trs") && !(inputName.endsWith(".trs") || inputName.endsWith(".trs.xml"))){
 							String trsDirName = outputDir + "/";
 							String outputName = trsDirName +inputName.split("\\.")[0] + ".trs";
-							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName);
+							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, false);
 							nbConv++;
 							ttt.createOutput();
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);

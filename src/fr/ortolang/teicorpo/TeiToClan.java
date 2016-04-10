@@ -40,6 +40,8 @@ public class TeiToClan extends TeiConverter{
 	 */
 	public TeiToClan(String inputName, String outputName) {
 		super(inputName, outputName);	
+		outputWriter();
+		conversion();
 	}
 
 	/**

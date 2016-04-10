@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -176,6 +178,15 @@ public class Utils {
 
 	public static int toCentiSeconds(float t) {
 		return (int)(t/10);
+	}
+
+	public static String printDouble(double value, int precision) {
+		if (value <= 0.0) return "0";
+		double intpart = Math.floor(value);
+	    BigDecimal bd = new BigDecimal(value);
+	    BigDecimal bdintpart = new BigDecimal(intpart);
+	    bd = bd.setScale(precision, RoundingMode.HALF_UP);
+	    return bdintpart.toString() + "." + (bd.subtract(bdintpart)).toString().substring(2);
 	}
 
 	public static String fullbasename(String fileName) {

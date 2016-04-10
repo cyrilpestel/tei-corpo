@@ -41,15 +41,25 @@ public class TeiToTranscriber extends TeiConverter {
 	Element section;
 	ArrayList<TranscriberTurn> turns;
 	String oldEndTime;
+	boolean sectionStartSet;
+	boolean sectionEndSet;
+	boolean shiftNextStart;
+	boolean noComments;
 
 	//Extension du fichier de sortie: .trs
 	final static String EXT = ".trs";
 
-	public TeiToTranscriber(String inputName, String outputName) {
+	public TeiToTranscriber(String inputName, String outputName, boolean princOnly) {
 		super(inputName, outputName);
 		speakers = null; // name of current speaker for turns
 		section = null; // is a section opened ?
 		oldEndTime = ""; // last end time of a turn
+		noComments = princOnly;
+		sectionStartSet = false;
+		sectionEndSet = false;
+		shiftNextStart = false;
+		outputWriter();
+		conversion();
 	}
 
 	//Création du document trs
@@ -219,13 +229,19 @@ public class TeiToTranscriber extends TeiConverter {
 			// un seul div c'est l'épisode
 			// on cherche les infos program et air_date
 			// sinon on met type + substype dans program
-			/*
-			String infoType = Utils.getInfoType(info);
-			String infoContent = Utils.getInfo(info).replaceAll("\\s+", " ");
-			if(info.startsWith("program") || info.startsWith("air_date")){
-				episode.setAttribute(infoType, infoContent);
-			}
-			 */
+			
+			String type = Utils.getDivHeadAttr(ep, "type");
+			String subtype = Utils.getDivHeadAttr(ep, "subtype");
+			String program = Utils.getDivHeadAttr(ep, "program");
+			String air_date = Utils.getDivHeadAttr(ep, "air_date");
+			if (Utils.isNotEmptyOrNull(program))
+				episode.setAttribute("program", program);
+			else if (Utils.isNotEmptyOrNull(type))
+				episode.setAttribute("program", type);
+			if (Utils.isNotEmptyOrNull(air_date))
+				episode.setAttribute("air_date", air_date);
+			else if (Utils.isNotEmptyOrNull(subtype))
+				episode.setAttribute("air_date", subtype);
 			bodyChildren = ep.getChildNodes();
 		}
 		processDivAndAnnotation(bodyChildren, true);
@@ -244,18 +260,24 @@ public class TeiToTranscriber extends TeiConverter {
 			Element d = (Element)nd;
 			if (d.getTagName().equals("div")) {
 				// clore la section en cours si elle existe
-				if (section != null) {
-					addTurnsToSection(section, turns);
-					section = null;
-				}
 				if (realdivs) {
+					if (section != null) {
+						addTurnsToSection(section, turns);
+						section = null;
+						turns = null;
+					}
 					// creer une nouvelle section
-					Element section = trsDoc.createElement("Section");
+					section = trsDoc.createElement("Section");
 					episode.appendChild(section);
+					turns = new ArrayList<TranscriberTurn>();
 					String startTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "start")));
+					if (shiftNextStart && !startTime.isEmpty())
+						startTime = Utils.printDouble(Double.parseDouble(startTime) + 0.001, 4);
 					String endTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "end")));
 					setAttr(section, "startTime", startTime, true);
 					setAttr(section, "endTime", endTime, true);
+					sectionStartSet = true;
+					sectionEndSet = true;
 					if(d.getAttribute("type")=="report" || d.getAttribute("type")=="nontrans" || Utils.getDivHeadAttr(d, "type")=="filler"){
 						section.setAttribute("type", Utils.getDivHeadAttr(d, "type"));
 					} else {
@@ -271,11 +293,21 @@ public class TeiToTranscriber extends TeiConverter {
 					if (section == null) {
 						section = trsDoc.createElement("Section");
 						section.setAttribute("type", "report");
+						sectionStartSet = false;
+						sectionEndSet = false;
 						episode.appendChild(section);
 						turns = new ArrayList<TranscriberTurn>();
 					}
 					String startTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "start")));
 					String endTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "end")));
+					if (shiftNextStart && !startTime.isEmpty())
+						startTime = Utils.printDouble(Double.parseDouble(startTime) + 0.001, 4);
+					if (sectionStartSet == false) {
+						setAttr(section, "startTime", startTime, true);
+						sectionStartSet = true;
+					}
+					if (sectionEndSet == false)
+						setAttr(section, "endTime", endTime, true);
 					String typediv = Utils.getDivHeadAttr(d, "type");
 					String subtypediv = Utils.getDivHeadAttr(d, "type");
 					String tc = "";
@@ -291,6 +323,8 @@ public class TeiToTranscriber extends TeiConverter {
 				// this an annotatedU
 				if (section == null) {
 					section = trsDoc.createElement("Section");
+					sectionStartSet = false;
+					sectionEndSet = false;
 					section.setAttribute("type", "report");
 					episode.appendChild(section);
 					turns = new ArrayList<TranscriberTurn>();
@@ -298,7 +332,9 @@ public class TeiToTranscriber extends TeiConverter {
 				buildTurn(d);
 			}
 		}
-		addTurnsToSection(section, turns);
+		if (section != null) addTurnsToSection(section, turns);
+		turns = null;
+		section = null;
 	}
 
 	private void addTurnsToSection(Element sec, ArrayList<TranscriberTurn> turns) {
@@ -376,11 +412,37 @@ public class TeiToTranscriber extends TeiConverter {
 	public void buildTurn(Element elt) {
 		String spk = Utils.getAttrAnnotationBloc(elt, "who");
 		String startTime = timeSimplification(tf.getTimeValue(Utils.getAttrAnnotationBloc(elt, "start")));
+		if (shiftNextStart && !startTime.isEmpty()) {
+			// System.err.println(startTime);
+			startTime = Utils.printDouble(Double.parseDouble(startTime) + 0.001, 4);
+			shiftNextStart = false;
+		}
 		String endTime = timeSimplification(tf.getTimeValue(Utils.getAttrAnnotationBloc(elt, "end")));
 		if (startTime.isEmpty() || endTime.isEmpty()) {
+			if (oldEndTime.isEmpty()) return;
 			startTime = oldEndTime;
-			endTime = oldEndTime;
+			if (shiftNextStart) {
+				// System.err.println(startTime);
+				startTime = Utils.printDouble(Double.parseDouble(startTime) + 0.001, 4);
+				endTime = Utils.printDouble(Double.parseDouble(oldEndTime) + 0.001, 4);
+				oldEndTime = endTime;
+			} else {
+				endTime = Utils.printDouble(Double.parseDouble(oldEndTime) + 0.001, 4);
+				oldEndTime = endTime;
+			}
+			shiftNextStart = true;
 		}
+		if (startTime.equals(endTime)) {
+			endTime = Utils.printDouble(Double.parseDouble(endTime) + 0.001, 4);
+			oldEndTime = endTime;
+			shiftNextStart = true;
+		}
+		if (sectionStartSet == false) {
+			setAttr(section, "startTime", startTime, true);
+			sectionStartSet = true;
+		}
+		if (sectionEndSet == false)
+			setAttr(section, "endTime", endTime, true);
 		TranscriberTurn tt = new TranscriberTurn(startTime, endTime, spk);
 		turns.add(tt);
 		setTurnAttributes(tt, elt);
@@ -459,8 +521,8 @@ public class TeiToTranscriber extends TeiConverter {
 				if(nodeName.equals("u")){
 					//Traitement des noeuds contenus dans: g, incident, vocal ou comment
 					addU(turn, annotUChild);
-				}
-				else if (nodeName.equals("spanGrp")){
+				} else if (nodeName.equals("spanGrp")) {
+					if (noComments) continue;
 					NodeList spans = annotUChild.getElementsByTagName("span");
 					for (int h = 0; h<spans.getLength(); h++){
 						Element span = (Element) spans.item(h);
@@ -683,6 +745,7 @@ public class TeiToTranscriber extends TeiConverter {
 		System.err.println("	     :-o nom du fichier de sortie au format Transcriber (.trs ou .xml.trs) ou du repertoire de résultats");
 		System.err.println("	     	si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension .trs;");
 		System.err.println("	     	si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockés dans le même dossier que l'entrée.\"");
+		System.err.println("	     :--princ : lignes principales seulement (pas de commentaires)");
 		System.err.println("	     :-usage ou -help = affichage ce message");
 		System.exit(1);
 	}
@@ -694,6 +757,7 @@ public class TeiToTranscriber extends TeiConverter {
 
 		String input = null;
 		String output = null;
+		boolean princOnly = false;
 		//Parcours des arguments
 
 		if (args.length == 0) {
@@ -708,6 +772,8 @@ public class TeiToTranscriber extends TeiConverter {
 					} else if (args[i].equals("-o")) {
 						i++;
 						output = args[i];
+					} else if (args[i].equals("--princ")) {
+						princOnly = true;
 					} else {
 						usage();
 					}
@@ -756,7 +822,7 @@ public class TeiToTranscriber extends TeiConverter {
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(Utils.EXT))){
 					String outputFileName = file.getName().split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-					TeiToTranscriber ttt = new TeiToTranscriber(file.getAbsolutePath(), outputDir+outputFileName);
+					TeiToTranscriber ttt = new TeiToTranscriber(file.getAbsolutePath(), outputDir+outputFileName, princOnly);
 					System.out.println(outputDir+outputFileName);
 					ttt.createOutput();
 				}
@@ -785,7 +851,7 @@ public class TeiToTranscriber extends TeiConverter {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + Utils.EXT);
 				usage();
 			}
-			TeiToTranscriber ttt = new TeiToTranscriber(new File(input).getAbsolutePath(), output);
+			TeiToTranscriber ttt = new TeiToTranscriber(new File(input).getAbsolutePath(), output, princOnly);
 			System.out.println("Reading " + input);
 			ttt.createOutput();
 			System.out.println("New file created " + output);

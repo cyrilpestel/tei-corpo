@@ -26,8 +26,6 @@ public abstract class TeiConverter {
 		this.tf = new TeiFile(new File(inputName));
 		this.inputName = inputName;
 		this.outputName = outputName;
-		outputWriter();
-		conversion();
 	}
 
 	//Initialisation du fichier de sortie

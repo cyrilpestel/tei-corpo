@@ -101,11 +101,32 @@ public class TeiFile {
 	public void buildTimeline(){
 		timeline.put("T0", "0");
 		Element tl = (Element)this.teiDoc.getElementsByTagName("timeline").item(0);
+		String unit = tl.getAttribute("unit");
+		double ratio = 1.0;
+		if (unit.equals("ms"))
+			ratio = 1.0/1000.0;
+		else if (unit.equals("s"))
+			ratio = 1.0;
+		else {
+			System.out.println("Unité inconnue pour timeline: " + unit);
+			System.out.println("Pas de conversion réalisée.");
+			ratio = 1.0;
+		}
 		NodeList whens = tl.getElementsByTagName("when");
 		for (int i = 0; i<whens.getLength(); i++){
 			Element when = (Element) whens.item(i);
-			if(when.hasAttribute("interval")){
-				timeline.put(when.getAttribute("xml:id"), when.getAttribute("interval"));
+			if (when.hasAttribute("interval")) {
+				String tms = when.getAttribute("interval");
+				double vald = Double.parseDouble(tms);
+				vald *= ratio;
+				tms = Utils.printDouble(vald, 15);
+				timeline.put(when.getAttribute("xml:id"), tms);
+			} else if (when.hasAttribute("absolute")) {
+				String tms = when.getAttribute("absolute");
+				double vald = Double.parseDouble(tms);
+				vald *= ratio;
+				tms = Utils.printDouble(vald, 15);
+				timeline.put(when.getAttribute("xml:id"), tms);
 			}
 		}
 	}
@@ -116,7 +137,11 @@ public class TeiFile {
 
 	public String getTimeValue(String timeId){
 		if(Utils.isNotEmptyOrNull(timeId)){
-			return timeline.get(timeId.split("#")[1]);
+			String[] spl = timeId.split("#");
+			if (spl.length>1)
+				return timeline.get(spl[1]);
+			else
+				return "";
 		}
 		return "";
 	}

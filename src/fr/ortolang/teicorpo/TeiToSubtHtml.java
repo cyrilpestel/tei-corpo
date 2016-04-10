@@ -37,6 +37,8 @@ public class TeiToSubtHtml extends TeiConverter{
 	 */
 	public TeiToSubtHtml(String inputName, String outputName) {
 		super(inputName, outputName);
+		outputWriter();
+		conversion();
 	}
 
 	/**

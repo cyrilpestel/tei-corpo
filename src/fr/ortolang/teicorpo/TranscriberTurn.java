@@ -132,7 +132,7 @@ public class TranscriberTurn {
 
 	public Element toElement(Document doc) {
 		Element t = doc.createElement("Turn");
-		t.setAttribute("who", speakersToString());
+		t.setAttribute("speaker", speakersToString());
 		if (!startTime.isEmpty())
 			t.setAttribute("startTime", startTime);
 		if (!endTime.isEmpty())

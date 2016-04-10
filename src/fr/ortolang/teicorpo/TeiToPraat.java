@@ -147,7 +147,6 @@ public class TeiToPraat {
 		out.printf("size = %d%n", ttp.tiers.size()); 
 	}
 
-
 	private String printDouble(double value) {
 		if (value <= 0.0) return "0";
 		double intpart = Math.floor(value);

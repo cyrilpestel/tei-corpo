@@ -31,7 +31,7 @@ public class Main {
 				teiDir.mkdir();
 				//Création des fichiers TEI
 				if(inputName.endsWith(".cha")){
-					ClanToTei cf = new ClanToTei(inputAbsPath, "");
+					ClanToTei cf = new ClanToTei(inputAbsPath, "", false);
 					Utils.createFile(outputTeiFileName, cf.docTEI);
 					nbConv ++;
 					System.out.printf("New TEI file created from %s to " + outputTeiFileName + "\n", inputAbsPath);
@@ -71,7 +71,7 @@ public class Main {
 						else if(f.equals("trs") && !(inputName.endsWith(".trs") || inputName.endsWith(".trs.xml"))){
 							String trsDirName = outputDir + "/trs/";
 							String outputName = trsDirName +inputName.split("\\.")[0] + ".trs";
-							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName);
+							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, false);
 							nbConv ++;
 							ttt.createOutput();
 							System.out.printf("New %s file created from %s to " + outputName + "\n", f.toUpperCase(), inputAbsPath);						
