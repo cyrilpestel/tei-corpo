@@ -12,10 +12,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -580,7 +577,7 @@ public class Utils {
 		System.err.println("	     :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
 		System.err.println("	     :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
 		System.err.println("	     :-usage ou -help = affichage ce message");
-		System.exit(1);
+		// System.exit(1);
 	}
 
 	public static TierParams getTierParams(String fn, TierParams tp) {
@@ -622,10 +619,11 @@ public class Utils {
 		return tp;
 	}
 
-	public static void processArgs(String[] args, TierParams options, String usage, String ext1, String ext2) {
+	public static boolean processArgs(String[] args, TierParams options, String usage, String ext1, String ext2) {
 		if (args.length == 0) {
 			System.err.println("Vous n'avez spécifié aucun argument\n");
 			Utils.printUsageMessage(usage, ext1, ext2);
+			return true;
 		} else {
 			for (int i = 0; i < args.length; i++) {
 				try {
@@ -645,8 +643,10 @@ public class Utils {
 						i++;
 						continue;
 					} else if (args[i].equals("-p")) {
-						if (i+1 >= args.length)
+						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2);
+							return false;
+						}
 						i++;
 						Utils.getTierParams(args[i], options);
 					} else {
@@ -654,38 +654,50 @@ public class Utils {
 					}
 				} catch (Exception e) {
 					Utils.printUsageMessage(usage, ext1, ext2);
+					return false;
 				}
 			}
 			for (int i = 0; i < args.length; i++) {
 				try {
 					if (args[i].equals("-i")) {
-						if (i+1 >= args.length)
+						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2);
+							return false;
+						}
 						i++;
 						options.input = args[i];
 					} else if (args[i].equals("-o")) {
-						if (i+1 >= args.length)
+						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2);
+							return false;
+						}
 						i++;
 						options.output = args[i];
 					} else if (args[i].equals("-n")) {
-						if (i+1 >= args.length)
+						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2);
+							return false;
+						}
 						i++;
 						try {
 							options.setLevel(Integer.parseInt(args[i]));
 						} catch(Exception e) {
 							System.err.println("Le paramètre -n n'est pas suivi d'un entier.");
 							Utils.printUsageMessage(usage, ext1, ext2);
+							return false;
 						}
 					} else if (args[i].equals("-a")) {
-						if (i+1 >= args.length)
+						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2);
+							return false;
+						}
 						i++;
 						options.addDoDisplay(args[i]);
 					} else if (args[i].equals("-s")) {
-						if (i+1 >= args.length)
+						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2);
+							return false;
+						}
 						i++;
 						options.addDontDisplay(args[i]);
 					} else if (args[i].equals("-p")) {
@@ -693,11 +705,14 @@ public class Utils {
 						continue;
 					} else {
 						Utils.printUsageMessage(usage, ext1, ext2);
+						return false;
 					}
 				} catch (Exception e) {
 					Utils.printUsageMessage(usage, ext1, ext2);
+					return false;
 				}
 			}
 		}
+		return true;
 	}
 }

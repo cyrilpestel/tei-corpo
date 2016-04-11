@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
@@ -27,18 +26,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import fr.ortolang.teicorpo.TeiFile.AnnotatedUtterance;
-import fr.ortolang.teicorpo.TeiFile.Div;
 
 public class TeiToElan {
 
@@ -518,7 +512,8 @@ public class TeiToElan {
 		String usage = "Description: TeiToElan convertit un fichier au format Tei en un fichier au format Elan%nUsage: TeiToElan [-options] <file" + Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments
-		Utils.processArgs(args, options, usage, Utils.EXT, EXT);
+		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT))
+			System.exit(1);
 		String input = options.input;
 		String output = options.output;
 

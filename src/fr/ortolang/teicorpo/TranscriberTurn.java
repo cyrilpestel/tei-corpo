@@ -1,8 +1,6 @@
 package fr.ortolang.teicorpo;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

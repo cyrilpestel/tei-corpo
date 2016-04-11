@@ -67,7 +67,7 @@ public class TeiToDC_colaje {
 
 	TeiToDC_colaje(String inputFileName, String outputFileName){
 		teiFile = new File(inputFileName);
-		tf = new TeiFile(teiFile);
+		tf = new TeiFile(teiFile, null);
 		dc = new DC();
 
 		//Remplissage DC

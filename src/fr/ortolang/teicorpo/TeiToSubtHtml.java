@@ -10,16 +10,12 @@ import java.io.IOException;
 //import java.io.FilenameFilter;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.text.DateFormatSymbols;
 import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import fr.ortolang.teicorpo.TeiFile.AnnotatedUtterance;
 import fr.ortolang.teicorpo.TeiFile.Div;
-import fr.ortolang.teicorpo.TeiFile.Participant;
 
 public class TeiToSubtHtml extends TeiConverter{
 
@@ -29,6 +25,7 @@ public class TeiToSubtHtml extends TeiConverter{
 	final static String outputEncoding = "UTF-8";
 	//Extension du fichier de sortie
 	final static String EXT = ".subt.html";
+	TierParams optionsOutput;
 
 	/**
 	 * Convertit le fichier TEI donné en argument en un fichier Srt.
@@ -37,6 +34,7 @@ public class TeiToSubtHtml extends TeiConverter{
 	 */
 	public TeiToSubtHtml(String inputName, String outputName, TierParams optionsTei) {
 		super(inputName, outputName, optionsTei);
+		optionsOutput = optionsTei;
 		outputWriter();
 		conversion();
 	}
@@ -158,7 +156,7 @@ public class TeiToSubtHtml extends TeiConverter{
                 	TimeDivision.toMinutes(endTime), TimeDivision.toSeconds(endTime), TimeDivision.toCentiSeconds(endTime),
                 	loc, speechContent );
             else                          
-                out.printf((Params.tierDisplay.equals(";")?"<p " : "<p class=\"twolines\"") + "data-begin=\"%d:%d.%d\" data-end=\"%d:%d.%d\"><span class=\"nutt\">%s:</span> %s%n",
+                out.printf((optionsOutput.doDisplay.size()==0?"<p " : "<p class=\"twolines\"") + "data-begin=\"%d:%d.%d\" data-end=\"%d:%d.%d\"><span class=\"nutt\">%s:</span> %s%n",
                 	TimeDivision.toMinutes(startTime), TimeDivision.toSeconds(startTime), TimeDivision.toCentiSeconds(startTime), 
                 	TimeDivision.toMinutes(endTime), TimeDivision.toSeconds(endTime), TimeDivision.toCentiSeconds(endTime),
                     loc, speechContent );
@@ -262,7 +260,7 @@ public class TeiToSubtHtml extends TeiConverter{
 			}
 
 			//Ecriture de l'énoncé
-			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, Params.forceEmpty);
+			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, optionsOutput.forceEmpty);
 		}
 		// écriture des tiers
 		for(Annot tier : u.tiers){
@@ -279,9 +277,9 @@ public class TeiToSubtHtml extends TeiConverter{
 	 * @param endTime	Temps de fin de l'énoncé
 	 */
 	public void writeSpeech(String loc, String speechContent, String startTime, String endTime, boolean force){
-		if (!Params.partDisplay.isEmpty()) {
-			String loctest = ";" + loc + ";";
-			if (!Params.partDisplay.contains(loctest)) return;
+		if (optionsOutput != null) {
+			if (optionsOutput.isDontDisplay(loc)) return;
+			if (!optionsOutput.isDoDisplay(loc)) return;
 		}
 		//System.out.println(loc + ' ' + startTime + ' ' + endTime +' ' + speechContent);
 		//Si le temps de début n'est pas renseigné, on mettra par défaut le temps de fin (s'il est renseigné) moins une seconde.
@@ -312,9 +310,9 @@ public class TeiToSubtHtml extends TeiConverter{
 	 * @param u
 	 */
 	public void writeAddInfo(AnnotatedUtterance u){
-		if (!Params.tierDisplay.isEmpty()) {
-			String loctest = ";com;";
-			if (!Params.tierDisplay.contains(loctest)) return;
+		if (optionsOutput != null) {
+			if (optionsOutput.isDontDisplay("com")) return;
+			if (!optionsOutput.isDoDisplay("com")) return;
 		}
 		//Ajout des informations additionnelles présents dans les fichiers srt
 		for(String s : u.coms){
@@ -328,10 +326,10 @@ public class TeiToSubtHtml extends TeiConverter{
 	 * Ecriture des tiers: lignes qui commencent par le signe pourcent %
 	 * @param tier	Le tier à écrire, au format : Nom du tier \t Contenu du tier
 	 */
-	public void writeTier(Annot tier){
-		if (!Params.tierDisplay.isEmpty()) {
-			String loctest = ";" + tier + ";";
-			if (!Params.tierDisplay.contains(loctest)) return;
+	public void writeTier(Annot tier) {
+		if (optionsOutput != null) {
+			if (optionsOutput.isDontDisplay(tier.name)) return;
+			if (!optionsOutput.isDoDisplay(tier.name)) return;
 		}
 		String type = tier.name;
 		String tierContent = tier.content;

@@ -7,41 +7,18 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import fr.ortolang.teicorpo.TeiFile.AnnotatedUtterance;
-import fr.ortolang.teicorpo.TeiFile.Div;
 
 public class TeiToPraat {
 
@@ -199,7 +176,8 @@ public class TeiToPraat {
 		String usage = "Description: TeiToPraat convertit un fichier au format Tei en un fichier au format Praat%nUsage: TeiToPraat [-options] <file" + Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments
-		Utils.processArgs(args, options, usage, Utils.EXT, EXT);
+		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT))
+			System.exit(1);
 		String input = options.input;
 		String output = options.output;
 

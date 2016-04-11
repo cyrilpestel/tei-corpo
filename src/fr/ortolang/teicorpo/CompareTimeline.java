@@ -1,6 +1,7 @@
 package fr.ortolang.teicorpo;
 
 import java.util.Comparator;
+
 import org.w3c.dom.Element;
 
 public class CompareTimeline implements Comparator<Element>{

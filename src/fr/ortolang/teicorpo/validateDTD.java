@@ -2,14 +2,8 @@ package fr.ortolang.teicorpo;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
-import org.w3c.dom.Document;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 /**
  * Validate a XML with INTERNAL DTD and use of the standard DOM and SAX parser of Sun implementation
@@ -67,8 +61,9 @@ public class validateDTD {
 	         builder.setErrorHandler(new MyErrorHandler());
 	   
 	         // Generates a Document object tree
-	         Document xmlDocument = builder.parse(new InputSource(xmlFileName));
+	         builder.parse(new InputSource(xmlFileName));
 	         
+//	         Document xmlDocument = builder.parse(new InputSource(xmlFileName));
 //	         DOMSource source = new DOMSource(xmlDocument);
 //	         StreamResult result = new StreamResult(System.out);
 //	         //

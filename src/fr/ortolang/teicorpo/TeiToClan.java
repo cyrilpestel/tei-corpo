@@ -517,7 +517,8 @@ public class TeiToClan extends TeiConverter{
 		String usageString =  "Description: TeiToChat convertit un fichier au format TEI en un fichier au format Chat%nUsage: TeiToChat [-options] <file." + Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments
-		Utils.processArgs(args, options, usageString, Utils.EXT, EXT);
+		if (!Utils.processArgs(args, options, usageString, Utils.EXT, EXT))
+			System.exit(1);
 		String input = options.input;
 		String output = options.output;
 

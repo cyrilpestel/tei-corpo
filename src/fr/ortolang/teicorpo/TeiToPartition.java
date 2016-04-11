@@ -2,7 +2,6 @@ package fr.ortolang.teicorpo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.TreeMap;
 
 import javax.xml.xpath.XPath;
@@ -370,7 +369,7 @@ public class TeiToPartition {
 							Element alt = (Element) child.getElementsByTagName("alt").item(z);
 							if(alt.hasAttribute("type")){
 								for(TierInfo ti : tierInfos){
-									NodeList pn = person.getElementsByTagName("persName");
+									// NodeList pn = person.getElementsByTagName("persName");
 									if(ti.tier_id.equals(alt.getAttribute("type"))){
 										if(person.getElementsByTagName("persName").getLength()>0){
 											ti.participant = person.getElementsByTagName("persName").item(0).getTextContent();

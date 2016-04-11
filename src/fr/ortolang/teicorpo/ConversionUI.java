@@ -11,10 +11,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.net.URISyntaxException;
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.prefs.*;
+import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -40,6 +38,8 @@ public class ConversionUI extends JFrame {
 	ButtonField bf2;
 	boolean nullOutput = false;
 	String arguments = null;
+	String argumentsOutput = null;
+	TierParams options;
 
 	static int nbConv = 0;	
 	static final long serialVersionUID = 1L;
@@ -309,6 +309,20 @@ public class ConversionUI extends JFrame {
 		try{
 			for(String f : formats){
 				if(f.equals("chat") || f.equals("trs") || f.equals("eaf") || f.equals("textgrid")){
+					if (argumentsOutput == null) // different from Empty
+						argumentsOutput = JOptionPane.showInputDialog(null, "Veuillez ajouter les éventuelles options à utiliser ou validez:\n" +
+								"-n niveau: niveau d'imbrication (1 pour lignes principales)\n" +
+								"-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)\n" +
+								"-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)" +
+								"-p fichier_parametres", "Conversion depuis la TEI", JOptionPane.QUESTION_MESSAGE);
+					if(Utils.isNotEmptyOrNull(argumentsOutput)) {
+						String usage =  "Description: Conversions convertit un fichier au format TEI en un fichier au format Chat, Praat, Elan, Transcriber\n";
+						String [] addArgs = argumentsOutput.split("\\s+");
+						if (Utils.processArgs(addArgs, options, usage, Utils.EXT, f) == false) {
+							JOptionPane.showMessageDialog(null, "Erreur sur les paramètres.",
+									"Erreur", JOptionPane.WARNING_MESSAGE);
+						}
+					}
 					File teiFile;
 					if(inputName.endsWith(Utils.EXT)){
 						teiFile = inputFile;

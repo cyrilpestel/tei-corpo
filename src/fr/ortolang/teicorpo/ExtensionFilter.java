@@ -1,5 +1,6 @@
 package fr.ortolang.teicorpo;
 import java.io.File;
+
 import javax.swing.filechooser.FileFilter;
 
 public class ExtensionFilter extends FileFilter {

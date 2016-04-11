@@ -17,11 +17,18 @@ package fr.ortolang.teicorpo;
  * t(i,j) : tiers 'j' de la ligne 'i'
  */
 
-import java.util.*;
-import java.util.regex.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChatFile {
 	/** All input will use this encoding */

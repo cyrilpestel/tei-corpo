@@ -11,16 +11,12 @@ import java.io.IOException;
 //import java.io.FilenameFilter;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.text.DateFormatSymbols;
 import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import fr.ortolang.teicorpo.TeiFile.AnnotatedUtterance;
 import fr.ortolang.teicorpo.TeiFile.Div;
-import fr.ortolang.teicorpo.TeiFile.Participant;
 
 public class TeiToSrt extends TeiConverter{
 
@@ -30,6 +26,7 @@ public class TeiToSrt extends TeiConverter{
 	final static String outputEncoding = "UTF-8";
 	//Extension du fichier de sortie
 	final static String EXT = ".srt";
+	TierParams optionsOutput;
 
 	int srtNumber = 1; // compte le nombre de sous-titres produits dans le fichier srt pour écrire les entêtes.
 	/**
@@ -39,6 +36,7 @@ public class TeiToSrt extends TeiConverter{
 	 */
 	public TeiToSrt(String inputName, String outputName, TierParams optionsTei) {
 		super(inputName, outputName, optionsTei);
+		optionsOutput = optionsTei;
 		outputWriter();
 		conversion();
 	}
@@ -176,7 +174,7 @@ public class TeiToSrt extends TeiConverter{
 			}
 
 			//Ecriture de l'énoncé
-			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, Params.forceEmpty);
+			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, optionsOutput.forceEmpty);
 		}
 		// écriture des tiers
 		for(Annot tier : u.tiers){
@@ -193,9 +191,9 @@ public class TeiToSrt extends TeiConverter{
 	 * @param endTime	Temps de fin de l'énoncé
 	 */
 	public void writeSpeech(String loc, String speechContent, String startTime, String endTime, boolean force){
-		if (!Params.partDisplay.isEmpty()) {
-			String loctest = ";" + loc + ";";
-			if (!Params.partDisplay.contains(loctest)) return;
+		if (optionsOutput != null) {
+			if (optionsOutput.isDontDisplay(loc)) return;
+			if (!optionsOutput.isDoDisplay(loc)) return;
 		}
 		//System.out.println(loc + ' ' + startTime + ' ' + endTime +' ' + speechContent);
 		//Si le temps de début n'est pas renseigné, on mettra par défaut le temps de fin (s'il est renseigné) moins une seconde.
@@ -233,10 +231,10 @@ public class TeiToSrt extends TeiConverter{
 	 * Ajout des info additionnelles (hors-tiers)
 	 * @param u
 	 */
-	public void writeAddInfo(AnnotatedUtterance u){
-		if (!Params.tierDisplay.isEmpty()) {
-			String loctest = ";com;";
-			if (!Params.tierDisplay.contains(loctest)) return;
+	public void writeAddInfo(AnnotatedUtterance u) {
+		if (optionsOutput != null) {
+			if (optionsOutput.isDontDisplay("com")) return;
+			if (!optionsOutput.isDoDisplay("com")) return;
 		}
 		//Ajout des informations additionnelles présents dans les fichiers srt
 		for(String s : u.coms){
@@ -251,9 +249,9 @@ public class TeiToSrt extends TeiConverter{
 	 * @param tier	Le tier à écrire, au format : Nom du tier \t Contenu du tier
 	 */
 	public void writeTier(Annot tier){
-		if (!Params.tierDisplay.isEmpty()) {
-			String loctest = ";" + tier + ";";
-			if (!Params.tierDisplay.contains(loctest)) return;
+		if (optionsOutput != null) {
+			if (optionsOutput.isDontDisplay(tier.name)) return;
+			if (!optionsOutput.isDoDisplay(tier.name)) return;
 		}
 		String type = tier.name;
 		String tierContent = tier.content;
@@ -292,7 +290,8 @@ public class TeiToSrt extends TeiConverter{
 		String usage = "Description: TeiToSrt convertit un fichier au format TEI en un fichier au format Srt%nUsage: TeiToSrt [-options] <file." + Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments
-		Utils.processArgs(args, options, usage, Utils.EXT, EXT);
+		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT))
+			System.exit(1);
 		String input = options.input;
 		String output = options.output;
 

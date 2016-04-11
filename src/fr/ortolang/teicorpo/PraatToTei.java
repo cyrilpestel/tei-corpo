@@ -9,7 +9,6 @@ package fr.ortolang.teicorpo;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -18,12 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.w3c.dom.Element;
-
-import fr.ortolang.teicorpo.Annot;
-import fr.ortolang.teicorpo.HierarchicTrans;
-import fr.ortolang.teicorpo.PraatSpecialChars;
 
 /**
  * local temporary structures
@@ -119,8 +112,7 @@ public class PraatToTei {
     private final String escapedOuterQuote = "\"\"\"";
     
     private boolean includeTextTiers = false;
-	private int pointDuration = 1;
-    private String encoding;
+	private String encoding;
     
     private File gridFile;
     private Map<String, String> tierNames;
@@ -166,8 +158,6 @@ public class PraatToTei {
             gridFile = new File(fileName);
         }
         this.includeTextTiers = includeTextTiers;
-        this.pointDuration = pointDuration;
-        
         parse();
     }
     
@@ -187,7 +177,6 @@ public class PraatToTei {
             gridFile = new File(fileName);
         }
         this.includeTextTiers = includeTextTiers;
-        this.pointDuration = pointDuration;
         this.encoding = encoding;
                 
         parse();
@@ -232,7 +221,6 @@ public class PraatToTei {
         this.gridFile = gridFile;
         
         this.includeTextTiers = includeTextTiers;
-        this.pointDuration = pointDuration;
         this.encoding = encoding;
         
         parse();

@@ -3,6 +3,7 @@ package fr.ortolang.teicorpo;
 import java.util.HashSet;
 
 class TierParams {
+	boolean forceEmpty;
 	String input;
 	String output;
 	HashSet<String> doDisplay;
@@ -14,6 +15,7 @@ class TierParams {
 		doDisplay = new HashSet<String>();
 		dontDisplay = new HashSet<String>();
 		level = 0; // all levels
+		forceEmpty = true;
 	}
 	void addDoDisplay(String s) {
 		doDisplay.add(s.toLowerCase());

@@ -3,7 +3,6 @@ package fr.ortolang.teicorpo;
 import java.awt.FlowLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-
 import java.util.HashSet;
 
 import javax.swing.JButton;

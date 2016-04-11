@@ -8,7 +8,6 @@ package fr.ortolang.teicorpo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -742,7 +741,8 @@ public class TeiToTranscriber extends TeiConverter {
 		String usageString = "Description: TeiToTranscriber convertit un fichier au format Tei en un fichier au format Transcriber.%nUsage: TeiToTranscriber [-options] <file"+ Utils.EXT +">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments
-		Utils.processArgs(args, options, usageString, Utils.EXT, EXT);
+		if (!Utils.processArgs(args, options, usageString, Utils.EXT, EXT))
+			System.exit(1);
 		String input = options.input;
 		String output = options.output;
 

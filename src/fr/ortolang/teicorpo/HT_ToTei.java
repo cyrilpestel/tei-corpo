@@ -1,11 +1,9 @@
 package fr.ortolang.teicorpo;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,7 +18,6 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class HT_ToTei{
 
@@ -515,7 +512,7 @@ public class HT_ToTei{
 		ArrayList<Element> annotWithoutStart = new ArrayList<Element>();
 		for(Entry<String, ArrayList<Annot>> entry : ht.hierarchic_representation.entrySet()){
 			String annotType = entry.getKey();
-			String spk = ht.tiersInfo.get(annotType).participant;
+			// String spk = ht.tiersInfo.get(annotType).participant;
 			ArrayList<Annot> annotList = entry.getValue();
 			for(Annot annot : annotList){
 				if (!annot.end.isEmpty()) {
