@@ -22,8 +22,8 @@ public abstract class TeiConverter {
 	 * @param inputName	Nom du fichier à convertir
 	 * @param outputName	Nom du fichier de sortie
 	 */
-	public TeiConverter(String inputName, String outputName){
-		this.tf = new TeiFile(new File(inputName));
+	public TeiConverter(String inputName, String outputName, TierParams options){
+		this.tf = new TeiFile(new File(inputName), options);
 		this.inputName = inputName;
 		this.outputName = outputName;
 	}

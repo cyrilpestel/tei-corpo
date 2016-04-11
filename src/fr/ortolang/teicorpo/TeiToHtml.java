@@ -37,7 +37,7 @@ public class TeiToHtml {
 		sizepage = sp;
 		inputFileName = inputName;
 		File input = new File(inputFileName);
-		tf = new TeiFile(input);
+		tf = new TeiFile(input, null);
 		medialocation = input.getAbsolutePath();
 		mediaName = input.getName().split("\\.")[0];
 

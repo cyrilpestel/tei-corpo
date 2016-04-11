@@ -37,8 +37,8 @@ public class TeiToSrt extends TeiConverter{
 	 * @param inputName	Nom du fichier d'entrée (fichier TEI, a donc l'extenstion .teiml)
 	 * @param outputName	Nom du fichier de sortie (fichier SRT, a donc l'extenson .srt)
 	 */
-	public TeiToSrt(String inputName, String outputName) {
-		super(inputName, outputName);
+	public TeiToSrt(String inputName, String outputName, TierParams optionsTei) {
+		super(inputName, outputName, optionsTei);
 		outputWriter();
 		conversion();
 	}
@@ -288,67 +288,13 @@ public class TeiToSrt extends TeiConverter{
 		return ConventionsToChat.setConv(initial);
 	}
 
-	public static void usage() {
-		System.err.println("Description: TeiToSrt convertit un fichier au format TEI en un fichier au format Srt");
-		System.err.println("Usage: TeiToSrt [-options] <file.teiml>");
-		System.err.println("		:-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension .teiml");
-		System.err.println("		:-o nom du fichier de sortie au format Srt (.srt) ou du repertoire de résultats");
-		System.err.println("			si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée + \"_fromTEIML\", avec l'extension .srt;");
-		System.err.println("			si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockées dans un dossier nommé \"input_results/\"");
-		System.err.println("		:-p participant = affiche ce participant");
-		System.err.println("		:-t tier : affiche ce tier");
-		System.err.println("		    ATTENTION: si un participant ou un tier est spécifié, il faut tous les spécifier sinon les autres ne seront pas imprimés");
-		System.err.println("		:-t = : affiche tous les tiers");
-		System.err.println("		:-a : affiche aussi les participants sans indication temporelle");
-		System.err.println("		    ATTENTION: par défaut, tous les participants sont affichés, aucun des tiers n'est affiché et les participants sans indication temporelle ne sont pas affichés");
-		System.err.println("		:-usage ou -help ou -h : affiche ce message");
-		System.exit(1);
-	}
-
-
 	public static void main(String args[]) throws IOException {
-
-		String input = null;
-		String output = null;
-		// parcours des arguments
-
-		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument\n");
-			usage();
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						i++;
-						input = args[i];
-					} else if (args[i].equals("-o")) {
-						i++;
-						output = args[i];
-					} else if (args[i].equals("-a")) {
-						Params.forceEmpty = true;
-					} else if (args[i].equals("-h") || args[i].equals("-help") || args[i].equals("-usage")) {
-						usage();
-						return;
-					} else if (args[i].equals("-t")) {
-						i++;
-						if (args[i].equals("="))
-							Params.tierDisplay = "";
-						else
-							Params.tierDisplay += args[i] + ";";
-					} else if (args[i].equals("-p")) {
-						if (Params.partDisplay.isEmpty())
-							Params.partDisplay = ";";
-						i++;
-						Params.partDisplay += args[i] + ";";
-					} else {
-						System.err.println("Paramètre inconnu: " + args[i] + "\n");
-						usage();
-					}
-				} catch (Exception e) {
-					usage();
-				}
-			}
-		}
+		String usage = "Description: TeiToSrt convertit un fichier au format TEI en un fichier au format Srt%nUsage: TeiToSrt [-options] <file." + Utils.EXT + ">%n";
+		TierParams options = new TierParams();
+		//Parcours des arguments
+		Utils.processArgs(args, options, usage, Utils.EXT, EXT);
+		String input = options.input;
+		String output = options.output;
 
 		File f = new File (input);
 
@@ -378,7 +324,6 @@ public class TeiToSrt extends TeiConverter{
 			if(outFile.exists()){
 				if(!outFile.isDirectory()){
 					System.out.println("\n Erreur :"+ output + " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					usage();
 					System.exit(1);
 				}
 			}
@@ -389,7 +334,7 @@ public class TeiToSrt extends TeiConverter{
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(".teiml"))){
 					String outputFileName = file.getName().split("\\.")[0] + EXT;
-					TeiToSrt ttc = new TeiToSrt(file.getAbsolutePath(), outputDir+outputFileName);
+					TeiToSrt ttc = new TeiToSrt(file.getAbsolutePath(), outputDir+outputFileName, options);
 					System.out.println(outputDir+outputFileName);
 					ttc.createOutput();
 				}
@@ -415,9 +360,8 @@ public class TeiToSrt extends TeiConverter{
 			if (!(Utils.validFileFormat(input, ".teiml") || !Utils.validFileFormat(output, EXT))) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension .teiml "
 						+ "\nLe fichier de sortie du programme doit avoir l'extension .srt ");
-				usage();
 			}
-			TeiToSrt ttc = new TeiToSrt(new File(input).getAbsolutePath(), output);
+			TeiToSrt ttc = new TeiToSrt(new File(input).getAbsolutePath(), output, options);
 			System.out.println("Reading " + input);
 			ttc.createOutput();
 			System.out.println("New file created " + output);

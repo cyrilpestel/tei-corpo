@@ -1,7 +1,11 @@
 package fr.ortolang.teicorpo;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -9,6 +13,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -536,4 +541,163 @@ public class Utils {
         return null;
     }
 
+    public static List<String> loadTextFile(String filename) throws IOException {
+		List<String> ls = new ArrayList<String>();
+		String line = "";
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader( new InputStreamReader(new FileInputStream(filename)) );
+			while((line = reader.readLine()) != null) {
+				// Traitement du flux de sortie de l'application si besoin est
+				ls.add(line.trim());
+			}
+		}
+		catch (FileNotFoundException fnfe) {
+			System.err.println("Erreur fichier : " + filename + " indisponible");
+			System.exit(1);
+			return null;
+		}
+		catch(IOException ioe) {
+			System.err.println("Erreur sur fichier : " + filename );
+			ioe.printStackTrace();
+			System.exit(1);
+			return null;
+		}
+		finally {
+			if (reader != null) reader.close();
+		}
+		return ls;
+	}
+
+	public static void printUsageMessage(String mess, String ext1, String ext2) {
+		System.err.printf(mess);
+		System.err.println("	     :-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension " + ext1);
+		System.err.println("	     :-o nom du fichier de sortie au format Elan (.eaf) ou du repertoire de résultats");
+		System.err.println("	     	si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension " + ext2);
+		System.err.println("	     	si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockés dans le même dossier que l'entrée.\"");
+		System.err.println("         :-p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.");
+		System.err.println("	     :-n niveau: niveau d'imbrication (1 pour lignes principales)");
+		System.err.println("	     :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
+		System.err.println("	     :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
+		System.err.println("	     :-usage ou -help = affichage ce message");
+		System.exit(1);
+	}
+
+	public static TierParams getTierParams(String fn, TierParams tp) {
+		List<String> ls = null;
+		try {
+			ls = loadTextFile(fn);
+		} catch (IOException e) {
+			System.err.println("Impossible de traiter le fichier: " + fn);
+			return null;
+		}
+		for (int k=0; k<ls.size(); k++) {
+			String l = ls.get(k);
+			String[] p = l.split("\\s+");
+			if (p.length > 0) {
+				if (p[0].equals("-n") || p[0].equals("n")) {
+					if (p.length < 2) {
+						System.out.println("Mauvaise ligne [" + l + "] dans le fichier paramètre: " + fn);
+						return null;
+					}
+					tp.setLevel(Integer.parseInt(p[1]));
+				} else if (p[0].equals("-s") || p[0].equals("s")) {
+					if (p.length < 2) {
+						System.out.println("Mauvaise ligne [" + l + "] dans le fichier paramètre: " + fn);
+						return null;
+					}
+					tp.addDontDisplay(p[1]);
+				} else if (p[0].equals("-a") || p[0].equals("a")) {
+					if (p.length < 2) {
+						System.out.println("Mauvaise ligne [" + l + "] dans le fichier paramètre: " + fn);
+						return null;
+					}
+					tp.addDoDisplay(p[1]);
+				} else {
+					System.out.println("Format inconnu dans le fichier paramètre: " + fn);
+					return null;
+				}
+			}
+		}
+		return tp;
+	}
+
+	public static void processArgs(String[] args, TierParams options, String usage, String ext1, String ext2) {
+		if (args.length == 0) {
+			System.err.println("Vous n'avez spécifié aucun argument\n");
+			Utils.printUsageMessage(usage, ext1, ext2);
+		} else {
+			for (int i = 0; i < args.length; i++) {
+				try {
+					if (args[i].equals("-i")) {
+						i++;
+						continue;
+					} else if (args[i].equals("-o")) {
+						i++;
+						continue;
+					} else if (args[i].equals("-n")) {
+						i++;
+						continue;
+					} else if (args[i].equals("-a")) {
+						i++;
+						continue;
+					} else if (args[i].equals("-s")) {
+						i++;
+						continue;
+					} else if (args[i].equals("-p")) {
+						if (i+1 >= args.length)
+							Utils.printUsageMessage(usage, ext1, ext2);
+						i++;
+						Utils.getTierParams(args[i], options);
+					} else {
+						continue;
+					}
+				} catch (Exception e) {
+					Utils.printUsageMessage(usage, ext1, ext2);
+				}
+			}
+			for (int i = 0; i < args.length; i++) {
+				try {
+					if (args[i].equals("-i")) {
+						if (i+1 >= args.length)
+							Utils.printUsageMessage(usage, ext1, ext2);
+						i++;
+						options.input = args[i];
+					} else if (args[i].equals("-o")) {
+						if (i+1 >= args.length)
+							Utils.printUsageMessage(usage, ext1, ext2);
+						i++;
+						options.output = args[i];
+					} else if (args[i].equals("-n")) {
+						if (i+1 >= args.length)
+							Utils.printUsageMessage(usage, ext1, ext2);
+						i++;
+						try {
+							options.setLevel(Integer.parseInt(args[i]));
+						} catch(Exception e) {
+							System.err.println("Le paramètre -n n'est pas suivi d'un entier.");
+							Utils.printUsageMessage(usage, ext1, ext2);
+						}
+					} else if (args[i].equals("-a")) {
+						if (i+1 >= args.length)
+							Utils.printUsageMessage(usage, ext1, ext2);
+						i++;
+						options.addDoDisplay(args[i]);
+					} else if (args[i].equals("-s")) {
+						if (i+1 >= args.length)
+							Utils.printUsageMessage(usage, ext1, ext2);
+						i++;
+						options.addDontDisplay(args[i]);
+					} else if (args[i].equals("-p")) {
+						i++;
+						continue;
+					} else {
+						Utils.printUsageMessage(usage, ext1, ext2);
+					}
+				} catch (Exception e) {
+					Utils.printUsageMessage(usage, ext1, ext2);
+				}
+			}
+		}
+	}
 }

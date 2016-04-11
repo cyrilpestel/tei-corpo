@@ -45,13 +45,15 @@ public class TeiFile {
 	public HashMap<String, String> timeline = new HashMap<String, String>();
 	//Extension des fichiers TEI
 
+	public TierParams optionsOutput;
 	//Lignes principales de la transcriptions (liste d'utterances)
 	ArrayList<AnnotatedUtterance> mainLines = new ArrayList<AnnotatedUtterance>();
 
 	//Validation du document Tei par la dtd
 	boolean validation = false;
 
-	public TeiFile(File teiFile){
+	public TeiFile(File teiFile, TierParams options){
+		optionsOutput = options;
 		DocumentBuilderFactory factory = null;
 		Element root = null;
 		try{
@@ -621,6 +623,10 @@ public class TeiFile {
 			start = getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "start"));
 			end = getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "end"));
 			speakerCode = Utils.getAttrAnnotationBloc(annotatedU, "who");
+			if (optionsOutput != null) {
+				if (optionsOutput.isDontDisplay(speakerCode)) return;
+				if (!optionsOutput.isDoDisplay(speakerCode)) return;
+			}
 			speakerName = getParticipantName(speakerCode);
 			NodeList annotUElements = annotatedU.getChildNodes();
 			cleanedSpeech = "";
@@ -784,6 +790,11 @@ public class TeiFile {
 					//Ajout des tiers
 					else if(nodeName.equals("spanGrp")){
 						String type = annotUEl.getAttribute("type");
+						if (optionsOutput != null) {
+							if (optionsOutput.level == 1) return;
+							if (optionsOutput.isDontDisplay(type)) return;
+							if (!optionsOutput.isDoDisplay(type)) return;
+						}
 						NodeList spans = annotUEl.getElementsByTagName("span");
 						for (int y = 0 ; y<spans.getLength(); y++){
 							Element span = (Element)spans.item(y);
@@ -1003,8 +1014,8 @@ public class TeiFile {
 	}
 
 	//Main
-	public static void main (String [] args){
-		TeiFile tf = new TeiFile(new File(args[0]));
+	public static void main (String [] args) {
+		TeiFile tf = new TeiFile(new File(args[0]), null);
 		for (Div d : tf.trans.divs){
 			for (AnnotatedUtterance u : d.utterances){
 				u.print();

@@ -38,8 +38,8 @@ public class TeiToClan extends TeiConverter{
 	 * @param inputName	Nom du fichier d'entrée (fichier TEI, a donc l'extenstion .teiml)
 	 * @param outputName	Nom du fichier de sortie (fichier Chat, a donc l'extenson .cha)
 	 */
-	public TeiToClan(String inputName, String outputName) {
-		super(inputName, outputName);	
+	public TeiToClan(String inputName, String outputName, TierParams optionsTei) {
+		super(inputName, outputName, optionsTei);	
 		outputWriter();
 		conversion();
 	}
@@ -513,48 +513,15 @@ public class TeiToClan extends TeiConverter{
 		return date;
 	}
 
-
-	public static void usage() {
-		System.err.println("Description: TeiToChat convertit un fichier au format TEI en un fichier au format Chat");
-		System.err.println("Usage: TeiToChat [-options] <file." + Utils.EXT + ">");
-		System.err.println("		:-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension " + Utils.EXT);
-		System.err.println("		:-o nom du fichier de sortie au format Chat (.cha) ou du repertoire de résultats");
-		System.err.println("			si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension .cha;");
-		System.err.println("			si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockées dans un dossier nommé \"input_results/\"");
-		System.err.println("		:-usage ou -help = affiche ce message");
-		System.exit(1);
-	}
-
-
 	public static void main(String args[]) throws IOException {
-
-		String input = null;
-		String output = null;
-		// parcours des arguments
-
-		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument\n");
-			usage();
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						i++;
-						input = args[i];
-					} else if (args[i].equals("-o")) {
-						i++;
-						output = args[i];
-					} else {
-						usage();
-					}
-				} catch (Exception e) {
-					usage();
-				}
-			}
-		}
+		String usageString =  "Description: TeiToChat convertit un fichier au format TEI en un fichier au format Chat%nUsage: TeiToChat [-options] <file." + Utils.EXT + ">%n";
+		TierParams options = new TierParams();
+		//Parcours des arguments
+		Utils.processArgs(args, options, usageString, Utils.EXT, EXT);
+		String input = options.input;
+		String output = options.output;
 
 		File f = new File (input);
-
 		//Permet d'avoir le nom complet du fichier (chemin absolu, sans raccourcis spéciaux)
 		input = f.getCanonicalPath();
 
@@ -581,7 +548,6 @@ public class TeiToClan extends TeiConverter{
 			if(outFile.exists()){
 				if(!outFile.isDirectory()){
 					System.out.println("\n Erreur :"+ output + " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					usage();
 					System.exit(1);
 				}
 			}
@@ -592,7 +558,7 @@ public class TeiToClan extends TeiConverter{
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(Utils.EXT))){
 					String outputFileName = Utils.basename(file.getName()) + EXT;
-					TeiToClan ttc = new TeiToClan(file.getAbsolutePath(), outputDir+outputFileName);
+					TeiToClan ttc = new TeiToClan(file.getAbsolutePath(), outputDir+outputFileName, options);
 					System.out.println(outputDir+outputFileName);
 					ttc.createOutput();
 				}
@@ -602,9 +568,7 @@ public class TeiToClan extends TeiConverter{
 					main(args);
 				}
 			}
-		}
-
-		else{
+		} else {
 			if (output == null) {
 				output = input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
 			}
@@ -619,15 +583,11 @@ public class TeiToClan extends TeiConverter{
 
 			if (!Utils.validFileFormat(output, EXT)) {
 				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .cha ");
-				usage();
 			}
-			TeiToClan ttc = new TeiToClan(new File(input).getAbsolutePath(), output);
+			TeiToClan ttc = new TeiToClan(new File(input).getAbsolutePath(), output, options);
 			System.out.println("Reading " + input);
 			ttc.createOutput();
 			System.out.println("New file created " + output);
 		}
-
 	}
-
 }
-

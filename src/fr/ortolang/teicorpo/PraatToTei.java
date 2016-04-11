@@ -978,34 +978,6 @@ public class PraatToTei {
 		}
 		return true;
     }
-
-    public static List<String> loadTextFile(String filename) throws IOException {
-		List<String> ls = new ArrayList<String>();
-		String line = "";
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader( new InputStreamReader(new FileInputStream(filename)) );
-			while((line = reader.readLine()) != null) {
-				// Traitement du flux de sortie de l'application si besoin est
-				ls.add(line.trim());
-			}
-		}
-		catch (FileNotFoundException fnfe) {
-			System.err.println("Erreur fichier : " + filename + " indisponible");
-			System.exit(1);
-			return null;
-		}
-		catch(IOException ioe) {
-			System.err.println("Erreur sur fichier : " + filename );
-			ioe.printStackTrace();
-			System.exit(1);
-			return null;
-		}
-		finally {
-			if (reader != null) reader.close();
-		}
-		return ls;
-	}
     
 	public static void usage() {
 		System.err.println("Description: PraatToTei convertit un fichier au format Praaat en un fichier au format TEI");
@@ -1017,12 +989,12 @@ public class PraatToTei {
 		System.err.println("               que le fichier d'entrée, avec l'extension .xml;");
 		System.err.println("            si on donne un repertoire comme input et que cette option n'est pas spécifiée,");
 		System.err.println("               les résultats seront stockées dans le même dossier que l'entrée.");
+		System.err.println("         :-p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.");
 		System.err.println("         :-m nom/adresse du fichier média");
 		System.err.println("         :-e encoding (par défaut detect encoding)");
 		System.err.println("         :-d default UTF8 encoding ");
 		System.err.println("         :-t tiername type parent (describe relations between tiers)");
 		System.err.println("             types autorisés: - assoc incl symbdiv timediv");
-		System.err.println("         :-p fichier_de_parametres: contient les paramètres m, e, d, t, sous leur format ci-dessus, un jeu de paramètre par ligne.");
 		System.err.println("         :-usage ou -help ou -h = affichage de ce message");
 		System.exit(1);
 	}
@@ -1189,7 +1161,7 @@ public class PraatToTei {
 	private static boolean addParams(String fn, ArrayList<DescTier> ldt, PraatParams pr) {
 		List<String> ls = null;
 		try {
-			ls = loadTextFile(fn);
+			ls = Utils.loadTextFile(fn);
 		} catch (IOException e) {
 			System.err.println("Impossible de traiter le fichier: " + fn);
 			return false;

@@ -49,12 +49,12 @@ public class TeiToTranscriber extends TeiConverter {
 	//Extension du fichier de sortie: .trs
 	final static String EXT = ".trs";
 
-	public TeiToTranscriber(String inputName, String outputName, boolean princOnly) {
-		super(inputName, outputName);
+	public TeiToTranscriber(String inputName, String outputName, TierParams optionsTei) {
+		super(inputName, outputName, optionsTei);
 		speakers = null; // name of current speaker for turns
 		section = null; // is a section opened ?
 		oldEndTime = ""; // last end time of a turn
-		noComments = princOnly;
+		if (optionsTei.level == 1) noComments = true;
 		sectionStartSet = false;
 		sectionEndSet = false;
 		shiftNextStart = false;
@@ -737,54 +737,16 @@ public class TeiToTranscriber extends TeiConverter {
 		return date;
 	}*/
 
-	//Usages du programme
-	public static void usage() {
-		System.err.println("Description: TeiToTranscriber convertit un fichier au format Tei en un fichier au format Transcriber");
-		System.err.println("Usage: TeiToTranscriber [-options] <file"+ Utils.EXT +">");
-		System.err.println("	     :-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension " + Utils.EXT);
-		System.err.println("	     :-o nom du fichier de sortie au format Transcriber (.trs ou .xml.trs) ou du repertoire de résultats");
-		System.err.println("	     	si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension .trs;");
-		System.err.println("	     	si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockés dans le même dossier que l'entrée.\"");
-		System.err.println("	     :--princ : lignes principales seulement (pas de commentaires)");
-		System.err.println("	     :-usage ou -help = affichage ce message");
-		System.exit(1);
-	}
-
 	//Programme principal
-
-
 	public static void main(String args[]) throws IOException {
-
-		String input = null;
-		String output = null;
-		boolean princOnly = false;
+		String usageString = "Description: TeiToTranscriber convertit un fichier au format Tei en un fichier au format Transcriber.%nUsage: TeiToTranscriber [-options] <file"+ Utils.EXT +">%n";
+		TierParams options = new TierParams();
 		//Parcours des arguments
-
-		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument\n");
-			usage();
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						i++;
-						input = args[i];
-					} else if (args[i].equals("-o")) {
-						i++;
-						output = args[i];
-					} else if (args[i].equals("--princ")) {
-						princOnly = true;
-					} else {
-						usage();
-					}
-				} catch (Exception e) {
-					usage();
-				}
-			}
-		}
+		Utils.processArgs(args, options, usageString, Utils.EXT, EXT);
+		String input = options.input;
+		String output = options.output;
 
 		File f = new File(input);
-
 		//Permet d'avoir le nom complet du fichier (chemin absolu, sans signes spéciaux(. et .. par ex))
 		input = f.getCanonicalPath();
 
@@ -811,7 +773,6 @@ public class TeiToTranscriber extends TeiConverter {
 			if(outFile.exists()){
 				if(!outFile.isDirectory()){
 					System.out.println("\n Erreur :"+ output + " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					usage();
 					System.exit(1);
 				}
 			}
@@ -822,7 +783,7 @@ public class TeiToTranscriber extends TeiConverter {
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(Utils.EXT))){
 					String outputFileName = file.getName().split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-					TeiToTranscriber ttt = new TeiToTranscriber(file.getAbsolutePath(), outputDir+outputFileName, princOnly);
+					TeiToTranscriber ttt = new TeiToTranscriber(file.getAbsolutePath(), outputDir+outputFileName, options);
 					System.out.println(outputDir+outputFileName);
 					ttt.createOutput();
 				}
@@ -849,9 +810,8 @@ public class TeiToTranscriber extends TeiConverter {
 
 			if (!(Utils.validFileFormat(input, Utils.EXT))) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + Utils.EXT);
-				usage();
 			}
-			TeiToTranscriber ttt = new TeiToTranscriber(new File(input).getAbsolutePath(), output, princOnly);
+			TeiToTranscriber ttt = new TeiToTranscriber(new File(input).getAbsolutePath(), output, options);
 			System.out.println("Reading " + input);
 			ttt.createOutput();
 			System.out.println("New file created " + output);

@@ -49,7 +49,7 @@ public class ConversionUI extends JFrame {
 
 		this.getContentPane().setLayout(null);
 
-		this.setTitle("Conversions (version "+ Utils.versionSoft +") 04/04/16 10:00" + " Version TEI_CORPO: " + Utils.versionTEI);
+		this.setTitle("Conversions (version "+ Utils.versionSoft +") 11/04/2016 10:00" + " Version TEI_CORPO: " + Utils.versionTEI);
 
 		inputFcb = new FormatJCheckBoxes();
 		inputFcb.setVisible(true);
@@ -320,7 +320,7 @@ public class ConversionUI extends JFrame {
 						if(f.equals("chat") && !inputName.endsWith(".cha")){
 							String chatDirName = outputDir + "/";
 							String outputName = chatDirName +inputName.split("\\.")[0] + ".cha";
-							TeiToClan ttc = new TeiToClan(teiFile.getAbsolutePath(), outputName);
+							TeiToClan ttc = new TeiToClan(teiFile.getAbsolutePath(), outputName, null);
 							ttc.createOutput();
 							nbConv ++;
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);
@@ -328,7 +328,7 @@ public class ConversionUI extends JFrame {
 						else if(f.equals("trs") && !(inputName.endsWith(".trs") || inputName.endsWith(".trs.xml"))){
 							String trsDirName = outputDir + "/";
 							String outputName = trsDirName +inputName.split("\\.")[0] + ".trs";
-							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, false);
+							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, null);
 							nbConv++;
 							ttt.createOutput();
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);
@@ -336,7 +336,7 @@ public class ConversionUI extends JFrame {
 						else if(f.equals("eaf") && !(inputName.endsWith(".eaf") )){
 							String eafDirName = outputDir + "/";
 							String outputName = eafDirName +inputName.split("\\.")[0] + ".eaf";
-							TeiToElan tte = new TeiToElan(teiFile.getAbsolutePath(), outputName);
+							TeiToElan tte = new TeiToElan(teiFile.getAbsolutePath(), outputName, null);
 							nbConv ++;
 							tte.createOutput();
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);
@@ -344,7 +344,7 @@ public class ConversionUI extends JFrame {
 						else if(f.equals("textgrid") && !(inputName.toLowerCase().endsWith(".textgrid") )){
 							String praatDirName = outputDir + "/";
 							String outputName = praatDirName +inputName.split("\\.")[0] + ".textgrid";
-							TeiToPraat ttp = new TeiToPraat(teiFile.getAbsolutePath(), outputName);
+							TeiToPraat ttp = new TeiToPraat(teiFile.getAbsolutePath(), outputName, null);
 							nbConv ++;
 							ttp.createOutput();
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);

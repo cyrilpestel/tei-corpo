@@ -69,7 +69,7 @@ public class TeiToPraat {
 	boolean validation = false;
 
 	//Constructeur à partir du nom du fichier TEI et du nom du fichier de sortie au format Elan
-	public TeiToPraat(String inputName, String outputName) {
+	public TeiToPraat(String inputName, String outputName, TierParams optionsTei) {
 		DocumentBuilderFactory factory = null;
 		try{
 			File teiFile = new File(inputName);
@@ -105,7 +105,7 @@ public class TeiToPraat {
 			        return null;
 			    }
 			});
-			ttp = new TeiToPartition(xpath, teiDoc);
+			ttp = new TeiToPartition(xpath, teiDoc, optionsTei);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -195,41 +195,14 @@ public class TeiToPraat {
 		out.close();
 	}
 
-	public static void usage() {
-		System.err.println("Description: TeiToPraat convertit un fichier au format Tei en un fichier au format Praat");
-		System.err.println("Usage: TeiToPraat [-options] <file" + Utils.EXT + ">");
-		System.err.println("	     :-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension " + Utils.EXT);
-		System.err.println("	     :-o nom du fichier de sortie au format Praat (.textgrid) ou du repertoire de résultats");
-		System.err.println("	     	si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension .textgrid;");
-		System.err.println("	     	si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockés dans le même dossier que l'entrée.\"");
-		System.err.println("	     :-usage ou -help = affichage ce message");
-		System.exit(1);
-	}	
-
 	public static void main(String args[]) throws IOException {
-		String input = null;
-		String output = null;
+		String usage = "Description: TeiToPraat convertit un fichier au format Tei en un fichier au format Praat%nUsage: TeiToPraat [-options] <file" + Utils.EXT + ">%n";
+		TierParams options = new TierParams();
 		//Parcours des arguments
-		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument\n");
-			usage();
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						i++;
-						input = args[i];
-					} else if (args[i].equals("-o")) {
-						i++;
-						output = args[i];
-					} else {
-						usage();
-					}
-				} catch (Exception e) {
-					usage();
-				}
-			}
-		}
+		Utils.processArgs(args, options, usage, Utils.EXT, EXT);
+		String input = options.input;
+		String output = options.output;
+
 		File f = new File(input);
 		//Permet d'avoir le nom complet du fichier (chemin absolu, sans signes spéciaux(. et .. par ex))
 		input = f.getCanonicalPath();
@@ -255,7 +228,6 @@ public class TeiToPraat {
 			if(outFile.exists()){
 				if(!outFile.isDirectory()){
 					System.out.println("\n Erreur :"+ output + " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					usage();
 					System.exit(1);
 				}
 			}
@@ -264,7 +236,7 @@ public class TeiToPraat {
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(Utils.EXT))){
 					String outputFileName = file.getName().split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-					TeiToPraat tte = new TeiToPraat(file.getAbsolutePath(), outputDir+outputFileName);
+					TeiToPraat tte = new TeiToPraat(file.getAbsolutePath(), outputDir+outputFileName, options);
 					System.out.println(outputDir+outputFileName);
 					tte.createOutput();
 				}
@@ -290,9 +262,8 @@ public class TeiToPraat {
 
 			if (!Utils.validFileFormat(input, Utils.EXT)) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension" + Utils.EXT);
-				usage();
 			}
-			TeiToPraat tte = new TeiToPraat(new File(input).getAbsolutePath(), output);
+			TeiToPraat tte = new TeiToPraat(new File(input).getAbsolutePath(), output, options);
 			System.out.println("Reading " + input);
 			tte.createOutput();
 			System.out.println("New file created " + output);

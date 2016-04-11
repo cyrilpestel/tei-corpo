@@ -33,8 +33,10 @@ public class TeiToPartition {
 
 	Document teiDoc;
 	XPath teiXPath;
+	public TierParams optionsOutput;
 	
-	TeiToPartition(XPath xpath, Document tei) {
+	TeiToPartition(XPath xpath, Document tei, TierParams optionsTei) {
+		optionsOutput = optionsTei;
 		teiDoc = tei;
 		teiXPath = xpath;
 		// récupérer la timeline
@@ -74,11 +76,11 @@ public class TeiToPartition {
 							timeline.put(id, Double.parseDouble(val));
 						else if (!val.isEmpty()) {
 							double vald;
-								vald = Double.parseDouble(val);
-								vald /= ratio;
-								timeline.put(id, vald);
-								if (vald > xmaxTime)
-									xmaxTime = vald;
+							vald = Double.parseDouble(val);
+							vald /= ratio;
+							timeline.put(id, vald);
+							if (vald > xmaxTime)
+								xmaxTime = vald;
 						}
 					} else if (when.hasAttribute("absolute")) {
 						String id = when.getAttribute("xml:id");
@@ -137,6 +139,10 @@ public class TeiToPartition {
 			NodeList annotGrpElmts = annotGrp.getChildNodes();
 			String name = annotGrp.getAttribute("who");
 			if (!Utils.isNotEmptyOrNull(name)) continue; // this is a note and not an utterance
+			if (optionsOutput != null) {
+				if (optionsOutput.isDontDisplay(name)) continue;
+				if (!optionsOutput.isDoDisplay(name)) continue;
+			}
 			String start = Utils.refID(annotGrp.getAttribute("start"));
 			start = Double.toString(timeline.get(start));
 			String end = Utils.refID(annotGrp.getAttribute("end"));
@@ -185,6 +191,11 @@ public class TeiToPartition {
 	//Traitement des spanGrp pour ajout dans la structure Map
 	public void spanGrpCase(TreeMap<String, ArrayList<Annot>> tiers, Element spanGrp, String id, String name, String timeref, String start, String end) {
 		String typeSG = spanGrp.getAttribute("type");
+		if (optionsOutput != null) {
+			if (optionsOutput.level == 1) return;
+			if (optionsOutput.isDontDisplay(typeSG)) return;
+			if (!optionsOutput.isDoDisplay(typeSG)) return;
+		}
 		NodeList spans = spanGrp.getChildNodes();
 		String previousId = "";
 		if (spans == null) return;
