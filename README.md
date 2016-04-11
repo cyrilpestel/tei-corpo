@@ -16,13 +16,13 @@ L'outil est à utiliser directement depuis le Finder ou Bureau (faire double cli
 L'outil est utilisable en ligne de commande. Les commandes à exécuter sont :
 
   * Chat -> TEI_CORPO :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.ClanToTei [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.ClanToTei [paramètres]
   * Transcriber -> TEI_CORPO :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.TranscriberToTei [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.TranscriberToTei [paramètres]
   * Praat -> TEI_CORPO :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.PraatToTei [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.PraatToTei [paramètres]
   * Elan -> TEI_CORPO :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.ElanToTei [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.ElanToTei [paramètres]
 
 Toutes les commandes utilisent les mêmes paramètres d'entrée sortie:
   -i nom du fichier ou répertoire où se trouvent les fichiers à convertir
@@ -40,13 +40,13 @@ La conversion depuis Praat dispose de paramètres supplémentaires
 
 
   * TEI_CORPO -> Clan :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.TeiToClan [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.TeiToClan [paramètres]
   * TEI_CORPO -> Transcriber :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.TeiToTranscriber [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.TeiToTranscriber [paramètres]
   * TEI_CORPO -> Elan :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.TeiToElan [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.TeiToElan [paramètres]
   * TEI_CORPO -> Praat :
-      * ''java -cp conversions.jar fr.ortolang.teicorpo.TeiToPraat [paramètres]''
+      * java -cp conversions.jar fr.ortolang.teicorpo.TeiToPraat [paramètres]
 
 Toutes les commandes de conversion inverse utilisent les mêmes paramètres, en plus des paramètres -i et -o
   * -p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.
