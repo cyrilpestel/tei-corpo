@@ -988,6 +988,8 @@ public class PraatToTei {
 	}
 
 	public static void main (String[] args) throws Exception{
+		Utils.printVersionMessage();
+
 		String input = null;
 		String output = null;
 		PraatParams prs = new PraatParams();

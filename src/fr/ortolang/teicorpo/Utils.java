@@ -42,8 +42,8 @@ public class Utils {
 	public static String ANNOTATIONBLOC = "annotationBloc";
 	public static String versionTEI = "0.9";
 	public static String versionSoft = "1.0"; // full version with Elan, Clan, Transcriber and Praat
-	public static String TEI_ALL = "http://ct3.ortolang.fr/tei_corpo/tei_all.dtd";
-	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei_corpo/tei_corpo.dtd";
+	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
+	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
 	public static boolean teiStylePure = false;
 
 	public static String teiCorpoDtd() {
@@ -188,7 +188,12 @@ public class Utils {
 	    BigDecimal bd = new BigDecimal(value);
 	    BigDecimal bdintpart = new BigDecimal(intpart);
 	    bd = bd.setScale(precision, RoundingMode.HALF_UP);
-	    return bdintpart.toString() + "." + (bd.subtract(bdintpart)).toString().substring(2);
+	    BigDecimal bdb = bd.subtract(bdintpart);
+	    // System.out.println(bd + " " + bdb);
+	    if (bdb.compareTo(new BigDecimal("0E-15")) <= 0)
+		    return bdintpart.toString() + ".0";
+	    bdb = bdb.setScale(precision, RoundingMode.HALF_UP);
+	    return bdintpart.toString() + "." + bdb.toString().substring(2);
 	}
 
 	public static String fullbasename(String fileName) {
@@ -335,7 +340,7 @@ public class Utils {
 					return file.getName();
 			}
 		}
-		return fn;
+		return "";
 	}
 	
 	public static String findMediaType(String fn) {
@@ -566,6 +571,10 @@ public class Utils {
 		return ls;
 	}
 
+	public static void printVersionMessage() {
+    	System.out.println("Conversions (version "+ Utils.versionSoft +") 11/04/2016 10:00" + " Version TEI_CORPO: " + Utils.versionTEI + "\n");
+	}
+	
 	public static void printUsageMessage(String mess, String ext1, String ext2) {
 		System.err.printf(mess);
 		System.err.println("	     :-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension " + ext1);

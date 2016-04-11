@@ -72,6 +72,7 @@ public class TranscriberTurn {
 	}
 
 	public void addEvent(String v1, String v2, String v3) {
+		// econtent, etype, eextent
 		TurnData td = new TurnData();
 		td.type = TranscriberTurn.Event;
 		td.data1 = v1;
@@ -130,7 +131,9 @@ public class TranscriberTurn {
 
 	public Element toElement(Document doc) {
 		Element t = doc.createElement("Turn");
-		t.setAttribute("speaker", speakersToString());
+		String spk = speakersToString();
+		if (!spk.isEmpty())
+			t.setAttribute("speaker", spk);
 		if (!startTime.isEmpty())
 			t.setAttribute("startTime", startTime);
 		if (!endTime.isEmpty())
@@ -157,9 +160,9 @@ public class TranscriberTurn {
 				t.appendChild(e);
 			} else if (td.type.equals(TranscriberTurn.Event)) {
 				Element e = doc.createElement("Event");
-				e.setAttribute("type", td.data1);
-				e.setAttribute("extend", td.data2);
-				e.setAttribute("desc", td.data3);
+				e.setAttribute("desc", td.data1);
+				e.setAttribute("type", td.data2);
+				e.setAttribute("extent", td.data3);
 				t.appendChild(e);
 			} else if (td.type.equals(TranscriberTurn.Background)) {
 				Element e = doc.createElement("Background");

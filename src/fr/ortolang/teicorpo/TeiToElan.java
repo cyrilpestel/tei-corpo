@@ -509,6 +509,8 @@ public class TeiToElan {
 	}
 
 	public static void main(String args[]) throws IOException {
+		Utils.printVersionMessage();
+
 		String usage = "Description: TeiToElan convertit un fichier au format Tei en un fichier au format Elan%nUsage: TeiToElan [-options] <file" + Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments

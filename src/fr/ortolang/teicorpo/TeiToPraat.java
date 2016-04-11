@@ -173,6 +173,8 @@ public class TeiToPraat {
 	}
 
 	public static void main(String args[]) throws IOException {
+		Utils.printVersionMessage();
+
 		String usage = "Description: TeiToPraat convertit un fichier au format Tei en un fichier au format Praat%nUsage: TeiToPraat [-options] <file" + Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments

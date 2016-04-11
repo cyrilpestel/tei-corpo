@@ -120,13 +120,14 @@ public class TeiFile {
 				String tms = when.getAttribute("interval");
 				double vald = Double.parseDouble(tms);
 				vald *= ratio;
-				tms = Utils.printDouble(vald, 15);
+				tms = Utils.printDouble(vald, 10);
+				//System.out.println(tms + " --> " + ntms);
 				timeline.put(when.getAttribute("xml:id"), tms);
 			} else if (when.hasAttribute("absolute")) {
 				String tms = when.getAttribute("absolute");
 				double vald = Double.parseDouble(tms);
 				vald *= ratio;
-				tms = Utils.printDouble(vald, 15);
+				tms = Utils.printDouble(vald, 10);
 				timeline.put(when.getAttribute("xml:id"), tms);
 			}
 		}

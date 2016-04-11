@@ -2,7 +2,6 @@
 <ANNOTATION_DOCUMENT AUTHOR="" DATE="2016-04-04T12:53:49+01:00" FORMAT="2.8" VERSION="2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.mpi.nl/tools/elan/EAFv2.8.xsd">
     <HEADER MEDIA_FILE="" TIME_UNITS="milliseconds">
         <MEDIA_DESCRIPTOR MEDIA_URL="file:///corpusformat/elan/testok/test3-elan.wav" MIME_TYPE="audio/x-wav" RELATIVE_MEDIA_URL="./test3-elan.wav"/>
-        <PROPERTY NAME="URN">urn:nl-mpi-tools-elan-eaf:4c6ad320-bd41-4c2d-93ff-59de03812443</PROPERTY>
         <PROPERTY NAME="lastUsedAnnotationId">138</PROPERTY>
     </HEADER>
     <TIME_ORDER>

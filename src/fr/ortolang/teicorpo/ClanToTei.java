@@ -1547,6 +1547,8 @@ public class ClanToTei {
 	}
 
 	public static void main(String[] args) throws Exception {
+		Utils.printVersionMessage();
+		
 		String input = null;
 		String output = null;
 		String options = "";

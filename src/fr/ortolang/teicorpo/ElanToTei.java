@@ -46,6 +46,7 @@ public class ElanToTei {
 	 * @throws IOException 
 	 */
 	public static void main(String args[]) throws IOException {
+		Utils.printVersionMessage();
 
 		String input = null;
 		String output = null;

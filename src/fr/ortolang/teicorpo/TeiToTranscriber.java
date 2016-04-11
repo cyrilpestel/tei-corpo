@@ -738,6 +738,8 @@ public class TeiToTranscriber extends TeiConverter {
 
 	//Programme principal
 	public static void main(String args[]) throws IOException {
+		Utils.printVersionMessage();
+
 		String usageString = "Description: TeiToTranscriber convertit un fichier au format Tei en un fichier au format Transcriber.%nUsage: TeiToTranscriber [-options] <file"+ Utils.EXT +">%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments

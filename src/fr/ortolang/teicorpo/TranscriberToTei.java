@@ -1072,6 +1072,7 @@ public class TranscriberToTei {
 	 * @throws IOException 
 	 */
 	public static void main(String args[]) throws IOException {
+		Utils.printVersionMessage();
 
 		boolean dtdValidation = false;
 		String input = null;
