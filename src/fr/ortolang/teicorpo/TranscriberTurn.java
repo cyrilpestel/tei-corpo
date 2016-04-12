@@ -1,6 +1,7 @@
 package fr.ortolang.teicorpo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -115,7 +116,7 @@ public class TranscriberTurn {
 		if (p != -1)
 			return;
 		speaker.add(s);
-		speaker.sort(null);
+		Collections.sort(speaker);
 	}
 
 	/*

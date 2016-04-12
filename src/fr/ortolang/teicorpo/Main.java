@@ -63,7 +63,7 @@ public class Main {
 						if(f.equals("chat") && !inputName.endsWith(".cha")){
 							String chatDirName = outputDir + "/chat/";
 							String outputName = chatDirName +inputName.split("\\.")[0] + ".cha";
-							TeiToClan ttc = new TeiToClan(teiFile.getAbsolutePath(), outputName);
+							TeiToClan ttc = new TeiToClan(teiFile.getAbsolutePath(), outputName, null);
 							ttc.createOutput();
 							nbConv ++;
 							System.out.printf("New %s file created from %s to " + outputName + "\n", f.toUpperCase(), inputAbsPath);
@@ -71,7 +71,7 @@ public class Main {
 						else if(f.equals("trs") && !(inputName.endsWith(".trs") || inputName.endsWith(".trs.xml"))){
 							String trsDirName = outputDir + "/trs/";
 							String outputName = trsDirName +inputName.split("\\.")[0] + ".trs";
-							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, false);
+							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, null);
 							nbConv ++;
 							ttt.createOutput();
 							System.out.printf("New %s file created from %s to " + outputName + "\n", f.toUpperCase(), inputAbsPath);						
