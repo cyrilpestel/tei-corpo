@@ -31,7 +31,7 @@ Toutes les commandes utilisent les mêmes paramètres d'entrée sortie:
 Si l'option -o n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée, avec une autre extension, et sera stocké au même endroit
 
 La conversion depuis Praat dispose de paramètres supplémentaires
-  * -p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.
+  * -p fichier_de_paramètres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.
   * -m nom/adresse du fichier média
   * -e encoding (par défaut detect encoding)
   * -d default UTF8 encoding
@@ -49,7 +49,7 @@ La conversion depuis Praat dispose de paramètres supplémentaires
       * java -cp conversions.jar fr.ortolang.teicorpo.TeiToPraat [paramètres]
 
 Toutes les commandes de conversion inverse utilisent les mêmes paramètres, en plus des paramètres -i et -o
-  * -p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.
+  * -p fichier_de_paramètres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.
   * -n niveau: niveau d'imbrication (1 pour lignes principales)
   * -a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)
   * -s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)
