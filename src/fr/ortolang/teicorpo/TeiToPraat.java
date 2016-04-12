@@ -27,7 +27,7 @@ public class TeiToPraat {
 	//Permet d'écrire le fichier de sortie
 	private PrintWriter out;
 	//Encodage du fichier de sortie
-	final static String outputEncoding = "UTF-16";
+	final static String outputEncoding = "UTF-8";
 	//Extension du fichier de sortie: .textgrid
 	final static String EXT = ".textgrid";
 
