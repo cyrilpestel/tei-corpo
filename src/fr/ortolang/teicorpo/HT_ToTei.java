@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -42,6 +43,7 @@ public class HT_ToTei{
         }
     };
     Map<String, String> newTimeline =  new TreeMap<String, String>(timeCompare);
+    HashMap<String, String> newTimelineInverse =  new HashMap<String, String>();
 	int lastIdTimeline = 0; // last id included in the map
 	
 	String timelineValueOf(String time) {
@@ -59,10 +61,17 @@ public class HT_ToTei{
 			lastIdTimeline++;
 			nt = "T" + lastIdTimeline;
 			newTimeline.put(time, nt);
+			newTimelineInverse.put(nt, time);
 			return nt;
 		}
 	}
 	
+	String timelineTimeOf(String ref) {
+		if (ref.startsWith("#"))
+			return newTimelineInverse.get(ref.substring(1));
+		else
+			return newTimelineInverse.get(ref);
+	}
 	/**Liste des types de tiers présents dans le corpus*/
 	HashSet<String> tiersNames;
 
@@ -512,6 +521,7 @@ public class HT_ToTei{
 		ArrayList<Element> annotWithoutStart = new ArrayList<Element>();
 		for(Entry<String, ArrayList<Annot>> entry : ht.hierarchic_representation.entrySet()){
 			String annotType = entry.getKey();
+			//System.out.println("annotType: "+annotType);
 			// String spk = ht.tiersInfo.get(annotType).participant;
 			ArrayList<Annot> annotList = entry.getValue();
 			for(Annot annot : annotList){
@@ -537,6 +547,7 @@ public class HT_ToTei{
 					Utils.setAttrAnnotationBloc(docTEI, annotUEl, "xml:id", "au" + idNb);
 					idNb++;
 				}
+				// System.out.println("annot: "+annotType+ " "+annot.id + " " +annot.name);
 				Utils.setAttrAnnotationBloc(docTEI, annotUEl, "who", annotType);
 				//buildU//
 				Element u = docTEI.createElement("u");
@@ -557,6 +568,7 @@ public class HT_ToTei{
 		sortNodes();
 		annotatedUElements.addAll(0,annotWithoutStart);
 		for(Element annotU : annotatedUElements){
+			//System.out.printf("%s %s %s%n", annotU.getAttribute("who"), timelineTimeOf(annotU.getAttribute("start")), timelineTimeOf(annotU.getAttribute("end")));
 			mainDiv.appendChild(annotU);
 		}
 
@@ -622,7 +634,7 @@ public class HT_ToTei{
 	}
 
 	public void sortNodes(){
-		CompareAnnotU ca = new CompareAnnotU(ht);
+		CompareAnnotU ca = new CompareAnnotU(this);
 		Collections.sort(annotatedUElements, ca);
 	}
 

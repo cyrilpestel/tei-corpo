@@ -847,17 +847,17 @@ public class PraatToTei {
 			File fnb = new File(bn + ".paramtei");
 			if (fnb.exists()) {
 				if (ldt.size()>0) {
-					System.out.println("Attention paramètres commande peut-être ignorés pour " + inputfile);
+					System.out.println("Attention paramÃ¨tres commande peut-Ãªtre ignorÃ©s pour " + inputfile);
 				}
-				System.out.println("Utilisation du fichier paramètres " + fnb.toString());
+				System.out.println("Utilisation du fichier paramÃ¨tres " + fnb.toString());
 				PraatParams prs = new PraatParams();
 				prs.encoding = encoding;
 				prs.mediaName = mediaName;
 				if (addParams(fnb.toString(), ldt, prs) == false)
-					System.err.println("Erreur de traitement du fichier paramètres: " + fnb.toString());
+					System.err.println("Erreur de traitement du fichier paramÃ¨tres: " + fnb.toString());
 			}
 			PraatToTei ptg = new PraatToTei(inputfile, true, 100, encoding);
-			System.out.println("Fichier " + inputfile + " Encoding: " + (encoding!=null?encoding:"par défaut"));
+			System.out.println("Fichier " + inputfile + " Encoding: " + (encoding!=null?encoding:"par dÃ©faut"));
 			/*
 			 * construire un hierarchic trans
 			 */
@@ -927,7 +927,7 @@ public class PraatToTei {
 			 * not necessary will be done later when printing the file
 			
 			int praatid = 0;
-			//unité timeline
+			//unitÃ© timeline
 			ht.metaInf.time_units = "s";
 			for (Map.Entry<String, ArrayList<Annot>> element : ptg.annotationMap.entrySet()) {
 				// System.out.println(element.getKey() + " :- ");
@@ -970,19 +970,19 @@ public class PraatToTei {
 	public static void usage() {
 		System.err.println("Description: PraatToTei convertit un fichier au format Praaat en un fichier au format TEI");
 		System.err.println("Usage: PraatToTei [-options] <file>" + EXT);
-		System.err.println("         :-i nom du fichier ou repertoire où se trouvent les fichiers Praat à convertir");
+		System.err.println("         :-i nom du fichier ou repertoire oÃ¹ se trouvent les fichiers Praat Ã  convertir");
 		System.err.println("            (les fichiers ont pour extension " + EXT + ")");
-		System.err.println("         :-o nom du fichier de sortie au format TEI (.xml) ou du repertoire de résultats");
-		System.err.println("            si cette option n'est pas spécifié, le fichier de sortie aura le même nom");
-		System.err.println("               que le fichier d'entrée, avec l'extension .xml;");
-		System.err.println("            si on donne un repertoire comme input et que cette option n'est pas spécifiée,");
-		System.err.println("               les résultats seront stockées dans le même dossier que l'entrée.");
-		System.err.println("         :-p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.");
-		System.err.println("         :-m nom/adresse du fichier média");
-		System.err.println("         :-e encoding (par défaut detect encoding)");
+		System.err.println("         :-o nom du fichier de sortie au format TEI (.xml) ou du repertoire de rÃ©sultats");
+		System.err.println("            si cette option n'est pas spÃ©cifiÃ©, le fichier de sortie aura le mÃªme nom");
+		System.err.println("               que le fichier d'entrÃ©e, avec l'extension .xml;");
+		System.err.println("            si on donne un repertoire comme input et que cette option n'est pas spÃ©cifiÃ©e,");
+		System.err.println("               les rÃ©sultats seront stockÃ©es dans le mÃªme dossier que l'entrÃ©e.");
+		System.err.println("         :-p fichier_de_parametres: contient les paramÃ¨tres sous leur format ci-dessous, un jeu de paramÃ¨tre par ligne.");
+		System.err.println("         :-m nom/adresse du fichier mÃ©dia");
+		System.err.println("         :-e encoding (par dÃ©faut detect encoding)");
 		System.err.println("         :-d default UTF8 encoding ");
 		System.err.println("         :-t tiername type parent (describe relations between tiers)");
-		System.err.println("             types autorisés: - assoc incl symbdiv timediv");
+		System.err.println("             types autorisÃ©s: - assoc incl symbdiv timediv");
 		System.err.println("         :-usage ou -help ou -h = affichage de ce message");
 		System.exit(1);
 	}
@@ -997,7 +997,7 @@ public class PraatToTei {
 		ArrayList<DescTier> ldt = new ArrayList<DescTier>();
 		// parcours des arguments
 		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument.\n");
+			System.err.println("Vous n'avez spÃ©cifiÃ© aucun argument.\n");
 			usage();
 		} else {
 			for (int i = 0; i < args.length; i++) {
@@ -1078,7 +1078,7 @@ public class PraatToTei {
 			File outFile = new File(output);
 			if(outFile.exists()){
 				if(!outFile.isDirectory()){
-					System.out.println("\n Erreur :"+ output + " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
+					System.out.println("\n Erreur :"+ output + " est un fichier, vous devez spÃ©cifier un nom de dossier pour le stockage des rÃ©sultats. \n");
 					usage();
 					System.exit(1);
 				}
@@ -1091,7 +1091,7 @@ public class PraatToTei {
 
 			for (File file : files){
 				if (file.getName().toLowerCase().endsWith(Utils.EXT_PUBLISH + EXT)) {
-					System.out.printf("-- ignoré: %s%n", file.getName());
+					System.out.printf("-- ignorÃ©: %s%n", file.getName());
 				} else if(file.getName().toLowerCase().endsWith(EXT)){
 //					System.out.printf("XX: %s%n", file.getName());
 					String outputFileName = Utils.basename(file) + Utils.EXT;
@@ -1125,7 +1125,7 @@ public class PraatToTei {
 			}
 
 			if (!(Utils.validFileFormat(input, EXT))) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + EXT);
+				System.err.println("Le fichier d'entrÃ©e du programme doit avoir l'extension " + EXT);
 				usage();
 			}
 
@@ -1181,7 +1181,7 @@ public class PraatToTei {
 					d.parent = p[3];
 					ldt.add(d);
 				} else {
-					System.out.println("Format inconnu dans le fichier paramètre: " + fn);
+					System.out.println("Format inconnu dans le fichier paramÃ¨tre: " + fn);
 					return false;
 				}
 			}
