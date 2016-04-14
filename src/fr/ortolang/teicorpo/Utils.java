@@ -573,7 +573,7 @@ public class Utils {
 	}
 
 	public static void printVersionMessage() {
-    	System.out.println("Conversions (version "+ Utils.versionSoft +") 11/04/2016 10:00" + " Version TEI_CORPO: " + Utils.versionTEI + "\n");
+    	System.out.println("Conversions (version "+ Utils.versionSoft +") 11/04/2016 10:00" + " Version TEI_CORPO: " + Utils.versionTEI);
 	}
 	
 	public static void printUsageMessage(String mess, String ext1, String ext2) {

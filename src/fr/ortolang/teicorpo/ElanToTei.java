@@ -45,9 +45,12 @@ public class ElanToTei {
 	 *            Liste des aruments du programme.
 	 * @throws IOException 
 	 */
-	public static void main(String args[]) throws IOException {
+	public static void main(String[] args) throws Exception {
 		Utils.printVersionMessage();
+		submain(args);
+	}
 
+	public static void submain(String[] args) throws Exception {
 		String input = null;
 		String output = null;
 		// parcours des arguments
@@ -126,7 +129,7 @@ public class ElanToTei {
 				else if(file.isDirectory()){
 					args[0] = "-i";
 					args[1] = file.getAbsolutePath();
-					main(args);
+					submain(args);
 				}
 			}
 		}

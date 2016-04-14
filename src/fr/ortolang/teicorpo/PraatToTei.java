@@ -1009,7 +1009,10 @@ public class PraatToTei {
 
 	public static void main(String[] args) throws Exception {
 		Utils.printVersionMessage();
+		submain(args);
+	}
 
+	public static void submain(String[] args) throws Exception {
 		String input = null;
 		String output = null;
 		PraatParams prs = new PraatParams();
@@ -1138,7 +1141,7 @@ public class PraatToTei {
 				} else if (file.isDirectory()) {
 					args[0] = "-i";
 					args[1] = file.getAbsolutePath();
-					main(args);
+					submain(args);
 				}
 			}
 		} else {
@@ -1157,7 +1160,7 @@ public class PraatToTei {
 				usage(stop);
 			}
 
-			System.out.println("Reading " + input);
+			System.out.println("Lecture de " + input);
 			try {
 				if (prs.detectEncoding) {
 					prs.encoding = EncodingDetector.detect(input);

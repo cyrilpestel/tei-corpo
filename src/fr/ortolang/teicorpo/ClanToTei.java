@@ -496,7 +496,7 @@ public class ClanToTei {
 		int size = cf.nbMainLines(), i;
 		// skip initial header
 		for (i = 0; i < size; i++) {
-			if (cf.ml(i).startsWith("*") || cf.ml(i).startsWith("@g") || cf.ml(i).startsWith("@bg")) {
+			if (cf.ml(i).startsWith("*") || cf.ml(i).toLowerCase().startsWith("@g") || cf.ml(i).toLowerCase().startsWith("@bg")) {
 				break;
 			}
 		}
@@ -1548,7 +1548,10 @@ public class ClanToTei {
 
 	public static void main(String[] args) throws Exception {
 		Utils.printVersionMessage();
-		
+		submain(args);
+	}
+
+	public static void submain(String[] args) throws Exception {
 		String input = null;
 		String output = null;
 		String options = "";
@@ -1639,7 +1642,7 @@ public class ClanToTei {
 				} else if (file.isDirectory()) {
 					args[0] = "-i";
 					args[1] = file.getAbsolutePath();
-					main(args);
+					submain(args);
 				}
 			}
 		} else {
@@ -1658,7 +1661,7 @@ public class ClanToTei {
 				usage();
 			}
 
-			System.out.println("Reading " + input);
+			System.out.println("Lecture de " + input);
 			ClanToTei tr = new ClanToTei(input, options, nospreadtime);
 			Utils.createFile(output, tr.docTEI);
 			System.out.println("New file TEI created: " + output);

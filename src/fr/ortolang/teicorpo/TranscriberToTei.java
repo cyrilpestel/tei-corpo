@@ -1071,9 +1071,12 @@ public class TranscriberToTei {
 	 *            Liste des aruments du programme.
 	 * @throws IOException 
 	 */
-	public static void main(String args[]) throws IOException {
+	public static void main(String[] args) throws Exception {
 		Utils.printVersionMessage();
+		submain(args);
+	}
 
+	public static void submain(String[] args) throws Exception {
 		boolean dtdValidation = false;
 		String input = null;
 		String output = null;
@@ -1150,7 +1153,7 @@ public class TranscriberToTei {
 				else if(file.isDirectory()){
 					args[0] = "-i";
 					args[1] = file.getAbsolutePath();
-					main(args);
+					submain(args);
 				}
 			}
 		}
@@ -1174,7 +1177,7 @@ public class TranscriberToTei {
 			}
 			
 			TranscriberToTei tr = new TranscriberToTei(new File(input), dtdValidation);
-			System.out.println("Reading " + input);
+			System.out.println("Lecture de " + input);
 			Utils.createFile(output, tr.docTEI);
 			System.out.println("New file created " + output);
 		}
