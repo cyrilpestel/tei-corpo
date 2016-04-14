@@ -1142,7 +1142,6 @@ public class PraatToTei {
 				}
 			}
 		} else {
-			System.out.println("Ouput: "+output);
 			if (output == null) {
 				output = Utils.fullbasename(input) + Utils.EXT;
 			} else if (new File(output).isDirectory()) {
@@ -1157,7 +1156,6 @@ public class PraatToTei {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + EXT);
 				usage(stop);
 			}
-			System.out.println("Ouput: "+output);
 
 			System.out.println("Reading " + input);
 			try {
