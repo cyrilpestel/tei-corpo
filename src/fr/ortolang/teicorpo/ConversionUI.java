@@ -27,7 +27,7 @@ import javax.swing.JTextField;
 
 public class ConversionUI extends JFrame {
 
-	File [] inputFileNames;
+	File[] inputFileNames;
 	File output;
 	JButton exec;
 	JButton stop;
@@ -41,15 +41,15 @@ public class ConversionUI extends JFrame {
 	String argumentsOutput = null;
 	TierParams options;
 
-	static int nbConv = 0;	
+	static int nbConv = 0;
 	static final long serialVersionUID = 1L;
 
-
-	public ConversionUI () throws URISyntaxException {
+	public ConversionUI() throws URISyntaxException {
 
 		this.getContentPane().setLayout(null);
 
-		this.setTitle("Conversions (version "+ Utils.versionSoft +") 13/04/2016 10:00" + " Version TEI_CORPO: " + Utils.versionTEI);
+		this.setTitle("Conversions (version " + Utils.versionSoft + ") 13/04/2016 10:00" + " Version TEI_CORPO: "
+				+ Utils.versionTEI);
 
 		inputFcb = new FormatJCheckBoxes();
 		inputFcb.setVisible(true);
@@ -88,7 +88,7 @@ public class ConversionUI extends JFrame {
 		bf2.field.setEditable(false);
 
 		bf1.button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e){
+			public void actionPerformed(ActionEvent e) {
 				Chooser ch = new Chooser(true);
 				bf1.field.setText(bf1.listFilesToString(ch.fileNames));
 				inputFileNames = ch.fileNames;
@@ -96,7 +96,7 @@ public class ConversionUI extends JFrame {
 		});
 
 		bf2.button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e){
+			public void actionPerformed(ActionEvent e) {
 				Chooser ch = new Chooser(false);
 				bf2.field.setText(bf2.listFilesToString(ch.fileNames));
 				output = ch.fileNames[0];
@@ -112,7 +112,7 @@ public class ConversionUI extends JFrame {
 
 		bf2.button.setBounds(340, 260, 100, 25);
 		bf2.field.setBounds(30, 260, 300, 25);
-		bf2.jl.setBounds(32, 200, 300, 100);		
+		bf2.jl.setBounds(32, 200, 300, 100);
 		this.add(bf2.jl);
 		this.add(bf2.button);
 		this.add(bf2.field);
@@ -122,7 +122,7 @@ public class ConversionUI extends JFrame {
 		this.add(exec);
 
 		////////////// Affichage des résultats //////////////
-		jt = new JTextArea(10,40);
+		jt = new JTextArea(10, 40);
 		add(jt);
 		jt.setText("Résultats :\n");
 		jt.setEditable(false);
@@ -137,40 +137,44 @@ public class ConversionUI extends JFrame {
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 	}
 
-	public void run(){
+	public void run() {
 		exec.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				final Thread t = new Thread(){
+				final Thread t = new Thread() {
 					public void run() {
-						///////////////////////////////////////Vérification des inputs utilisateur///////////////////////////////////////////////////////////////
-						if(outputFcb.formats.size() == 0){
-							JOptionPane.showMessageDialog(null, "Veuillez choisir le(s) format(s) de conversion.", "Information", JOptionPane.INFORMATION_MESSAGE);
+						/////////////////////////////////////// Vérification des
+						/////////////////////////////////////// inputs
+						/////////////////////////////////////// utilisateur///////////////////////////////////////////////////////////////
+						if (outputFcb.formats.size() == 0) {
+							JOptionPane.showMessageDialog(null, "Veuillez choisir le(s) format(s) de conversion.",
+									"Information", JOptionPane.INFORMATION_MESSAGE);
 							return;
 						}
-						if(inputFileNames == null){
-							JOptionPane.showMessageDialog(null, "Veuillez choisir le(s) fichier(s) à convertir.", "Information", JOptionPane.INFORMATION_MESSAGE);
+						if (inputFileNames == null) {
+							JOptionPane.showMessageDialog(null, "Veuillez choisir le(s) fichier(s) à convertir.",
+									"Information", JOptionPane.INFORMATION_MESSAGE);
 							return;
 						}
-						if(output == null){
+						if (output == null) {
 							nullOutput = true;
-							if(inputFileNames[0].isFile() || inputFileNames.length>1){
+							if (inputFileNames[0].isFile() || inputFileNames.length > 1) {
 								output = new File(inputFileNames[0].getParent());
-							}
-							else{
+							} else {
 								output = new File(inputFileNames[0].getAbsolutePath());
 							}
 							output.mkdir();
 							bf2.field.setText(output.getName());
 						}
 
-						///////////////////////////////////////////////////////////// Conversions ///////////////////////////////////////////////////////////////
+						///////////////////////////////////////////////////////////// Conversions
+						///////////////////////////////////////////////////////////// ///////////////////////////////////////////////////////////////
 
-						for (File f : inputFileNames){
+						for (File f : inputFileNames) {
 							Conversion(f);
 						}
 						showMsg();
 						printResults("\nNombre total de conversions: " + nbConv + ".\n");
-						//Réinitialisation des comptes
+						// Réinitialisation des comptes
 						reinit();
 						output = null;
 					}
@@ -180,24 +184,22 @@ public class ConversionUI extends JFrame {
 		});
 	}
 
-	//Conversion d'un fichier
-	public void Conversion(final File f){
-		if (f.isFile()){
-			if(acceptFile(f, inputFcb.formats)){
+	// Conversion d'un fichier
+	public void Conversion(final File f) {
+		if (f.isFile()) {
+			if (acceptFile(f, inputFcb.formats)) {
 				runConversion(f, output.getAbsolutePath(), outputFcb.formats);
 			}
-		}
-		else{
+		} else {
 			File[] files = f.listFiles();
-			for (File cFile : files){
-				if(acceptFile(cFile, inputFcb.formats)){
+			for (File cFile : files) {
+				if (acceptFile(cFile, inputFcb.formats)) {
 					runConversion(cFile, output.getAbsolutePath(), outputFcb.formats);
-				}
-				else if(cFile.isDirectory()){
+				} else if (cFile.isDirectory()) {
 					File[] subFiles = cFile.listFiles();
-					for(File sf : subFiles){
-						if(acceptFile(sf, inputFcb.formats)){
-							if(nullOutput){
+					for (File sf : subFiles) {
+						if (acceptFile(sf, inputFcb.formats)) {
+							if (nullOutput) {
 								output = sf.getParentFile();
 							}
 							runConversion(sf, output.getAbsolutePath(), outputFcb.formats);
@@ -208,21 +210,22 @@ public class ConversionUI extends JFrame {
 		}
 	}
 
-	//Affichage informations à la fin des conversations
-	public void showMsg(){
-		if(nbConv == 0){
-			JOptionPane.showMessageDialog(null, "Aucune conversion à effectuer.", "Information", JOptionPane.INFORMATION_MESSAGE);
-		}
-		else if(nbConv == 1){
-			JOptionPane.showMessageDialog(null, "1 conversion a été effectuée.", "Information", JOptionPane.INFORMATION_MESSAGE);
-		}
-		else{
-			JOptionPane.showMessageDialog(null, nbConv + " conversions ont été effectuées.", "Information", JOptionPane.INFORMATION_MESSAGE);
+	// Affichage informations à la fin des conversations
+	public void showMsg() {
+		if (nbConv == 0) {
+			JOptionPane.showMessageDialog(null, "Aucune conversion à effectuer.", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
+		} else if (nbConv == 1) {
+			JOptionPane.showMessageDialog(null, "1 conversion a été effectuée.", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(null, nbConv + " conversions ont été effectuées.", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 
-	//Conversion d'un fichier dans le(s) format(s) spécifié(s)
-	public void runConversion(File inputFile, String outputDir, HashSet<String> formats){
+	// Conversion d'un fichier dans le(s) format(s) spécifié(s)
+	public void runConversion(File inputFile, String outputDir, HashSet<String> formats) {
 
 		String inputName = inputFile.getName();
 		String inputAbsPath = inputFile.getAbsolutePath();
@@ -231,175 +234,189 @@ public class ConversionUI extends JFrame {
 
 		String outputTeiFileName = outputDir + "/" + Utils.basename(inputName) + Utils.EXT;
 
-		if (new File(outputTeiFileName).exists()){
+		if (new File(outputTeiFileName).exists()) {
 			existTeiFile = true;
 		}
 		File outputTeiFile = new File(outputTeiFileName);
 
-		try{
-			//Création du dossier tei où seront stockée tous les fichiers tei crées
-			if(!inputName.endsWith(Utils.EXT)){
-				//Création des fichiers TEI
-				if(inputName.toLowerCase().endsWith(".cha")){
+		try {
+			// Création du dossier tei où seront stockée tous les fichiers tei
+			// crées
+			if (!inputName.endsWith(Utils.EXT)) {
+				// Création des fichiers TEI
+				if (inputName.toLowerCase().endsWith(".cha")) {
 					ClanToTei cf = new ClanToTei(inputAbsPath, "", false);
 					Utils.createFile(outputTeiFileName, cf.docTEI);
-					if(formats.contains("tei")){
+					if (formats.contains("tei")) {
 						nbConv++;
 						printResults("New TEI file created from " + inputAbsPath + " to " + outputTeiFileName);
 					}
-				}
-				else if(inputName.toLowerCase().endsWith(".trs") || inputName.toLowerCase().endsWith(".trs.xml")){
+				} else if (inputName.toLowerCase().endsWith(".trs") || inputName.toLowerCase().endsWith(".trs.xml")) {
 					TranscriberToTei trTT = new TranscriberToTei(inputFile, false);
 					Utils.createFile(outputTeiFileName, trTT.docTEI);
-					if(formats.contains("tei")){
+					if (formats.contains("tei")) {
 						nbConv++;
 						printResults("New TEI file created from " + inputAbsPath + " to " + outputTeiFileName);
 					}
-				}
-				else if(inputName.toLowerCase().endsWith(".eaf")){
+				} else if (inputName.toLowerCase().endsWith(".eaf")) {
 					new ElanToTei(inputFile, outputTeiFileName);
-					if(formats.contains("tei")){
+					if (formats.contains("tei")) {
 						nbConv++;
 						printResults("New TEI file created from " + inputAbsPath + " to " + outputTeiFileName);
 					}
-				}
-				else if(inputName.toLowerCase().endsWith(".textgrid")){
+				} else if (inputName.toLowerCase().endsWith(".textgrid")) {
 					if (arguments == null) // different from Empty
-						arguments = JOptionPane.showInputDialog(null, "Veuillez ajouter les éventuelles options à utiliser ou validez:\n" +
-								"-e encoding (par défaut UTF8)\n" +
-								"-t tiername type parent (type de relation entre les tiers)\n" +
-								"-m adresse du media\n" +
-								"types autorisés: assoc incl timediv" +
-								"-p ficher_parametres", "Conversion de Praat vers TEI", JOptionPane.QUESTION_MESSAGE);
-					String [] allArgs = null;
-					if(Utils.isNotEmptyOrNull(arguments)){
-						String [] addArgs = arguments.split("\\s+");	
-						allArgs = new String [3+addArgs.length];
+						arguments = JOptionPane.showInputDialog(null,
+								"Veuillez ajouter les éventuelles options à utiliser ou validez:\n"
+										+ "-e encoding (par défaut UTF8)\n"
+										+ "-t tiername type parent (type de relation entre les tiers)\n"
+										+ "-m adresse du media\n" + "types autorisés: assoc incl timediv"
+										+ "-p ficher_parametres",
+								"Conversion de Praat vers TEI", JOptionPane.QUESTION_MESSAGE);
+					String[] allArgs = null;
+					if (Utils.isNotEmptyOrNull(arguments)) {
+						String[] addArgs = arguments.split("\\s+");
+						if (Utils.isNotEmptyOrNull(outputTeiFileName))
+							allArgs = new String[5 + addArgs.length];
+						else
+							allArgs = new String[3 + addArgs.length];
 						allArgs[0] = "-i";
-						allArgs[1] = inputFile.getAbsolutePath();				
-						allArgs[2] = "-d";
+						allArgs[1] = inputFile.getAbsolutePath();
+						allArgs[2] = "-x";
 						int j = 3;
-						for(int i = 0; i<addArgs.length; i++){						
+						if (Utils.isNotEmptyOrNull(outputTeiFileName)) {
+							allArgs[j++] = "-o";
+							allArgs[j++] = outputTeiFileName;
+						}
+						for (int i = 0; i < addArgs.length; i++) {
 							allArgs[j] = addArgs[i];
 							j++;
 						}
-					}
-					else{
-						allArgs = new String [3];
+					} else {
+						if (Utils.isNotEmptyOrNull(outputTeiFileName))
+							allArgs = new String[4];
+						else
+							allArgs = new String[2];
 						allArgs[0] = "-i";
-						allArgs[1] = inputFile.getAbsolutePath();				
-						allArgs[2] = "-d";
-
+						allArgs[1] = inputFile.getAbsolutePath();
+						if (Utils.isNotEmptyOrNull(outputTeiFileName)) {
+							allArgs[2] = "-o";
+							allArgs[3] = outputTeiFileName;
+						}
 					}
 
 					PraatToTei.main(allArgs);
-					
-					if(formats.contains("tei")){
+
+					if (formats.contains("tei")) {
 						nbConv++;
 						printResults("New TEI file created from " + inputAbsPath + " to " + outputTeiFileName);
 					}
 				}
 			}
-		}
-		catch(Exception e){
-			JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur fichier " + inputName, JOptionPane.WARNING_MESSAGE);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur fichier " + inputName,
+					JOptionPane.WARNING_MESSAGE);
 			e.printStackTrace();
 		}
 
-		try{
-			for(String f : formats){
-				if(f.equals("chat") || f.equals("trs") || f.equals("eaf") || f.equals("textgrid")){
+		try {
+			for (String f : formats) {
+				if (f.equals("chat") || f.equals("trs") || f.equals("eaf") || f.equals("textgrid")) {
 					if (argumentsOutput == null) // different from Empty
-						argumentsOutput = JOptionPane.showInputDialog(null, "Veuillez ajouter les éventuelles options à utiliser ou validez:\n" +
-								"-n niveau: niveau d'imbrication (1 pour lignes principales)\n" +
-								"-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)\n" +
-								"-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)" +
-								"-p fichier_parametres", "Conversion depuis la TEI", JOptionPane.QUESTION_MESSAGE);
-					if(Utils.isNotEmptyOrNull(argumentsOutput)) {
-						String usage =  "Description: Conversions convertit un fichier au format TEI en un fichier au format Chat, Praat, Elan, Transcriber\n";
-						String [] addArgs = argumentsOutput.split("\\s+");
+						argumentsOutput = JOptionPane.showInputDialog(null,
+								"Veuillez ajouter les éventuelles options à utiliser ou validez:\n"
+										+ "-n niveau: niveau d'imbrication (1 pour lignes principales)\n"
+										+ "-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)\n"
+										+ "-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)"
+										+ "-p fichier_parametres",
+								"Conversion depuis la TEI", JOptionPane.QUESTION_MESSAGE);
+					if (Utils.isNotEmptyOrNull(argumentsOutput)) {
+						String usage = "Description: Conversions convertit un fichier au format TEI en un fichier au format Chat, Praat, Elan, Transcriber\n";
+						String[] addArgs = argumentsOutput.split("\\s+");
 						if (Utils.processArgs(addArgs, options, usage, Utils.EXT, f) == false) {
-							JOptionPane.showMessageDialog(null, "Erreur sur les paramètres.",
-									"Erreur", JOptionPane.WARNING_MESSAGE);
+							JOptionPane.showMessageDialog(null, "Erreur sur les paramètres.", "Erreur",
+									JOptionPane.WARNING_MESSAGE);
 						}
 					}
 					File teiFile;
-					if(inputName.endsWith(Utils.EXT)){
+					if (inputName.endsWith(Utils.EXT)) {
 						teiFile = inputFile;
+					} else {
+						teiFile = new File(outputDir + "/" + Utils.basename(inputName) + Utils.EXT);
 					}
-					else{
-						teiFile = new File(outputDir + "/" +inputName.split("\\.")[0] + Utils.EXT);
-					}
-					if(teiFile.exists()){
-						if(f.equals("chat") && !inputName.endsWith(".cha")){
+					if (teiFile.exists()) {
+						if (f.equals("chat") && !inputName.endsWith(".cha")) {
 							String chatDirName = outputDir + "/";
-							String outputName = chatDirName +inputName.split("\\.")[0] + ".cha";
+							String outputName = chatDirName + inputName.split("\\.")[0] + ".cha";
 							TeiToClan ttc = new TeiToClan(teiFile.getAbsolutePath(), outputName, null);
 							ttc.createOutput();
-							nbConv ++;
-							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);
-						}
-						else if(f.equals("trs") && !(inputName.endsWith(".trs") || inputName.endsWith(".trs.xml"))){
+							nbConv++;
+							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
+									+ outputName);
+						} else if (f.equals("trs") && !(inputName.endsWith(".trs") || inputName.endsWith(".trs.xml"))) {
 							String trsDirName = outputDir + "/";
-							String outputName = trsDirName +inputName.split("\\.")[0] + ".trs";
+							String outputName = trsDirName + inputName.split("\\.")[0] + ".trs";
 							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, null);
 							nbConv++;
 							ttt.createOutput();
-							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);
-						}
-						else if(f.equals("eaf") && !(inputName.endsWith(".eaf") )){
+							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
+									+ outputName);
+						} else if (f.equals("eaf") && !(inputName.endsWith(".eaf"))) {
 							String eafDirName = outputDir + "/";
-							String outputName = eafDirName +inputName.split("\\.")[0] + ".eaf";
+							String outputName = eafDirName + inputName.split("\\.")[0] + ".eaf";
 							TeiToElan tte = new TeiToElan(teiFile.getAbsolutePath(), outputName, null);
-							nbConv ++;
+							nbConv++;
 							tte.createOutput();
-							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);
-						}
-						else if(f.equals("textgrid") && !(inputName.toLowerCase().endsWith(".textgrid") )){
+							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
+									+ outputName);
+						} else if (f.equals("textgrid") && !(inputName.toLowerCase().endsWith(".textgrid"))) {
 							String praatDirName = outputDir + "/";
-							String outputName = praatDirName +inputName.split("\\.")[0] + ".textgrid";
+							String outputName = praatDirName + inputName.split("\\.")[0] + ".textgrid";
 							TeiToPraat ttp = new TeiToPraat(teiFile.getAbsolutePath(), outputName, null);
-							nbConv ++;
+							nbConv++;
 							ttp.createOutput();
-							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to " + outputName);
+							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
+									+ outputName);
 						}
-					}
-					else{
-						JOptionPane.showMessageDialog(null, "Erreur rencontrée sur le fichier " + inputName + ", format non pris en charge pour la conversion vers le format "+ f.toUpperCase() + ".",
+					} else {
+						JOptionPane.showMessageDialog(null,
+								"Erreur rencontrée sur le fichier " + inputName
+										+ ", format non pris en charge pour la conversion vers le format "
+										+ f.toUpperCase() + ".",
 								"Erreur", JOptionPane.WARNING_MESSAGE);
 					}
 				}
 			}
-		}
-		catch(Exception e){
-			JOptionPane.showMessageDialog(null, "Erreur rencontrée sur le fichier " + inputName, "Erreur", JOptionPane.WARNING_MESSAGE);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erreur rencontrée sur le fichier " + inputName, "Erreur",
+					JOptionPane.WARNING_MESSAGE);
 			e.printStackTrace();
 		}
 
-		//Si l'utilisateur ne demande pas la conversion tei
-		if(!formats.contains("tei") && !existTeiFile){
+		// Si l'utilisateur ne demande pas la conversion tei
+		if (!formats.contains("tei") && !existTeiFile) {
 			outputTeiFile.delete();
 		}
 	}
 
-	//Affichage des résultats dans la fenêtre "résultats"
-	public void printResults(String s){
+	// Affichage des résultats dans la fenêtre "résultats"
+	public void printResults(String s) {
 		System.out.println(s);
 		jt.append("\n" + s);
 		jt.selectAll();
 	}
 
-	//Réinitialisation des données après conversion
-	public void reinit(){
+	// Réinitialisation des données après conversion
+	public void reinit() {
 		nbConv = 0;
-		outputFcb.formats = new HashSet<String> ();
+		outputFcb.formats = new HashSet<String>();
 		outputFcb.tei.setSelected(false);
 		outputFcb.chat.setSelected(false);
 		outputFcb.trs.setSelected(false);
 		outputFcb.elan.setSelected(false);
 		outputFcb.praat.setSelected(false);
 
-		inputFcb.formats = new HashSet<String> ();
+		inputFcb.formats = new HashSet<String>();
 		inputFcb.tei.setSelected(false);
 		inputFcb.chat.setSelected(false);
 		inputFcb.trs.setSelected(false);
@@ -413,29 +430,26 @@ public class ConversionUI extends JFrame {
 		output = null;
 	}
 
-	public static boolean acceptFile(File f, HashSet<String> formats){
+	public static boolean acceptFile(File f, HashSet<String> formats) {
 		String fName = f.getName();
-		for(String format : formats){
-			if(format.equals("chat") && fName.toLowerCase().endsWith(".cha")){
+		for (String format : formats) {
+			if (format.equals("chat") && fName.toLowerCase().endsWith(".cha")) {
 				return true;
-			}
-			else if(format.equals("trs") && (fName.toLowerCase().endsWith(".trs") || fName.toLowerCase().endsWith(".trs.xml"))){
+			} else if (format.equals("trs")
+					&& (fName.toLowerCase().endsWith(".trs") || fName.toLowerCase().endsWith(".trs.xml"))) {
 				return true;
-			}
-			else if(format.equals("eaf") && (fName.toLowerCase().endsWith(".eaf") )){
+			} else if (format.equals("eaf") && (fName.toLowerCase().endsWith(".eaf"))) {
 				return true;
-			}
-			else if(format.equals("tei") && fName.toLowerCase().endsWith(Utils.EXT)){
+			} else if (format.equals("tei") && fName.toLowerCase().endsWith(Utils.EXT)) {
 				return true;
-			}
-			else if(format.equals("textgrid") && fName.toLowerCase().endsWith(".textgrid")){
+			} else if (format.equals("textgrid") && fName.toLowerCase().endsWith(".textgrid")) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	class FormatJCheckBoxes extends JPanel implements ItemListener{
+	class FormatJCheckBoxes extends JPanel implements ItemListener {
 
 		private static final long serialVersionUID = 1L;
 
@@ -447,7 +461,7 @@ public class ConversionUI extends JFrame {
 
 		HashSet<String> formats = new HashSet<String>();
 
-		public FormatJCheckBoxes(){
+		public FormatJCheckBoxes() {
 			this.setLayout(new GridLayout());
 
 			tei = new JCheckBox("TEI");
@@ -472,55 +486,50 @@ public class ConversionUI extends JFrame {
 		public void itemStateChanged(ItemEvent e) {
 			if (tei.isSelected()) {
 				formats.add("tei");
-			}
-			else{
+			} else {
 				formats.remove("tei");
 			}
 			if (chat.isSelected()) {
 				formats.add("chat");
-			}
-			else{
+			} else {
 				formats.remove("chat");
 			}
 			if (trs.isSelected()) {
 				formats.add("trs");
-			}
-			else{
+			} else {
 				formats.remove("trs");
 			}
 			if (elan.isSelected()) {
 				formats.add("eaf");
-			}
-			else{
+			} else {
 				formats.remove("eaf");
 			}
 			if (praat.isSelected()) {
 				formats.add("textgrid");
-			}
-			else{
+			} else {
 				formats.remove("textGrid");
 			}
 		}
 	}
 
-	class ButtonField{
+	class ButtonField {
 
 		JButton button;
 		JTextField field;
 		JLabel jl;
-		File [] filenames;
+		File[] filenames;
 
-		public ButtonField(String title){ 
+		public ButtonField(String title) {
 			button = new JButton("Parcourir");
 			field = new JTextField();
 			jl = new JLabel();
 			jl.setText(title);
 		}
 
-		public String listFilesToString(File [] files){
+		public String listFilesToString(File[] files) {
 			String filesList = "";
 			if (files != null)
-				for (File f : files){
+				for (File f : files) {
 					filesList += f.getName();
 					filesList += "; ";
 				}
@@ -533,52 +542,51 @@ public class ConversionUI extends JFrame {
 		private static final long serialVersionUID = 1L;
 
 		JFileChooser dialog;
-		File [] fileNames;
+		File[] fileNames;
 
 		public Chooser(boolean dirAndFiles) {
 
-			Preferences userPrefs = Preferences.userRoot().node( "/fr/ortolang/tools/imports" );
-			File suggestedFile = new File(userPrefs.get( "SAVEDIR", "/" ) + "/.", "");
+			Preferences userPrefs = Preferences.userRoot().node("/fr/ortolang/tools/imports");
+			File suggestedFile = new File(userPrefs.get("SAVEDIR", "/") + "/.", "");
 			System.out.println("GET *SAVEDIR " + suggestedFile);
 
 			JFileChooser dialog = new JFileChooser();
 			dialog.setSelectedFile(suggestedFile);
 			dialog.setMultiSelectionEnabled(true);
-			if(dirAndFiles){
+			if (dirAndFiles) {
 				dialog.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				if (dialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 					fileNames = dialog.getSelectedFiles();
-					System.out.println("PUT SAVEDIR " + dialog.getCurrentDirectory() + " -- " + dialog.getCurrentDirectory().getAbsolutePath());
+					System.out.println("PUT SAVEDIR " + dialog.getCurrentDirectory() + " -- "
+							+ dialog.getCurrentDirectory().getAbsolutePath());
 					userPrefs.put("SAVEDIR", dialog.getCurrentDirectory().getAbsolutePath() + '/');
-				}
-				else{
+				} else {
 					this.annulation();
 					return;
 				}
-			}
-			else{
+			} else {
 				dialog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				if (dialog.showDialog(null, "Save in")==JFileChooser.APPROVE_OPTION) {
+				if (dialog.showDialog(null, "Save in") == JFileChooser.APPROVE_OPTION) {
 					fileNames = dialog.getSelectedFiles();
 					userPrefs.put("SAVEDIR", new File(fileNames[0].getParent()).getAbsolutePath());
-				}
-				else{
+				} else {
 					this.annulation();
 					return;
 				}
 			}
 		}
 
-		public void annulation(){
-			JOptionPane.showMessageDialog(null, "Vous avez annulé l'opération.", "Information", JOptionPane.INFORMATION_MESSAGE);
+		public void annulation() {
+			JOptionPane.showMessageDialog(null, "Vous avez annulé l'opération.", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 
-	public static void main(String [] args) throws URISyntaxException{
-		ConversionUI ui = new ConversionUI(); 
-		try{
+	public static void main(String[] args) throws URISyntaxException {
+		ConversionUI ui = new ConversionUI();
+		try {
 			ui.run();
+		} catch (NullPointerException n) {
 		}
-		catch(NullPointerException n){}
 	}
 }

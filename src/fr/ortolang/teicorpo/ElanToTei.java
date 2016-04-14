@@ -132,7 +132,7 @@ public class ElanToTei {
 		}
 		else{
 			if (output == null) {
-				output = Utils.basename(input) + Utils.EXT;
+				output = Utils.fullbasename(input) + Utils.EXT;
 			}
 			else if(new File(output).isDirectory()){
 				if(output.endsWith("/")){

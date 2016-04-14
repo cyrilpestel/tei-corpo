@@ -1644,7 +1644,7 @@ public class ClanToTei {
 			}
 		} else {
 			if (output == null) {
-				output = input.split("\\.")[0] + Utils.EXT;
+				output = Utils.fullbasename(input) + Utils.EXT;
 			} else if (new File(output).isDirectory()) {
 				if (output.endsWith("/")) {
 					output = output + Utils.basename(input) + Utils.EXT;

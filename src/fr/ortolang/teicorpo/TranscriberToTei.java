@@ -1143,7 +1143,7 @@ public class TranscriberToTei {
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(".trs") || name.endsWith(".trs.xml"))){
 					TranscriberToTei tr = new TranscriberToTei(file, dtdValidation );
-					String outputFileName = file.getName().split("\\.")[0] + Utils.EXT;
+					String outputFileName = Utils.basename(file) + Utils.EXT;
 					System.out.println(outputDir+outputFileName);
 					Utils.createFile(outputDir+outputFileName, tr.docTEI);
 				}
@@ -1157,14 +1157,14 @@ public class TranscriberToTei {
 
 		else{
 			if (output == null) {
-				output = input.split("\\.")[0] + Utils.EXT;
+				output = Utils.fullbasename(input) + Utils.EXT;
 			}
 			else if(new File(output).isDirectory()){
 				if(output.endsWith("/")){
-					output = output + input.split("\\.")[0] + Utils.EXT;
+					output = output + Utils.basename(input) + Utils.EXT;
 				}
 				else{
-					output = output + "/"+ input.split("\\.")[0] + Utils.EXT;
+					output = output + "/"+ Utils.basename(input) + Utils.EXT;
 				}
 			}
 
