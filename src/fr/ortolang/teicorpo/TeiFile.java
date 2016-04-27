@@ -25,8 +25,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import fr.ortolang.teicorpo.TeiFile.Us.Seg;
-
 public class TeiFile {
 
 	//Document TEI à lire
@@ -503,75 +501,6 @@ public class TeiFile {
 		}
 	}
 
-	public class Us{
-
-		public ArrayList<Seg> segs = new ArrayList<Seg>();
-		public Element annotatedU;
-
-		public Us(Element annotu, Element annotatU, String links){
-
-			annotatedU = annotatU;
-			String sync = "-1";
-			Seg lastSeg = null;
-
-			for(int i=0; i<annotu.getChildNodes().getLength(); i++){
-				if(Utils.isElement(annotu.getChildNodes().item(i))){
-					Element segEl = (Element) annotu.getChildNodes().item(i);
-					NodeList segChilds = segEl.getChildNodes();
-					for (int j = 0 ;  j<segChilds.getLength(); j++){
-						try{
-							lastSeg = segs.get(segs.size()-1);
-						}
-						catch(Exception e){
-							lastSeg = null;
-						}
-
-						if(Utils.isElement(segChilds.item(j))){
-							Element el = (Element)segChilds.item(j);
-							if(el.getNodeName().equals("anchor") && !el.getAttribute("synch").startsWith("#au")){
-								sync = el.getAttribute("synch");
-								if(lastSeg != null && !Utils.isNotEmptyOrNull(lastSeg.end)){
-									lastSeg.end = getTimeValue(sync);
-								}
-								sync = "-1";
-							}
-							else if(el.getNodeName().equals("seg")){
-								Seg segg = new Seg();
-								segg.content = el.getTextContent();
-								if(sync !="-1" && !Utils.isNotEmptyOrNull(segg.start)){
-									segg.start = getTimeValue(sync);
-								}
-								segs.add(segg);
-							}
-						}
-					}
-				}
-			}
-
-			//Cas des premiers et derniers segs
-			if(segs.size()>0){
-				if(!Utils.isNotEmptyOrNull(segs.get(0).start)){
-					segs.get(0).start = getTimeValue(annotatedU.getAttribute("start"));
-				}
-				if(!Utils.isNotEmptyOrNull(segs.get(segs.size()-1).end)){
-					segs.get(segs.size()-1).end = getTimeValue(annotatedU.getAttribute("end"));
-				}
-			}
-		}
-
-		public class Seg{
-			public String start;
-			public String end;
-			public String content;
-
-			public Seg(){
-				start = "";
-				end = "";
-				content = "";
-			}
-		}
-	}
-
 	/**
 	 * Représentation des objets Utterance
 	 */
@@ -595,8 +524,6 @@ public class TeiFile {
 		//Marque de div: si l'utterance marque le début d'un div, le type de div est spécifié dans ce champ
 		//Servira à repérer les divisions dans la transcription
 		public String type;
-		//Liens
-		public String links;
 		//Commentaires additionnels hors tiers
 		public ArrayList<String> coms = new ArrayList<String>();
 		//Liste d'énoncés
@@ -605,6 +532,10 @@ public class TeiFile {
 		public ArrayList<Annot> tiers = new ArrayList<Annot>();
 		//Liste des types de tiers
 		public HashSet<String> tierTypes = new HashSet<String>();
+
+		public String shortPause = " # ";
+		public String longPause = " ## ";
+		public String veryLongPause = " ### ";
 
 		/**
 		 * Impression des utterances : liste des énoncés
@@ -618,6 +549,9 @@ public class TeiFile {
 
 		public AnnotatedUtterance(Element annotatedU){
 			//Initialisation des variables d'instances
+			shortPause = " # ";
+			longPause = " ## ";
+			veryLongPause = " ### ";
 			annotU = annotatedU;
 			id = Utils.getAttrAnnotationBloc(annotatedU, "xml:id");
 			start = getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "start"));
@@ -631,10 +565,6 @@ public class TeiFile {
 			NodeList annotUElements = annotatedU.getChildNodes();
 			cleanedSpeech = "";
 			speech = "";
-			String shortPause = " # ";
-			String longPause = " ## ";
-			String veryLongPause = " ### ";
-			int segIndex = 0;
 			//Parcours des éléments contenus dans u et construction des variables speech, cleanedSpeech et speeches en fonction.
 			for(int i = 0; i<annotUElements.getLength(); i++){
 				if (Utils.isElement(annotUElements.item(i))){
@@ -645,147 +575,9 @@ public class TeiFile {
 					 * (sous la forme d'une chaîne de caractère prédéfinie).
 					 * On ajoute tous les énoncés dans speeches.
 					 */
-					if(nodeName.equals("u")){
-						Us segs = new Us(annotU, annotUEl, links);
+					if(nodeName.equals("u")) {
 						NodeList us = annotUEl.getChildNodes();
-						for(int z = 0; z<us.getLength(); z++){
-							if(Utils.isElement(us.item(z))){
-								Element uChild = (Element) us.item(z);
-								String uChildName = uChild.getNodeName();
-								String start = "";
-								String end = "";
-								if(uChildName.equals("seg")){
-									Seg segObject = segs.segs.get(segIndex);
-									segIndex ++;
-									NodeList segChilds = uChild.getChildNodes();
-									for (int t = 0; t<segChilds.getLength(); t++){
-										Node segChild = segChilds.item(t);
-										String segChildName = segChild.getNodeName();
-										//Ajout des pauses: syntaxe = # pour les pauses courtes, sinon ### pour les pauses longues
-										if(Utils.isElement(segChild)){
-											Element segChildEl = (Element) segChild;
-											if(segChildName.equals("pause")){
-												if(segChildEl.getAttribute("type").equals("short")){
-													cleanedSpeech += shortPause;
-													speech += shortPause;
-													addSpeech(shortPause);
-												}
-												else if(segChildEl.getAttribute("type").equals("long")){
-													cleanedSpeech += longPause;
-													speech += longPause;
-													addSpeech(longPause);
-												}
-												else if(segChildEl.getAttribute("type").equals("verylong")){
-													cleanedSpeech += veryLongPause;
-													speech += veryLongPause;
-													addSpeech(veryLongPause);
-												}
-												else if(segChildEl.getAttribute("type").equals("chrono")){
-													String chronoPause = "#" + segChildEl.getAttribute("dur") + " ";
-													cleanedSpeech += chronoPause;
-													speech += chronoPause;
-													addSpeech(chronoPause);
-												}
-											}
-
-											//Ajout des évènement (éléments incident & vocal):
-											//syntaxe = * type|subtype|desc1 desc2 ... descN /*
-											else if(segChildName.equals("incident")){
-												if(segChildEl.getAttribute("subtype").equals("pronounce")){													
-													String [] speechSplit = speech.split("\\s");
-													String lastW = "";
-													try{
-														lastW = speechSplit[speechSplit.length-1];
-													}
-													catch(Exception e){}
-													if(lastW.contains("]")){
-														lastW = "";
-													}
-													speech = joinString(speechSplit, 0, speechSplit.length);
-													String pron = "[" + lastW + ", " + getIncidentDesc(segChildEl, "desc") + "] ";
-													if(!Utils.isNotEmptyOrNull(speech.trim())){
-														speech += pron;
-													}
-													addSpeech(pron);
-												}
-												else if(segChildEl.getAttribute("subtype").equals("language")){
-													String [] speechSplit = speech.split("\\s");
-													//String lastW = speechSplit[speechSplit.length-1];
-													speech = joinString(speechSplit, 0, speechSplit.length) + " $ lang=" + getIncidentDesc(segChildEl, "desc") + " X/$ ";	
-												}
-												else{
-													String event = "* " + segChildEl.getAttribute("subtype");
-													try{
-														NodeList descs = segChildEl.getElementsByTagName("desc");
-														if(descs.getLength()!=0){ event+= "|";}
-														for(int q = 0; q < descs.getLength(); q++){
-															Element desc = (Element) descs.item(q);
-															event += desc.getAttribute("type");
-															event += ":" + desc.getTextContent() + " ";
-														}
-													}
-													finally{
-														speech += event + "B/* ";
-														addSpeech(event + "B/* ");
-													}
-												}
-											}
-											else if (segChildName.equals("vocal")){
-												String vocal = "* vocal|";
-												try{ 
-													vocal += "|" + segChildEl.getElementsByTagName("desc").item(0).getTextContent();
-												}
-												finally{
-													speech += vocal + "/* ";
-													addSpeech(vocal + "/* ");
-												}
-											}
-										}
-										else if(segChild.getNodeName().equals("#text")){
-											String content = segChild.getTextContent() + " ";
-											if (Utils.isNotEmptyOrNull(content.trim())){
-												speech += content;
-												cleanedSpeech += content;
-												//Dans speeches, pour chaque énoncé (seg), il peut y avoir des marques temporelles
-												//On ajoute donc chaque énoncé sous cette forme
-												//start;end__speech
-												String lastSpeech = "";
-												start = segObject.start;
-												end = segObject.end;
-												if(!speeches.isEmpty()){
-													lastSpeech = speeches.get(speeches.size()-1).trim();
-												}
-												if((lastSpeech.endsWith("#") || lastSpeech.endsWith("]")) && (Utils.isNotEmptyOrNull(start) || Utils.isNotEmptyOrNull(end))){												
-													addSpeech(" " + content);
-												}
-												else{
-													speeches.add(start + ";" + end + "__" + content);
-												}
-											}
-										}
-									}
-								}
-
-								//Tiers de type "morpho"
-								else if(uChildName.equals("morpho")){
-									String tierName="morpho";
-									String tierMorpho="";
-									NodeList cN = uChild.getElementsByTagName("w");
-									for (int j=0; j<cN.getLength(); j++){
-										Node w = cN.item(j);
-										tierMorpho += w.getTextContent();
-										NamedNodeMap attrs = w.getAttributes();
-										for(int jz=0; jz<attrs.getLength(); jz++){
-											Node att = attrs.item(jz);
-											tierMorpho += "|" + att.getNodeName() + ":" + att.getNodeValue();
-										}
-										tierMorpho =" ";
-									}
-									tiers.add(new Annot(tierName, tierMorpho));
-									tierTypes.add(nodeName);
-								}
-							}
-						}
+						processSeg(us);
 					}
 					//Ajout des tiers
 					else if(nodeName.equals("spanGrp")){
@@ -812,16 +604,138 @@ public class TeiFile {
 			speech = Utils.cleanString(speech);
 			cleanedSpeech = Utils.cleanString(cleanedSpeech);
 		}
+						
+		public void processSeg(NodeList us) {
+			String utt = "";
+			for(int z = 0; z<us.getLength(); z++){
+				Node segChild = us.item(z);
+				String segChildName = segChild.getNodeName();
+				//Ajout des pauses: syntaxe = # pour les pauses courtes, sinon ### pour les pauses longues
+				if(Utils.isElement(segChild)){
+					Element segChildEl = (Element) segChild;
+					if(segChildName.equals("pause")){
+						if(segChildEl.getAttribute("type").equals("short")){
+							cleanedSpeech += shortPause;
+							speech += shortPause;
+							utt += shortPause;
+						}
+						else if(segChildEl.getAttribute("type").equals("long")){
+							cleanedSpeech += longPause;
+							speech += longPause;
+							utt += longPause;
+						}
+						else if(segChildEl.getAttribute("type").equals("verylong")){
+							cleanedSpeech += veryLongPause;
+							speech += veryLongPause;
+							utt += veryLongPause;
+						}
+						else if(segChildEl.getAttribute("type").equals("chrono")){
+							String chronoPause = "#" + segChildEl.getAttribute("dur") + " ";
+							cleanedSpeech += chronoPause;
+							speech += chronoPause;
+							utt += chronoPause;
+						}
+					}
 
-		public void addSpeech(String sp){
-			if(speeches.isEmpty()){
-				speeches.add("__" + sp);
+					//Ajout des évènement (éléments incident & vocal):
+					//syntaxe = * type|subtype|desc1 desc2 ... descN /*
+					else if(segChildName.equals("incident")){
+						if(segChildEl.getAttribute("subtype").equals("pronounce")){													
+							String [] speechSplit = speech.split("\\s");
+							String lastW = "";
+							try{
+								lastW = speechSplit[speechSplit.length-1];
+							}
+							catch(Exception e){}
+							if(lastW.contains("]")){
+								lastW = "";
+							}
+							String v = joinString(speechSplit, 0, speechSplit.length);
+							speech += v;
+							utt += v;
+							String pron = "[" + lastW + ", " + getIncidentDesc(segChildEl, "desc") + "] ";
+							if(!Utils.isNotEmptyOrNull(speech.trim())){
+								speech += pron;
+								utt += pron;
+							}
+						}
+						else if(segChildEl.getAttribute("subtype").equals("language")){
+							String [] speechSplit = speech.split("\\s");
+							//String lastW = speechSplit[speechSplit.length-1];
+							String v = joinString(speechSplit, 0, speechSplit.length) + " $ lang=" + getIncidentDesc(segChildEl, "desc") + " X/$ ";
+							speech += v;
+							utt += v;
+						}
+						else{
+							String event = "* " + segChildEl.getAttribute("subtype");
+							try{
+								NodeList descs = segChildEl.getElementsByTagName("desc");
+								if(descs.getLength()!=0){ event+= "|";}
+								for(int q = 0; q < descs.getLength(); q++){
+									Element desc = (Element) descs.item(q);
+									event += desc.getAttribute("type");
+									event += ":" + desc.getTextContent() + " ";
+								}
+							}
+							finally{
+								speech += event + "B/* ";
+								utt += event + "B/* ";
+							}
+						}
+					}
+					else if (segChildName.equals("vocal")){
+						String vocal = "* vocal|";
+						try{ 
+							vocal += "|" + segChildEl.getElementsByTagName("desc").item(0).getTextContent();
+						}
+						finally{
+							speech += vocal + "/* ";
+							utt += vocal + "/* ";
+						}
+					}
+					else if(segChildName.equals("seg")){
+						processSeg(segChildEl.getChildNodes());
+					}
+					else if(segChildName.equals("anchor") && !segChildEl.getAttribute("synch").startsWith("#au")){
+						String sync = getTimeValue(segChildEl.getAttribute("synch"));
+						// creer une ligne avec speech, cleanedSpeech, addspeech
+						speeches.add(start + ";" + sync + "__" + utt);
+						start = sync;
+						System.out.printf("anchor: %s %s %s%n", start, sync, utt);
+						utt = "";
+					}
+					//Tiers de type "morpho"
+					else if(segChildName.equals("morpho")){
+						String tierName="morpho";
+						String tierMorpho="";
+						NodeList cN = ((Element)segChild).getElementsByTagName("w");
+						for (int j=0; j<cN.getLength(); j++){
+							Node w = cN.item(j);
+							tierMorpho += w.getTextContent();
+							NamedNodeMap attrs = w.getAttributes();
+							for(int jz=0; jz<attrs.getLength(); jz++){
+								Node att = attrs.item(jz);
+								tierMorpho += "|" + att.getNodeName() + ":" + att.getNodeValue();
+							}
+							tierMorpho =" ";
+						}
+						tiers.add(new Annot(tierName, tierMorpho));
+						tierTypes.add("morpho");
+					}
+				}
+				else if(segChild.getNodeName().equals("#text")){
+					String content = segChild.getTextContent() + " ";
+					if (Utils.isNotEmptyOrNull(content.trim())){
+						speech += content;
+						cleanedSpeech += content;
+						//Dans speeches, pour chaque énoncé (seg), il peut y avoir des marques temporelles
+						//On ajoute donc chaque énoncé sous cette forme
+						//start;end__speech
+						utt += content;
+					}
+				}
 			}
-			else{
-				int lastPos = speeches.size()-1;
-				String lastItem = speeches.get(lastPos);
-				speeches.set(lastPos, lastItem+sp);
-			}
+			speeches.add(start + ";" + end + "__" + utt);
 		}
 
 		//Récupération d'un type de tier donné (passé en paramètre)

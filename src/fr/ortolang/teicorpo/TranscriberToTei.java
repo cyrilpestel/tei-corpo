@@ -556,7 +556,9 @@ public class TranscriberToTei {
 			// div.setAttribute("end", endId);
 			Utils.setDivHeadAttr(this.docTEI, div, "end", endId);
 		}
-		catch(Exception e){}
+		catch(Exception e){
+			System.out.println("Erreur dans le traitement des turns : " + e.getMessage());
+		}
 	}
 
 	/**
@@ -624,7 +626,9 @@ public class TranscriberToTei {
 			String annotatedU_start = Utils.getAttrAnnotationBloc(annotatedU, "start");
 			if (elmtName == "Sync") {
 				sync = attrs.item(0).getNodeValue();
-				if(sync != "-1" && Utils.isNotEmptyOrNull(annotatedU_start) && !sync.equals(getTimeValue(annotatedU_start))){
+				String ref_sync = addTimeToTimeline(sync);
+				if(sync != "-1" && Utils.isNotEmptyOrNull(annotatedU_start) && !ref_sync.equals(annotatedU_start)){
+					// System.out.printf("anchor (%s) (%s)%n", sync, getTimeValue(annotatedU_start));
 					this.addSynchro(sync, u);
 					seg = docTEI.createElement("seg");
 				}				
@@ -708,7 +712,11 @@ public class TranscriberToTei {
 				}
 				u = (Element)currentAU.getElementsByTagName("u").item(0);
 				seg = docTEI.createElement("seg");
-				this.addSynchro(sync, u);
+				String ref_sync = addTimeToTimeline(sync);
+				String startTurn = turn.getAttribute("startTime");
+				String annotatedU_start = addTimeToTimeline(startTurn);
+				if (Utils.isNotEmptyOrNull(annotatedU_start) && !ref_sync.equals(annotatedU_start))
+					this.addSynchro(sync, u);
 				u.appendChild(seg);
 			}
 			else if (elmtName == "#text" ) {

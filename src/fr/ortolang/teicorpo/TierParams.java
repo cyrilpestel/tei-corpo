@@ -6,16 +6,26 @@ class TierParams {
 	boolean forceEmpty;
 	String input;
 	String output;
+	String mediaName;
+	String encoding;
+	String options;
+	boolean nospreadtime;
+	boolean detectEncoding;
 	HashSet<String> doDisplay;
 	HashSet<String> dontDisplay;
 	int level;
 	TierParams() {
 		input = null;
 		output = null;
+		mediaName = null;
+		encoding = null;
+		detectEncoding = true;
 		doDisplay = new HashSet<String>();
 		dontDisplay = new HashSet<String>();
 		level = 0; // all levels
 		forceEmpty = true;
+		options = "";
+		nospreadtime = false;
 	}
 	void addDoDisplay(String s) {
 		doDisplay.add(s.toLowerCase());

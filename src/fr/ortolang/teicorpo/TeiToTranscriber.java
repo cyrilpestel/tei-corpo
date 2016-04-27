@@ -48,6 +48,7 @@ public class TeiToTranscriber extends TeiConverter {
 
 	public TeiToTranscriber(String inputName, String outputName, TierParams optionsTei) {
 		super(inputName, outputName, optionsTei);
+		if (this.tf == null) return;
 		speakers = null; // name of current speaker for turns
 		section = null; // is a section opened ?
 		oldEndTime = ""; // last end time of a turn

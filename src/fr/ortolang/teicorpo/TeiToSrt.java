@@ -36,6 +36,7 @@ public class TeiToSrt extends TeiConverter{
 	 */
 	public TeiToSrt(String inputName, String outputName, TierParams optionsTei) {
 		super(inputName, outputName, optionsTei);
+		if (this.tf == null) return;
 		optionsOutput = optionsTei;
 		outputWriter();
 		conversion();

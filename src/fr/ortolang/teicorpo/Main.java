@@ -31,7 +31,7 @@ public class Main {
 				teiDir.mkdir();
 				//Création des fichiers TEI
 				if(inputName.endsWith(".cha")){
-					ClanToTei cf = new ClanToTei(inputAbsPath, "", false);
+					ClanToTei cf = new ClanToTei(inputAbsPath, null);
 					Utils.createFile(outputTeiFileName, cf.docTEI);
 					nbConv ++;
 					System.out.printf("New TEI file created from %s to " + outputTeiFileName + "\n", inputAbsPath);

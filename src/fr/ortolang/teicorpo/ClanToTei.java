@@ -53,6 +53,7 @@ public class ClanToTei {
 	ArrayList<String> times = new ArrayList<String>();
 	ArrayList<Element> timeElements;
 	Double maxTime = 0.0;
+	TierParams tparams;
 
 	/**
 	 * Identifiant des éléments <strong>desc</strong> de <strong>text</strong>.
@@ -70,17 +71,18 @@ public class ClanToTei {
 	 * @throws Exception
 	 */
 	// Constructeur: initialise le ChatFile et le docTEI
-	public ClanToTei(String chatFileName, String options, boolean nospreadtime) throws Exception {
+	public ClanToTei(String chatFileName, TierParams tp) throws Exception {
 		descID = 0;
 		utteranceId = 0;
 		whenId = 0;
+		tparams = (tp != null) ? tp : new TierParams();
 		tiersNames = new HashSet<String>();
 		cf = new ChatFile();
 		chatFile = new File(chatFileName);
 		cf.load(chatFileName);
 		cf.findInfo(false);
 		// ajouter paramètre
-		if (!nospreadtime) cf.cleantime_inmemory(1);
+		if (!tp.nospreadtime) cf.cleantime_inmemory(1);
 		timeElements = new ArrayList<Element>();
 		DocumentBuilderFactory factory = null;
 
@@ -124,7 +126,7 @@ public class ClanToTei {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		conversion(options);
+		conversion(tp.options);
 	}
 
 	/**
@@ -265,7 +267,10 @@ public class ClanToTei {
 		// Element media
 		Element media = docTEI.createElement("media");
 		recording.appendChild(media);
-		if (cf.mediaFilename != null) {
+		if (tparams.mediaName != null) {
+			media.setAttribute("mimeType", Utils.findMediaType(tparams.mediaName));
+			media.setAttribute("url", tparams.mediaName);
+		} else if (cf.mediaFilename != null) {
 			String url = Utils.findClosestMedia(chatFile.getParent(), cf.mediaFilename.toUpperCase(), cf.mediaType);
 			media.setAttribute("mimeType", Utils.findMediaType(url));
 			media.setAttribute("url", url);
@@ -1540,6 +1545,7 @@ public class ClanToTei {
 		// System.err.println(" :-f xmorext lecture et traitement des champs
 		// %xmor avec extension des répétitions (attention: résultats à
 		// contrôler)");
+		System.err.println("	     :-m media - nom du fichier média associé");
 		System.err.println("	     :--pure - do not use special tags but only classic tei tags");
 		System.err.println("	     :--nospreadtime - do not try to ajust time for unaligned utterances");
 		System.err.println("	     :-usage ou -help = affichage de ce message");
@@ -1552,9 +1558,11 @@ public class ClanToTei {
 	}
 
 	public static void submain(String[] args) throws Exception {
-		String input = null;
-		String output = null;
-		String options = "";
+		TierParams tp = new TierParams();
+		tp.input = null;
+		tp.output = null;
+		tp.mediaName = null;
+		tp.options = "";
 		boolean nospreadtime = false;
 		// parcours des arguments
 		if (args.length == 0) {
@@ -1567,12 +1575,17 @@ public class ClanToTei {
 						i++;
 						if (i >= args.length)
 							usage();
-						input = args[i];
+						tp.input = args[i];
 					} else if (args[i].equals("-o")) {
 						i++;
 						if (i >= args.length)
 							usage();
-						output = args[i];
+						tp.output = args[i];
+					} else if (args[i].equals("-m")) {
+						i++;
+						if (i >= args.length)
+							usage();
+						tp.mediaName = args[i];
 					} else if (args[i].equals("--nospreadtime")) {
 						nospreadtime = true;
 					} else if (args[i].equals("--pure")) {
@@ -1582,13 +1595,13 @@ public class ClanToTei {
 						if (i >= args.length)
 							usage();
 						if (args[i].equals("mor")) {
-							options = "mor";
+							tp.options = "mor";
 						} else if (args[i].equals("xmor")) {
-							options = "xmor";
+							tp.options = "xmor";
 						} else if (args[i].equals("morext")) {
-							options = "morext";
+							tp.options = "morext";
 						} else if (args[i].equals("xmorext")) {
-							options = "xmorext";
+							tp.options = "xmorext";
 						} else {
 							usage();
 						}
@@ -1601,44 +1614,44 @@ public class ClanToTei {
 			}
 		}
 
-		File f = new File(input);
+		File f = new File(tp.input);
 
-		input = f.getCanonicalPath();
+		tp.input = f.getCanonicalPath();
 
 		if (f.isDirectory()) {
 			File[] chatFiles = f.listFiles();
 
-			if (output == null) {
-				if (input.endsWith("/")) {
-					output = input.substring(0, input.length() - 1);
+			if (tp.output == null) {
+				if (tp.input.endsWith("/")) {
+					tp.output = tp.input.substring(0, tp.input.length() - 1);
 				} else {
-					output = input;
+					tp.output = tp.input;
 				}
 			}
 
-			File outFile = new File(output);
+			File outFile = new File(tp.output);
 			if (outFile.exists()) {
 				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
+					System.out.println("\n Erreur :" + tp.output
 							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
 					usage();
 					System.exit(1);
 				}
 			}
 
-			if (!output.endsWith("/")) {
-				output += "/";
+			if (!tp.output.endsWith("/")) {
+				tp.output += "/";
 			}
-			new File(output).mkdir();
+			new File(tp.output).mkdir();
 
 			for (File file : chatFiles) {
 				if (file.getName().toLowerCase().endsWith(Utils.EXT_PUBLISH + EXT)) {
 					System.out.printf("-- ignoré: %s%n", file.getName());
 				} else if (file.getName().endsWith(EXT)) {
-					ClanToTei tr = new ClanToTei(file.getAbsolutePath(), options, nospreadtime);
+					ClanToTei tr = new ClanToTei(file.getAbsolutePath(), tp);
 					String outputFileName = Utils.basename(file) + Utils.EXT;
-					System.out.println(output + outputFileName);
-					Utils.createFile(output + outputFileName, tr.docTEI);
+					System.out.println(tp.output + outputFileName);
+					Utils.createFile(tp.output + outputFileName, tr.docTEI);
 				} else if (file.isDirectory()) {
 					args[0] = "-i";
 					args[1] = file.getAbsolutePath();
@@ -1646,25 +1659,25 @@ public class ClanToTei {
 				}
 			}
 		} else {
-			if (output == null) {
-				output = Utils.fullbasename(input) + Utils.EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + Utils.basename(input) + Utils.EXT;
+			if (tp.output == null) {
+				tp.output = Utils.fullbasename(tp.input) + Utils.EXT;
+			} else if (new File(tp.output).isDirectory()) {
+				if (tp.output.endsWith("/")) {
+					tp.output = tp.output + Utils.basename(tp.input) + Utils.EXT;
 				} else {
-					output = output + "/" + Utils.basename(input) + Utils.EXT;
+					tp.output = tp.output + "/" + Utils.basename(tp.input) + Utils.EXT;
 				}
 			}
 
-			if (!(Utils.validFileFormat(input, EXT))) {
+			if (!(Utils.validFileFormat(tp.input, EXT))) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + EXT);
 				usage();
 			}
 
-			System.out.println("Lecture de " + input);
-			ClanToTei tr = new ClanToTei(input, options, nospreadtime);
-			Utils.createFile(output, tr.docTEI);
-			System.out.println("New file TEI created: " + output);
+			System.out.println("Lecture de " + tp.input);
+			ClanToTei tr = new ClanToTei(tp.input, tp);
+			Utils.createFile(tp.output, tr.docTEI);
+			System.out.println("New file TEI created: " + tp.output);
 		}
 	}
 }

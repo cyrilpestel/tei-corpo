@@ -245,7 +245,7 @@ public class ConversionUI extends JFrame {
 			if (!inputName.endsWith(Utils.EXT)) {
 				// Création des fichiers TEI
 				if (inputName.toLowerCase().endsWith(".cha")) {
-					ClanToTei cf = new ClanToTei(inputAbsPath, "", false);
+					ClanToTei cf = new ClanToTei(inputAbsPath, null);
 					Utils.createFile(outputTeiFileName, cf.docTEI);
 					if (formats.contains("tei")) {
 						nbConv++;

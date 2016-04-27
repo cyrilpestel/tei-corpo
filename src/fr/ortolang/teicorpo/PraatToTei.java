@@ -55,24 +55,6 @@ class DescTier {
 }
 
 /**
- * local parameters for PraatToTei
- * 
- * @author cp
- *
- */
-class PraatParams {
-	String mediaName;
-	String encoding;
-	boolean detectEncoding;
-
-	public PraatParams() {
-		mediaName = null;
-		encoding = null;
-		detectEncoding = true;
-	}
-}
-
-/**
  * A class to extract annotations from a Praat .TextGrid file. Only
  * "IntervalTier"s and "TextTier"s are supported. The expected format is roughly
  * like below, but the format is only loosely checked.
@@ -877,7 +859,7 @@ public class PraatToTei {
 					System.out.println("Attention paramètres commande peut-être ignorés pour " + inputfile);
 				}
 				System.out.println("Utilisation du fichier paramètres " + fnb.toString());
-				PraatParams prs = new PraatParams();
+				TierParams prs = new TierParams();
 				prs.encoding = encoding;
 				prs.mediaName = mediaName;
 				if (addParams(fnb.toString(), ldt, prs) == false)
@@ -1015,7 +997,7 @@ public class PraatToTei {
 	public static void submain(String[] args) throws Exception {
 		String input = null;
 		String output = null;
-		PraatParams prs = new PraatParams();
+		TierParams prs = new TierParams();
 		boolean stop = true;
 
 		ArrayList<DescTier> ldt = new ArrayList<DescTier>();
@@ -1179,7 +1161,7 @@ public class PraatToTei {
 		}
 	}
 
-	private static boolean addParams(String fn, ArrayList<DescTier> ldt, PraatParams pr) {
+	private static boolean addParams(String fn, ArrayList<DescTier> ldt, TierParams pr) {
 		List<String> ls = null;
 		try {
 			ls = Utils.loadTextFile(fn);

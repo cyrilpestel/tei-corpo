@@ -341,7 +341,12 @@ public class Utils {
 					return file.getName();
 			}
 		}
-		return "";
+		if (type.indexOf("video") >= 0)
+			return Utils.basename(fn) + ".mp4";
+		if (type.indexOf("audio") >= 0)
+			return Utils.basename(fn) + ".wav";
+		else
+			return Utils.basename(fn);
 	}
 	
 	public static String findMediaType(String fn) {
@@ -404,7 +409,10 @@ public class Utils {
 	}
 
 	public static String getHeadAttr(Element annotU, String attrName) {
-		Element head = (Element)annotU.getElementsByTagName("head").item(0);
+		NodeList nl = annotU.getElementsByTagName("head");
+		if (nl == null) return "";
+		Element head = (Element)nl.item(0);
+		if (head == null) return "";
 		NodeList notes = head.getElementsByTagName("note");
 		for (int i=0; i < notes.getLength(); i++) {
 			Element e = (Element)(notes.item(i));
