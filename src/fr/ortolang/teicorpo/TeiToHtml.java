@@ -22,7 +22,7 @@ public class TeiToHtml {
 
 	static int spanidNumber;
 	static String spanID;
-	static String EXT = ".teiml";
+	static String EXT = ".visu.html";
 
 	private PrintWriter out;
 
@@ -682,7 +682,7 @@ public class TeiToHtml {
 		if (isDir){
 			File[] teiFiles = input.listFiles();
 			for (File file : teiFiles){
-				if(file.getName().endsWith(".teiml")){
+				if(file.getName().endsWith(Utils.EXT)){
 					String outputFilename = "";
 					if(video == false){
 						outputFilename = file.getAbsolutePath().split("\\.")[0]+"_audio.html";

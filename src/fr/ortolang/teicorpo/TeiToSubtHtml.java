@@ -136,6 +136,7 @@ public class TeiToSubtHtml extends TeiConverter{
         out.println( "<video data-syncmaster=\"true\" data-timeaction=\"none\" controls=\"controls\" preload=\"auto\">" );
         out.printf( "<source type=\"video/mp4\" src=\"%s-480p.mp4\"></source><br/>%n", media );
         out.printf( "<source type=\"video/webm\" src=\"%s-480p.webm\"></source>%n", media );
+        out.printf( "<source type=\"video/mp4\" src=\"%s-240p.mp4\"></source><br/>%n", media );
         out.printf( "<source type=\"video/ogg\" src=\"%s-240p.ogv\"></source>%n", media );
         out.printf( "<source type=\"video/mp4\" src=\"%s.mp4\"></source><br/>%n", media );
         out.printf( "<source type=\"video/webm\" src=\"%s.webm\"></source>%n", media );
@@ -222,15 +223,26 @@ public class TeiToSubtHtml extends TeiConverter{
 			s = s.replaceAll("\n", "");
 			String start = null;
 			String end = null;
-			String [] splitS = s.split("__");
-			speech = toChatLine(splitS[1]).trim();
-			String times = splitS[0];
 
-			try{
-				start = times.split(";")[0];
-				end = times.split(";")[1];
+			String[] splitS = s.split("__");
+			if (splitS.length > 1)
+				speech = toChatLine(splitS[1]).trim();
+			else
+				speech = "";
+			if (splitS.length == 0) {
+				start = "";
+				end = "";
+			} else {
+				String times = splitS[0];
+				String[] tms = times.split(";");
+				if (tms.length == 2) {
+					start = tms[0];
+					end = tms[1];
+				} else {
+					start = "";
+					end = "";
+				}
 			}
-			catch(Exception e){}		
 
 			//Si le temps de début n'est pas renseigné, on prend le temps de fin de l'énoncé précédent(si présent)
 			if(!Utils.isNotEmptyOrNull(start)){
@@ -409,8 +421,8 @@ public class TeiToSubtHtml extends TeiConverter{
 
 			for (File file : teiFiles){
 				String name = file.getName();
-				if (file.isFile() && (name.endsWith(".teiml"))){
-					String outputFileName = file.getName().split("\\.")[0] + EXT;
+				if (file.isFile() && (name.endsWith(Utils.EXT))){
+					String outputFileName = Utils.basename(file.getName()) + EXT;
 					TeiToSubtHtml ttc = new TeiToSubtHtml(file.getAbsolutePath(), outputDir+outputFileName, options);
 					System.out.println(outputDir+outputFileName);
 					ttc.createOutput();
@@ -423,14 +435,14 @@ public class TeiToSubtHtml extends TeiConverter{
 			}
 		} else {
 			if (output == null) {
-				output = input.split("\\.")[0] + EXT;
+				output = Utils.basename(input) + EXT;
 			}
 			else if(new File(output).isDirectory()){
 				if(output.endsWith("/")){
-					output = output + input.split("\\.")[0] + EXT;
+					output = output + Utils.basename(input) + EXT;
 				}
 				else{
-					output = output + "/"+ input.split("\\.")[0] + EXT;
+					output = output + "/"+ Utils.basename(input) + EXT;
 				}
 			}
 

@@ -136,15 +136,25 @@ public class TeiToSrt extends TeiConverter{
 			String start = null;
 			String end = null;
 
-			String [] splitS = s.split("__");
-			speech = toChatLine(splitS[1]).trim();
-			String times = splitS[0];
-
-			try{
-				start = times.split(";")[0];
-				end = times.split(";")[1];
+			String[] splitS = s.split("__");
+			if (splitS.length > 1)
+				speech = toChatLine(splitS[1]).trim();
+			else
+				speech = "";
+			if (splitS.length == 0) {
+				start = "";
+				end = "";
+			} else {
+				String times = splitS[0];
+				String[] tms = times.split(";");
+				if (tms.length == 2) {
+					start = tms[0];
+					end = tms[1];
+				} else {
+					start = "";
+					end = "";
+				}
 			}
-			catch(Exception e){}		
 
 			//Si le temps de début n'est pas renseigné, on prend le temps de fin de l'énoncé précédent(si présent)
 			if(!Utils.isNotEmptyOrNull(start)){
@@ -332,8 +342,8 @@ public class TeiToSrt extends TeiConverter{
 
 			for (File file : teiFiles){
 				String name = file.getName();
-				if (file.isFile() && (name.endsWith(".teiml"))){
-					String outputFileName = file.getName().split("\\.")[0] + EXT;
+				if (file.isFile() && (name.endsWith(Utils.EXT))){
+					String outputFileName = Utils.basename(file.getName()) + EXT;
 					TeiToSrt ttc = new TeiToSrt(file.getAbsolutePath(), outputDir+outputFileName, options);
 					System.out.println(outputDir+outputFileName);
 					ttc.createOutput();
@@ -346,25 +356,26 @@ public class TeiToSrt extends TeiConverter{
 			}
 		} else {
 			if (output == null) {
-				output = input.split("\\.")[0] + EXT;
+				output = Utils.basename(input) + EXT;
 			}
 			else if(new File(output).isDirectory()){
 				if(output.endsWith("/")){
-					output = output + input.split("\\.")[0] + EXT;
+					output = output + Utils.basename(input) + EXT;
 				}
 				else{
-					output = output + "/"+ input.split("\\.")[0] + EXT;
+					output = output + "/"+ Utils.basename(input) + EXT;
 				}
 			}
 
-			if (!(Utils.validFileFormat(input, ".teiml") || !Utils.validFileFormat(output, EXT))) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension .teiml "
-						+ "\nLe fichier de sortie du programme doit avoir l'extension .srt ");
+			if (!Utils.validFileFormat(output, EXT)) {
+				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .srt ");
 			}
 			TeiToSrt ttc = new TeiToSrt(new File(input).getAbsolutePath(), output, options);
-			System.out.println("Reading " + input);
-			ttc.createOutput();
-			System.out.println("New file created " + output);
+			if (ttc.tf != null) {
+				System.out.println("Reading " + input);
+				ttc.createOutput();
+				System.out.println("New file created " + output);
+			}
 		}
 
 	}

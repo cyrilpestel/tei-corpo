@@ -701,7 +701,7 @@ public class TeiFile {
 						// creer une ligne avec speech, cleanedSpeech, addspeech
 						speeches.add(start + ";" + sync + "__" + utt);
 						start = sync;
-						System.out.printf("anchor: %s %s %s%n", start, sync, utt);
+						// System.out.printf("anchor: %s %s %s%n", start, sync, utt);
 						utt = "";
 					}
 					//Tiers de type "morpho"

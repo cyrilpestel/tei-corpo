@@ -834,9 +834,11 @@ public class TeiToTranscriber extends TeiConverter {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + Utils.EXT);
 			}
 			TeiToTranscriber ttt = new TeiToTranscriber(new File(input).getAbsolutePath(), output, options);
-			System.out.println("Reading " + input);
-			ttt.createOutput();
-			System.out.println("New file created " + output);
+			if (ttt.tf != null) {
+				System.out.println("Reading " + input);
+				ttt.createOutput();
+				System.out.println("New file created " + output);
+			}
 		}
 	}
 }

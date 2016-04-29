@@ -616,12 +616,12 @@ public class TeiToClan extends TeiConverter {
 			}
 		} else {
 			if (output == null) {
-				output = input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
+				output = Utils.basename(input) + EXT;
 			} else if (new File(output).isDirectory()) {
 				if (output.endsWith("/")) {
-					output = output + input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
+					output = output + Utils.basename(input) + EXT;
 				} else {
-					output = output + "/" + input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
+					output = output + "/" + Utils.basename(input) + EXT;
 				}
 			}
 
@@ -629,9 +629,11 @@ public class TeiToClan extends TeiConverter {
 				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .cha ");
 			}
 			TeiToClan ttc = new TeiToClan(new File(input).getAbsolutePath(), output, options);
-			System.out.println("Reading " + input);
-			ttc.createOutput();
-			System.out.println("New file created " + output);
+			if (ttc.tf != null) {
+				System.out.println("Reading " + input);
+				ttc.createOutput();
+				System.out.println("New file created " + output);
+			}
 		}
 	}
 }
