@@ -279,7 +279,7 @@ public class TeiToHtml {
 								}
 							}
 						}
-						speech = join(speechSplit);
+						speech = Utils.join(speechSplit);
 					}
 
 					String id0 = "";
@@ -633,15 +633,6 @@ public class TeiToHtml {
 
 	public static String newDirName(String path){
 		return "";
-	}
-
-	public static String join(String... args) {
-		String result = "";
-		for(String st : args){
-			result += st + " ";
-		}
-
-		return result;
 	}
 
 	public static String basexVersion(String s){

@@ -39,16 +39,32 @@ public class Utils {
 	
 	public static String EXT = ".tei_corpo.xml";
 	public static String EXT_PUBLISH = ".tei_corpo";
-	public static String ANNOTATIONBLOC = "annotationBloc";
+	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.031"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "29/04/2016 18:00";
+	public static String versionSoft = "1.033"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "04/05/2016 18:00";
+//	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
 	public static boolean teiStylePure = false;
+	
+	public static String shortPause = " # ";
+	public static String longPause = " ## ";
+	public static String veryLongPause = " ### ";
+	public static String specificPause = "#";
+	
+	public static String leftBracket = "⟪"; // 27EA - "❮"; // "⟨" 27E8 - "❬" 
+	public static String rightBracket = "⟫"; // 27EB - "❯"; // "⟩" 27E9 - "❭" - 276C à 2771 ❬ ❭ ❮ ❯ ❰ ❱ 
+	public static String leftEvent = "⟦"; // 27E6 - "『"; // 300E - "⌈"; // u2308 
+	public static String rightEvent = "⟧"; // 27E7 - "』"; // 300F - "⌋"; // u230b
+	public static String leftParent = "⁅"; // 2045 // "⁘"; // 2058 // "⁑" // 2051
+	public static String rightParent = "⁆"; // 2046 // "⁘"; // 2058
+	public static String leftCode = "⌜"; // 231C - "⁌"; // 204C
+	public static String rightCode = "⌟"; // 231F - "⁍"; // 204D
 
 	public static String teiCorpoDtd() {
-		return teiStylePure == true ? TEI_ALL : TEI_CORPO_DTD;
+		// return teiStylePure == true ? TEI_ALL : TEI_CORPO_DTD;
+		return TEI_ALL;
 	}
 
 	public static boolean isElement(Node n){
@@ -73,6 +89,18 @@ public class Utils {
 			result += st + " ";
 		}
 		return result;
+	}
+
+	public static String join(String[] s, String delimiter) {
+		StringBuffer buffer = new StringBuffer();
+		int i = 0;
+		while (i < s.length-1) {
+			buffer.append(s[i]);
+			buffer.append(delimiter);
+			i++;
+		}
+		buffer.append(s[i]);
+		return buffer.toString();
 	}
 	
 	public static String getInfo2(String line){
@@ -732,5 +760,43 @@ public class Utils {
 			}
 		}
 		return true;
+	}
+
+	public static void setAttrAnnotationBlocSupplement(Document docTEI, Element annotatedU, String string,
+			String attValue) {
+		NodeList spanGrpList = annotatedU.getElementsByTagName("spanGrp");
+		if (spanGrpList != null && spanGrpList.getLength() > 0) {
+			for (int i=0; i<spanGrpList.getLength(); i++) {
+				Element spanGrp = (Element) spanGrpList.item(i);
+				if (spanGrp.getAttribute("type").equals("TurnInformation")) {
+					NodeList spanList = spanGrp.getElementsByTagName("span");
+					if (spanList != null && spanList.getLength() > 0) {
+						for (int j=0; j<spanList.getLength(); j++) {
+							Element span = (Element) spanList.item(j);
+							if (span.getAttribute("type").equals(string)) {
+								span.setAttribute("type", string);
+								return;
+							}
+						}
+					}
+					// si pas trouvé
+					// ou si pas de span dans le spanGrp TurnInformation
+					Element s = docTEI.createElement("span");
+					s.setAttribute("type", string);
+					s.setTextContent(attValue);
+					spanGrp.appendChild(s);
+					return;
+				}
+			}
+		}
+		// si pas de spanGrp s'appelent TurnInformation
+		// ou si pas encore de spanGrp
+		Element sg = docTEI.createElement("spanGrp");
+		sg.setAttribute("type", "TurnInformation");
+		Element s = docTEI.createElement("span");
+		s.setAttribute("type", string);
+		s.setTextContent(attValue);
+		sg.appendChild(s);
+		annotatedU.appendChild(sg);
 	}
 }

@@ -24,7 +24,7 @@ import org.w3c.dom.NodeList;
 
 public class TranscriberToTei {
 
-	//***Variables statiques
+	// ***Variables statiques
 
 	/** Encodage des fichiers de sortie et d'entrée. */
 	static final String outputEncoding = "UTF-8";
@@ -32,7 +32,7 @@ public class TranscriberToTei {
 	private static int utteranceId;
 	static int whenId;
 
-	//***Variables d'instance
+	// ***Variables d'instance
 
 	/** Fichier d'entrée, au format .trs. */
 	private File inputTRS;
@@ -47,13 +47,14 @@ public class TranscriberToTei {
 	public XPath xpath;
 	/** Racine du document Transcriber. */
 	private Element rootTRS;
-	/**Element timeline*/
-	//Element timeline;
-	/**Liste des types de tiers présents dans le corpus*/
+	/** Element timeline */
+	// Element timeline;
+	/** Liste des types de tiers présents dans le corpus */
 	HashSet<String> tiersNames;
 	ArrayList<String> times = new ArrayList<String>();
 	ArrayList<Element> timeElements = new ArrayList<Element>();
 	Double maxTime = 0.0;
+
 	/**
 	 * décrit par la DTD TEI_CORPO_DTD.
 	 * 
@@ -64,10 +65,11 @@ public class TranscriberToTei {
 
 		utteranceId = 0;
 		whenId = 0;
-		tiersNames = new HashSet<String> ();
+		tiersNames = new HashSet<String>();
 		this.inputTRS = inputFile;
 
-		// Création des documents TRS (à partir du parsing du fichier Transcriber) et TEI (nouveau document)
+		// Création des documents TRS (à partir du parsing du fichier
+		// Transcriber) et TEI (nouveau document)
 		this.docTRS = null;
 		DocumentBuilderFactory factory = null;
 		try {
@@ -78,45 +80,33 @@ public class TranscriberToTei {
 			this.rootTRS = this.docTRS.getDocumentElement();
 			this.docTEI = builder.newDocument();
 			/*
-			this.xPathfactory = XPathFactory.newInstance();
-			this.xpath = xPathfactory.newXPath();
-			this.xpath.setNamespaceContext(new NamespaceContext() {
-			    public String getNamespaceURI(String prefix) {
-		        	System.out.println("prefix called " + prefix);
-			        if (prefix == null) {
-			            throw new IllegalArgumentException("No prefix provided!");
-			        } else if (prefix.equals(XMLConstants.DEFAULT_NS_PREFIX)) {
-			        	System.out.println("default prefix called");
-			            return "http://www.tei-c.org/ns/1.0";
-			        } else if (prefix.equals("tei")) {
-			        	System.out.println("tei prefix called");
-			            return "http://www.tei-c.org/ns/1.0";
-			        } else if (prefix.equals("xsi")) {
-			            return "http://www.w3.org/2001/XMLSchema-instance";
-			        } else {
-			            return XMLConstants.NULL_NS_URI;
-			        }
-			    }
-
-			    public Iterator<?> getPrefixes(String val) {
-			        return null;
-			    }
-
-			    public String getPrefix(String uri) {
-			        return null;
-			    }
-			});
-			*/
+			 * this.xPathfactory = XPathFactory.newInstance(); this.xpath =
+			 * xPathfactory.newXPath(); this.xpath.setNamespaceContext(new
+			 * NamespaceContext() { public String getNamespaceURI(String prefix)
+			 * { System.out.println("prefix called " + prefix); if (prefix ==
+			 * null) { throw new IllegalArgumentException("No prefix provided!"
+			 * ); } else if (prefix.equals(XMLConstants.DEFAULT_NS_PREFIX)) {
+			 * System.out.println("default prefix called"); return
+			 * "http://www.tei-c.org/ns/1.0"; } else if (prefix.equals("tei")) {
+			 * System.out.println("tei prefix called"); return
+			 * "http://www.tei-c.org/ns/1.0"; } else if (prefix.equals("xsi")) {
+			 * return "http://www.w3.org/2001/XMLSchema-instance"; } else {
+			 * return XMLConstants.NULL_NS_URI; } }
+			 * 
+			 * public Iterator<?> getPrefixes(String val) { return null; }
+			 * 
+			 * public String getPrefix(String uri) { return null; } });
+			 */
 			this.rootTEI = this.docTEI.createElement("TEI");
 			rootTEI.setAttribute("version", Utils.versionTEI);
-			this.rootTEI.setAttribute("xmlns","http://www.tei-c.org/ns/1.0");
+			this.rootTEI.setAttribute("xmlns", "http://www.tei-c.org/ns/1.0");
 			this.docTEI.appendChild(rootTEI);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			// e.printStackTrace();
 			System.exit(1);
 		}
-		//Conversion
+		// Conversion
 		this.conversion();
 	}
 
@@ -136,7 +126,8 @@ public class TranscriberToTei {
 	}
 
 	/**
-	 * Création d'un fichier TEI "vide": contenant les éléments principaux soit:<br>
+	 * Création d'un fichier TEI "vide": contenant les éléments principaux soit:
+	 * <br>
 	 * <ul>
 	 * <li><strong>teiHeader</strong>: contient des informations sur le document
 	 * <br>
@@ -170,7 +161,8 @@ public class TranscriberToTei {
 		Element encodingDesc = this.docTEI.createElement("encodingDesc");
 		teiHeader.appendChild(encodingDesc);
 		Element revisionDesc = this.docTEI.createElement("revisionDesc");
-		//revisionDesc.setAttribute("url", this.inputTRS.getAbsolutePath().split("\\.")[0]  + Utils.EXT);
+		// revisionDesc.setAttribute("url",
+		// this.inputTRS.getAbsolutePath().split("\\.")[0] + Utils.EXT);
 		///
 		Element list = docTEI.createElement("list");
 		revisionDesc.appendChild(list);
@@ -190,7 +182,7 @@ public class TranscriberToTei {
 		Element when = this.docTEI.createElement("when");
 		when.setAttribute("absolute", "0");
 		when.setAttribute("xml:id", "T" + whenId);
-		//timeline.appendChild(when);
+		// timeline.appendChild(when);
 		timeElements.add(when);
 		timeline.setAttribute("unit", "s");
 		times.add("0.0");
@@ -212,9 +204,10 @@ public class TranscriberToTei {
 	}
 
 	/**
-	 * Mise à jour de l'élément encodingDesc: informations sur le logiciel qui a généré le document d'origine (ici Transcriber)
+	 * Mise à jour de l'élément encodingDesc: informations sur le logiciel qui a
+	 * généré le document d'origine (ici Transcriber)
 	 */
-	public void setEncodingDesc(){
+	public void setEncodingDesc() {
 		Element encodingDesc = (Element) docTEI.getElementsByTagName("encodingDesc").item(0);
 		Element appInfo = this.docTEI.createElement("appInfo");
 		encodingDesc.appendChild(appInfo);
@@ -231,7 +224,8 @@ public class TranscriberToTei {
 		}
 		Element desc = this.docTEI.createElement("desc");
 		application.appendChild(desc);
-		desc.setTextContent("Transcription created with Transcriber and converted to TEI_CORPO - Soft version: " + Utils.versionSoft);
+		desc.setTextContent("Transcription created with Transcriber and converted to TEI_CORPO - Soft version: "
+				+ Utils.versionSoft);
 	}
 
 	/**
@@ -246,7 +240,7 @@ public class TranscriberToTei {
 		Element note = this.docTEI.createElement("note");
 		addNotes.appendChild(note);
 		if (attValue != "") {
-			note.setAttribute("type",attName);
+			note.setAttribute("type", attName);
 			note.setTextContent(attValue);
 		}
 	}
@@ -276,41 +270,39 @@ public class TranscriberToTei {
 			recording.appendChild(media);
 		}
 		Element recording = (Element) this.docTEI.getElementsByTagName("recording").item(0);
-		Element media = (Element)recording.getElementsByTagName("media").item(0);
+		Element media = (Element) recording.getElementsByTagName("media").item(0);
 		if (attName == "audio_filename" && attValue != "") {
 			String sameMedia = this.inputTRS.getName();
-			sameMedia = sameMedia.substring(0, sameMedia.length()-3) + "wav";
+			sameMedia = sameMedia.substring(0, sameMedia.length() - 3) + "wav";
 			media.setAttribute("url", /* this.inputTRS.getParent() + "/" + */ sameMedia);
 			media.setAttribute("mimeType", Utils.findMediaType(sameMedia));
 			// utiliser ? attValue
-		}
-		else if(attName == "elapsed_time"){
+		} else if (attName == "elapsed_time") {
 			recording.setAttribute("dur", attValue);
 		}
 	}
 
 	/**
 	 * Mise à jour des attributs et élëments de l'élément
-	 * <strong>publicationStmt</strong> à partir des informations contenues dans le
-	 * document TRS.
+	 * <strong>publicationStmt</strong> à partir des informations contenues dans
+	 * le document TRS.
 	 */
 	public void setPublicationStmtElement() {
 		Element publicationStmt = (Element) this.docTEI.getElementsByTagName("publicationStmt").item(0);
-		
-		//Ajout publicationStmt
+
+		// Ajout publicationStmt
 		Element distributor = docTEI.createElement("distributor");
 		distributor.setTextContent("tei_corpo");
 		publicationStmt.appendChild(distributor);
 	}
 
 	/**
-	 * Mise à jour des attributs et élëments de l'élément
-	 * document TRS.
+	 * Mise à jour des attributs et élëments de l'élément document TRS.
 	 */
 	public void setNotesStmtElement() {
 		Element notesStmt = (Element) this.docTEI.getElementsByTagName("notesStmt").item(0);
-		
-		//Ajout notesStmt
+
+		// Ajout notesStmt
 		Element addNotes = docTEI.createElement("note");
 		addNotes.setAttribute("type", "COMMENTS_DESC");
 		notesStmt.appendChild(addNotes);
@@ -361,7 +353,7 @@ public class TranscriberToTei {
 	public void setsettingDescElement(Element settingDesc) {
 		int settingAdded = 0;
 		Element t = (Element) this.docTRS.getElementsByTagName("Topics").item(0);
-		if (t != null && t.hasAttribute("desc")){
+		if (t != null && t.hasAttribute("desc")) {
 			Element setting = docTEI.createElement("setting");
 			Element activity = docTEI.createElement("activity");
 			setting.appendChild(activity);
@@ -395,8 +387,8 @@ public class TranscriberToTei {
 
 	/**
 	 * Mise à jour des attributs et éléments de l'élément
-	 * <strong>particDesc</strong> à partir des informations contenues dans
-	 * le document TRS.<br>
+	 * <strong>particDesc</strong> à partir des informations contenues dans le
+	 * document TRS.<br>
 	 * Liste les persons du documents et leurs attributs.
 	 * 
 	 * @param particDesc
@@ -414,36 +406,30 @@ public class TranscriberToTei {
 				String attName = att.getNodeName();
 				String attValue = att.getNodeValue();
 				if (attValue != "") {
-					if(attName == "type"){
-						if (attValue.equals("male") || attValue.equals("female") || attValue.equals("unknown")){
-							if(attValue.equals("male")){
+					if (attName == "type") {
+						if (attValue.equals("male") || attValue.equals("female") || attValue.equals("unknown")) {
+							if (attValue.equals("male")) {
 								person.setAttribute("sex", "1");
-							}
-							else if(attValue.equals("female")){
+							} else if (attValue.equals("female")) {
 								person.setAttribute("sex", "2");
-							}
-							else{
+							} else {
 								person.setAttribute("sex", "9");
 							}
-						}
-						else{
+						} else {
 							person.setAttribute("role", attValue);
 						}
-					}
-					else if(attName == "name"){
+					} else if (attName == "name") {
 						Element name = docTEI.createElement("persName");
 						name.setTextContent(attValue);
 						person.appendChild(name);
-					}
-					else if(attName == "id"){
+					} else if (attName == "id") {
 						Element altGrp = docTEI.createElement("altGrp");
 						Element alt = docTEI.createElement("alt");
 						alt.setAttribute("type", attValue);
 						person.appendChild(altGrp);
 						altGrp.appendChild(alt);
-					}
-					else {
-						if (Utils.isNotEmptyOrNull(attValue)){
+					} else {
+						if (Utils.isNotEmptyOrNull(attValue)) {
 							Element n = docTEI.createElement("note");
 							n.setTextContent(attValue);
 							n.setAttribute("type", attName);
@@ -465,9 +451,10 @@ public class TranscriberToTei {
 		Element divEpisode = Utils.createDivHead(this.docTEI);
 		body.appendChild(divEpisode);
 		NamedNodeMap attrs = episode.getAttributes();
-		if(attrs.getLength() != 0) {
-			for (int i = 0; i<attrs.getLength(); i++) {
-				Utils.setDivHeadAttr(this.docTEI, divEpisode, attrs.item(i).getNodeName(), attrs.item(i).getNodeValue());
+		if (attrs.getLength() != 0) {
+			for (int i = 0; i < attrs.getLength(); i++) {
+				Utils.setDivHeadAttr(this.docTEI, divEpisode, attrs.item(i).getNodeName(),
+						attrs.item(i).getNodeValue());
 			}
 		}
 		NodeList textContent = episode.getChildNodes();
@@ -535,8 +522,8 @@ public class TranscriberToTei {
 		for (int i = 0; i < turns.getLength(); i++) {
 			Node current = turns.item(i);
 			if (current.getNodeName() == "Turn") {
-				Element turn = (Element)current;
-				String [] speakers = turn.getAttribute("speaker").split(" ");
+				Element turn = (Element) current;
+				String[] speakers = turn.getAttribute("speaker").split(" ");
 				if (speakers.length == 1) {
 					Element annotatedU = Utils.createAnnotationBloc(this.docTEI);
 					div.appendChild(annotatedU);
@@ -546,17 +533,16 @@ public class TranscriberToTei {
 					this.setElementU((Element) current, annotatedU, div);
 				} else {
 					Element annotatedU = Utils.createAnnotationBloc(this.docTEI);
-					this.setElementU((Element)current, annotatedU, div);
+					this.setElementU((Element) current, annotatedU, div);
 				}
 			}
 		}
-		Element sect = (Element)section;
-		try{
+		Element sect = (Element) section;
+		try {
 			String endId = addTimeToTimeline(sect.getAttribute("endTime"));
 			// div.setAttribute("end", endId);
 			Utils.setDivHeadAttr(this.docTEI, div, "end", endId);
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			System.out.println("Erreur dans le traitement des turns : " + e.getMessage());
 		}
 	}
@@ -583,11 +569,11 @@ public class TranscriberToTei {
 				String endId = addTimeToTimeline(attValue);
 				Utils.setAttrAnnotationBloc(this.docTEI, annotatedU, "end", endId);
 			} else if (attName == "mode") {
-				Utils.setAttrAnnotationBloc(this.docTEI, annotatedU, "mode", attValue);
+				Utils.setAttrAnnotationBlocSupplement(this.docTEI, annotatedU, "mode", attValue);
 			} else if (attName == "fidelity") {
-				Utils.setAttrAnnotationBloc(this.docTEI, annotatedU, "fidelity", attValue);
+				Utils.setAttrAnnotationBlocSupplement(this.docTEI, annotatedU, "fidelity", attValue);
 			} else if (attName == "channel") {
-				Utils.setAttrAnnotationBloc(this.docTEI, annotatedU, "channel", attValue);
+				Utils.setAttrAnnotationBlocSupplement(this.docTEI, annotatedU, "channel", attValue);
 			}
 		}
 	}
@@ -614,7 +600,7 @@ public class TranscriberToTei {
 		annotatedU.appendChild(u);
 		String sync = "-1";
 		Element spangrp = null;
-		if(turn.getElementsByTagName("Who").getLength()!=0){
+		if (turn.getElementsByTagName("Who").getLength() != 0) {
 			buildDecompoTurnMultiSpk(turn, div);
 			return;
 		}
@@ -627,24 +613,24 @@ public class TranscriberToTei {
 			if (elmtName == "Sync") {
 				sync = attrs.item(0).getNodeValue();
 				String ref_sync = addTimeToTimeline(sync);
-				if(sync != "-1" && Utils.isNotEmptyOrNull(annotatedU_start) && !ref_sync.equals(annotatedU_start)){
-					// System.out.printf("anchor (%s) (%s)%n", sync, getTimeValue(annotatedU_start));
+				if (sync != "-1" && Utils.isNotEmptyOrNull(annotatedU_start) && !ref_sync.equals(annotatedU_start)) {
+					// System.out.printf("anchor (%s) (%s)%n", sync,
+					// getTimeValue(annotatedU_start));
 					this.addSynchro(sync, u);
 					seg = docTEI.createElement("seg");
-				}				
-			}
-			else if (elmtName == "#text" ) {
+				}
+			} else if (elmtName == "#text") {
 				setTextTrsElement(elmtValue, sync, annotatedU, u, seg, spangrp, false);
 			} else if (elmtName == "Comment") {
-				spangrp = setCommentTrsElement(elmt, div, spangrp, annotatedU, u, seg );
-			} else if (elmtName == "Background" || elmtName == "Event" || elmtName == "Vocal"){
+				spangrp = setCommentTrsElement(elmt, div, spangrp, annotatedU, u, seg);
+			} else if (elmtName == "Background" || elmtName == "Event" || elmtName == "Vocal") {
 				setEventsTrsElement(elmtName, annotatedU, u, seg, spangrp, attrs);
 			}
 		}
 		addSpanGrp(spangrp, annotatedU);
 	}
 
-	public Element addComment(Element el, String infoType, String content){
+	public Element addComment(Element el, String infoType, String content) {
 		Element spanGrp = docTEI.createElement("spanGrp");
 		Element span = this.docTEI.createElement("span");
 		spanGrp.setAttribute("type", infoType);
@@ -654,13 +640,13 @@ public class TranscriberToTei {
 		return spanGrp;
 	}
 
-	public void buildDecompoTurnMultiSpk(Element turn, Element div){
+	public void buildDecompoTurnMultiSpk(Element turn, Element div) {
 		String[] speakers = turn.getAttribute("speaker").split(" ");
-		ArrayList <Element> annotatedUs = new ArrayList <Element> ();
-		ArrayList <Element> spanGrps = new ArrayList <Element> ();
-		ArrayList <String> ids = new ArrayList <String> ();
-		//Création d'un annotU par speaker
-		for (String spk : speakers){
+		ArrayList<Element> annotatedUs = new ArrayList<Element>();
+		ArrayList<Element> spanGrps = new ArrayList<Element>();
+		ArrayList<String> ids = new ArrayList<String>();
+		// Création d'un annotU par speaker
+		for (String spk : speakers) {
 			Element au = Utils.createAnnotationBloc(this.docTEI);
 			setU_Id(au);
 			ids.add(Utils.getAttrAnnotationBloc(au, "xml:id"));
@@ -677,40 +663,37 @@ public class TranscriberToTei {
 		Element firstWho = (Element) turn.getElementsByTagName("Who").item(0);
 		Element currentAU;
 		Element currentSpanGrp;
-		try{
-			currentAU = annotatedUs.get(Integer.parseInt(firstWho.getAttribute("nb"))-1);
-			currentSpanGrp = spanGrps.get(Integer.parseInt(firstWho.getAttribute("nb"))-1);
-		}
-		catch(Exception e){
+		try {
+			currentAU = annotatedUs.get(Integer.parseInt(firstWho.getAttribute("nb")) - 1);
+			currentSpanGrp = spanGrps.get(Integer.parseInt(firstWho.getAttribute("nb")) - 1);
+		} catch (Exception e) {
 			currentAU = annotatedUs.get(0);
 			currentSpanGrp = spanGrps.get(0);
 		}
-		Element u = (Element)currentAU.getElementsByTagName("u").item(0);
+		Element u = (Element) currentAU.getElementsByTagName("u").item(0);
 		NodeList turnChildren = turn.getChildNodes();
 		Element seg = docTEI.createElement("seg");
-		if(u.getElementsByTagName("seg").getLength() > 0){
-			seg = (Element)u.getElementsByTagName("seg").item(u.getElementsByTagName("seg").getLength()-1);
+		if (u.getElementsByTagName("seg").getLength() > 0) {
+			seg = (Element) u.getElementsByTagName("seg").item(u.getElementsByTagName("seg").getLength() - 1);
 		}
-		//addLinks(ids, annotatedUs);
+		// addLinks(ids, annotatedUs);
 		for (int i = 0; i < turnChildren.getLength(); i++) {
 			Node elmt = turnChildren.item(i);
 			String elmtName = elmt.getNodeName();
 			String elmtValue = elmt.getNodeValue();
 			NamedNodeMap attrs = turnChildren.item(i).getAttributes();
-			if(elmtName == "Sync") {
+			if (elmtName == "Sync") {
 				sync = attrs.item(0).getNodeValue();
-			}
-			else if (elmtName == "Who"){
-				int nb = Integer.parseInt(((Element)elmt).getAttribute("nb"));
-				try{
+			} else if (elmtName == "Who") {
+				int nb = Integer.parseInt(((Element) elmt).getAttribute("nb"));
+				try {
 					currentAU = annotatedUs.get(nb);
 					currentSpanGrp = spanGrps.get(nb);
-				}
-				catch(Exception e){
+				} catch (Exception e) {
 					currentAU = annotatedUs.get(0);
 					currentSpanGrp = spanGrps.get(0);
 				}
-				u = (Element)currentAU.getElementsByTagName("u").item(0);
+				u = (Element) currentAU.getElementsByTagName("u").item(0);
 				seg = docTEI.createElement("seg");
 				String ref_sync = addTimeToTimeline(sync);
 				String startTurn = turn.getAttribute("startTime");
@@ -718,63 +701,59 @@ public class TranscriberToTei {
 				if (Utils.isNotEmptyOrNull(annotatedU_start) && !ref_sync.equals(annotatedU_start))
 					this.addSynchro(sync, u);
 				u.appendChild(seg);
-			}
-			else if (elmtName == "#text" ) {
+			} else if (elmtName == "#text") {
 				setTextTrsElement(elmtValue, sync, currentAU, u, seg, currentSpanGrp, true);
-			}
-			else if (elmtName == "Comment") {
-				currentSpanGrp = setCommentTrsElement(elmt, div, currentSpanGrp, currentAU, u, seg );
-			}
-			else if (elmtName == "Background" || elmtName == "Event" || elmtName == "Vocal") {
+			} else if (elmtName == "Comment") {
+				currentSpanGrp = setCommentTrsElement(elmt, div, currentSpanGrp, currentAU, u, seg);
+			} else if (elmtName == "Background" || elmtName == "Event" || elmtName == "Vocal") {
 				setEventsTrsElement(elmtName, currentAU, u, seg, currentSpanGrp, attrs);
-			}			
+			}
 		}
-	}	
+	}
 
-	public void addSpanGrp(Element spangrp, Element annotatedU){
-		if(spangrp != null){
+	public void addSpanGrp(Element spangrp, Element annotatedU) {
+		if (spangrp != null) {
 			annotatedU.appendChild(spangrp);
 		}
 	}
 
-	public void setTextTrsElement(String elmtValue, String sync, Element annotatedU, Element u, Element seg, Element spangrp, boolean link){
-		String annotatedU_start = Utils.getAttrAnnotationBloc(annotatedU, "start");		
-		if(! Utils.isNotEmptyOrNull(elmtValue.trim()) && ! sync.equals("-1") && Utils.isNotEmptyOrNull(annotatedU_start) && !sync.equals(getTimeValue(annotatedU_start)) && !link){
-			seg = docTEI.createElement("seg");			
+	public void setTextTrsElement(String elmtValue, String sync, Element annotatedU, Element u, Element seg,
+			Element spangrp, boolean link) {
+		String annotatedU_start = Utils.getAttrAnnotationBloc(annotatedU, "start");
+		if (!Utils.isNotEmptyOrNull(elmtValue.trim()) && !sync.equals("-1") && Utils.isNotEmptyOrNull(annotatedU_start)
+				&& !sync.equals(getTimeValue(annotatedU_start)) && !link) {
+			seg = docTEI.createElement("seg");
 			u.appendChild(seg);
-		}
-		else{
+		} else {
 			String content = elmtValue.trim();
-			if(!content.isEmpty()){					
-				String [] s = content.split("\\s");
+			if (!content.isEmpty()) {
+				String[] s = content.split("\\s");
 				String segContent = "";
-				for (String el:s){
-					if (el.matches("(\\s|^)((\\+(\\s|$)?){2,})(\\s|$)") || el.matches("(\\s|^)(\\/\\/\\/+)(\\s|$)") || el.matches("(\\s|^)\\+(\\s|$)")){
+				for (String el : s) {
+					if (el.matches("(\\s|^)((\\+(\\s|$)?){2,})(\\s|$)") || el.matches("(\\s|^)(\\/\\/\\/+)(\\s|$)")
+							|| el.matches("(\\s|^)\\+(\\s|$)")) {
 						Element pause = docTEI.createElement("pause");
 						Node textContent = docTEI.createTextNode(segContent);
 						seg.appendChild(textContent);
-						if(Utils.isNotEmptyOrNull(segContent.trim())){
+						if (Utils.isNotEmptyOrNull(segContent.trim())) {
 							annotatedU.appendChild(u);
 							addSpanGrp(spangrp, annotatedU);
 							u.appendChild(seg);
 						}
 						seg.appendChild(pause);
 						segContent = "";
-						if(el.matches("(\\s|^)(\\+\\s?){3,}(\\s|$)") || el.matches("(\\s|^)/{3,}(\\s|$)")){
+						if (el.matches("(\\s|^)(\\+\\s?){3,}(\\s|$)") || el.matches("(\\s|^)/{3,}(\\s|$)")) {
 							pause.setAttribute("type", "verylong");
-						}
-						else if(el.matches("(\\s|^)(\\+\\s?){2}(\\s|$)")){
+						} else if (el.matches("(\\s|^)(\\+\\s?){2}(\\s|$)")) {
 							pause.setAttribute("type", "long");
-						}
-						else if(el.matches("(\\s|^)\\+(\\s|$)")){
+						} else if (el.matches("(\\s|^)\\+(\\s|$)")) {
 							pause.setAttribute("type", "short");
 						}
-					}
-					else{
-						segContent += el+= " ";
+					} else {
+						segContent += el += " ";
 					}
 				}
-				if(Utils.isNotEmptyOrNull(segContent.trim())){
+				if (Utils.isNotEmptyOrNull(segContent.trim())) {
 					Node textContent = docTEI.createTextNode(segContent);
 					seg.appendChild(textContent);
 					u.appendChild(seg);
@@ -782,50 +761,44 @@ public class TranscriberToTei {
 					addSpanGrp(spangrp, annotatedU);
 				}
 			}
-		}		
+		}
 	}
 
-	public Element setCommentTrsElement(Node elmt, Element div, Element spanGrp, Element au, Element u, Element seg ){
-		String comContent = ((Element)elmt).getAttribute("desc");
-		if(comContent.contains(":\t")){
-			try{
+	public Element setCommentTrsElement(Node elmt, Element div, Element spanGrp, Element au, Element u, Element seg) {
+		String comContent = ((Element) elmt).getAttribute("desc");
+//		System.out.printf("setComment: %s%n", comContent);
+		if (comContent.contains(":\t")) {
+			try {
 				String infoType = Utils.getInfoType(comContent);
 				String infoContent = Utils.getInfo(comContent);
-				if(infoType.startsWith("@")){
+				if (infoType.startsWith("@")) {
 					Element add = this.docTEI.createElement("add");
 					add.setTextContent(infoContent);
 					add.setAttribute("type", infoType.substring(1));
 					div.appendChild(add);
-				}
-				else{
+				} else {
 					spanGrp = addComment(au, infoType, infoContent);
 				}
-			}
-			catch(Exception e){
+			} catch (Exception e) {
 				spanGrp = addComment(au, "com", comContent);
 			}
-		}
-		else{
-			if(((Element)elmt).getAttribute("desc").equals("sic")){
-				Element incident = this.docTEI.createElement("incident");
-				incident.setAttribute("subtype", "pronounce");
-				incident.setAttribute("type", "Event");
-				Element desc = this.docTEI.createElement("desc");
-				desc.setTextContent("sic");
-				desc.setAttribute("type", "desc");
-				incident.appendChild(desc);
-				seg.appendChild(incident);
-				u.appendChild(seg);
-			}
-			else{
-				spanGrp = addComment(au, "com", comContent);
-			}
+		} else {
+			Element incident = this.docTEI.createElement("incident");
+			incident.setAttribute("type", "comment");
+			incident.setAttribute("subtype", "previous");
+			Element desc = this.docTEI.createElement("desc");
+			desc.setTextContent(((Element) elmt).getAttribute("desc"));
+			incident.appendChild(desc);
+			seg.appendChild(incident);
+			u.appendChild(seg);
+//				spanGrp = addComment(au, "com", comContent);
 		}
 		return spanGrp;
 	}
 
-	public void setEventsTrsElement(String elmtName, Element au, Element u, Element seg, Element spanGrp, NamedNodeMap attrs){
-		if (elmtName == "Background" || elmtName=="Event") {
+	public void setEventsTrsElement(String elmtName, Element au, Element u, Element seg, Element spanGrp,
+			NamedNodeMap attrs) {
+		if (elmtName == "Background" || elmtName == "Event") {
 			Element incident = this.docTEI.createElement("incident");
 			this.setIncidentAttributes(incident, elmtName, attrs);
 			seg.appendChild(incident);
@@ -834,16 +807,15 @@ public class TranscriberToTei {
 			addSpanGrp(spanGrp, au);
 		} else if (elmtName == "Vocal") {
 			Element vocal = this.docTEI.createElement("vocal");
-			Element desc = this.docTEI.createElement("desc");
-			desc.setTextContent(attrs.item(0).getNodeValue());
-			vocal.appendChild(desc);
+			vocal.setTextContent(attrs.item(0).getNodeValue());
 			seg.appendChild(vocal);
 			u.appendChild(seg);
 		}
 	}
 
 	/**
-	 * Traitement des éléments <strong>sync</strong> du document Transcriber:<br>
+	 * Traitement des éléments <strong>sync</strong> du document Transcriber:
+	 * <br>
 	 * dans le cas où un élément <strong>sync</strong> est présent, on ajoute un
 	 * élément anchor à l'élément au annotatedU qui le contient.
 	 * 
@@ -869,7 +841,8 @@ public class TranscriberToTei {
 	 * <strong>u</strong>.
 	 * 
 	 * @param u
-	 *            L'élément <strong>annotatedU</strong> auquel on attribut l'identifiant.
+	 *            L'élément <strong>annotatedU</strong> auquel on attribut
+	 *            l'identifiant.
 	 */
 	public void setU_Id(Element annotatedU) {
 		String IdU = "au" + utteranceId;
@@ -887,7 +860,7 @@ public class TranscriberToTei {
 	public String[] getSpeakers(Element turn) {
 		String spk = turn.getAttribute("speaker");
 		return spk.split(" ");
-	}	
+	}
 
 	/**
 	 * Mise à jour des attributs et éléments de l'élément
@@ -905,66 +878,76 @@ public class TranscriberToTei {
 	 *            Transcriber.
 	 */
 	public void setIncidentAttributes(Element incident, String type, NamedNodeMap attrs) {
-		for (int i = 0; i < attrs.getLength(); i++) {
-			String attName = attrs.item(i).getNodeName();
-			String attValue = attrs.item(i).getNodeValue();
-			//Deux valeurs possibles : event ou background
-			incident.setAttribute("type", type);
-			if (attName == "time") {
-				String startId = addTimeToTimeline(attValue);
-				incident.setAttribute("start", startId);
-			} else if (attName == "type") {
-				incident.setAttribute("subtype", attValue);
-			} else if (attName == "desc") {
-				Element desc = this.docTEI.createElement("desc");
-				desc.setAttribute("type", "desc");
-				desc.setTextContent(attValue);
-				incident.appendChild(desc);
-			} else if (attName == "level") {
-				Element desc = this.docTEI.createElement("desc");
-				desc.setAttribute("type", "level");
-				desc.setTextContent(attValue);
-				incident.appendChild(desc);
-			} else if (attName == "extent") {
-				Element desc = this.docTEI.createElement("desc");
-				desc.setAttribute("type", "extent");
-				desc.setTextContent(attValue);
-				incident.appendChild(desc);
+		if (type == "Background") {
+			incident.setAttribute("type", "background");
+			for (int i = 0; i < attrs.getLength(); i++) {
+				String attName = attrs.item(i).getNodeName();
+				String attValue = attrs.item(i).getNodeValue();
+				if (attName == "time") {
+					String startId = addTimeToTimeline(attValue);
+					Element desc = this.docTEI.createElement("desc");
+					desc.setAttribute("type", "time");
+					desc.setTextContent(startId);
+					incident.appendChild(desc);
+				} else if (attName == "type") {
+					// noise|lexical|pronounce|language|entities
+					incident.setAttribute("subtype", attValue);
+				} else if (attName == "level") {
+					Element desc = this.docTEI.createElement("desc");
+					desc.setAttribute("type", "level");
+					desc.setTextContent(attValue);
+					incident.appendChild(desc);
+				}
+			}
+		} else {
+			for (int i = 0; i < attrs.getLength(); i++) {
+				String attName = attrs.item(i).getNodeName();
+				String attValue = attrs.item(i).getNodeValue();
+				if (attName == "type") {
+					// noise|lexical|pronounce|language|entities
+					incident.setAttribute("type", attValue);
+				} else if (attName == "desc") {
+					Element desc = this.docTEI.createElement("desc");
+					desc.setTextContent(attValue);
+					incident.appendChild(desc);
+				} else if (attName == "extent") {
+					incident.setAttribute("subtype", attValue);
+				}
 			}
 		}
 	}
 
-	public String getTimeValue(String timeId){
+	public String getTimeValue(String timeId) {
 		return times.get(Integer.parseInt(timeId.split("#T")[1]));
 	}
 
-	public String addTimeToTimeline(String time){
-		String id = "";	
-		if(!Utils.isNotEmptyOrNull(time)){return time;}
+	public String addTimeToTimeline(String time) {
+		String id = "";
+		if (!Utils.isNotEmptyOrNull(time)) {
+			return time;
+		}
 		Double t = Double.parseDouble(time);
 		if (t > maxTime)
 			maxTime = t;
-		if(Float.parseFloat(time) == 0){
+		if (Float.parseFloat(time) == 0) {
 			id = "T0";
-		}
-		else if (times.contains(time)){
+		} else if (times.contains(time)) {
 			id = "T" + times.indexOf(time);
-		}
-		else{
+		} else {
 			times.add(time);
 			Element when = docTEI.createElement("when");
 			when.setAttribute("interval", time);
-			whenId ++;
-			id = "T"+whenId;
+			whenId++;
+			id = "T" + whenId;
 			when.setAttribute("xml:id", id);
 			when.setAttribute("since", "#T0");
-			//timeline.appendChild(when);
+			// timeline.appendChild(when);
 			timeElements.add(when);
 		}
 		return "#" + id;
 	}
 
-	public void addTemplateDesc(){
+	public void addTemplateDesc() {
 
 		Element fileDesc = (Element) this.docTEI.getElementsByTagName("fileDesc").item(0);
 		Element notesStmt = (Element) fileDesc.getElementsByTagName("notesStmt").item(0);
@@ -972,27 +955,26 @@ public class TranscriberToTei {
 		templateNote.setAttribute("type", "TEMPLATE_DESC");
 		notesStmt.appendChild(templateNote);
 
-
-		//Ajout des locuteurs dans les templates
+		// Ajout des locuteurs dans les templates
 		Element particDesc = (Element) this.docTEI.getElementsByTagName("particDesc").item(0);
 		NodeList persons = particDesc.getElementsByTagName("person");
-		for(int i = 0; i<persons.getLength(); i++){
-			Element person = (Element)persons.item(i);
+		for (int i = 0; i < persons.getLength(); i++) {
+			Element person = (Element) persons.item(i);
 			Element note = docTEI.createElement("note");
 
-			Element noteType  = docTEI.createElement("note");
+			Element noteType = docTEI.createElement("note");
 			noteType.setAttribute("type", "type");
 			noteType.setTextContent("-");
 			note.appendChild(noteType);
 
-			Element noteParent  = docTEI.createElement("note");
+			Element noteParent = docTEI.createElement("note");
 			noteParent.setAttribute("type", "parent");
 			noteParent.setTextContent("-");
 			note.appendChild(noteParent);
-			if(person.getElementsByTagName("alt").getLength()>0){
-				Element alt = (Element)person.getElementsByTagName("alt").item(0);
+			if (person.getElementsByTagName("alt").getLength() > 0) {
+				Element alt = (Element) person.getElementsByTagName("alt").item(0);
 
-				Element noteCode  = docTEI.createElement("note");
+				Element noteCode = docTEI.createElement("note");
 				noteCode.setAttribute("type", "code");
 				noteCode.setTextContent(alt.getAttribute("type"));
 				note.appendChild(noteCode);
@@ -1000,41 +982,41 @@ public class TranscriberToTei {
 			}
 			templateNote.appendChild(note);
 		}
-		for(String tierName : this.tiersNames){
+		for (String tierName : this.tiersNames) {
 			Element note = docTEI.createElement("note");
 
-			Element noteCode  = docTEI.createElement("note");
+			Element noteCode = docTEI.createElement("note");
 			noteCode.setAttribute("type", "code");
 			noteCode.setTextContent(tierName);
 			note.appendChild(noteCode);
 
-			Element noteType  = docTEI.createElement("note");
+			Element noteType = docTEI.createElement("note");
 			noteType.setAttribute("type", "type");
 			noteType.setTextContent(LgqType.SYMB_ASSOC);
 			note.appendChild(noteType);
 
 			String parent = Utils.ANNOTATIONBLOC;
-			if(tierName.toLowerCase().equals(Utils.ANNOTATIONBLOC)){
+			if (tierName.toLowerCase().equals(Utils.ANNOTATIONBLOC)) {
 				parent = "-";
 			}
-			Element noteParent  = docTEI.createElement("note");
+			Element noteParent = docTEI.createElement("note");
 			noteParent.setAttribute("type", "parent");
 			noteParent.setTextContent(parent);
 			note.appendChild(noteParent);
 
 			templateNote.appendChild(note);
-		}		
+		}
 	}
-	
-	public void addTimeline(){
+
+	public void addTimeline() {
 		Utils.sortTimeline(timeElements);
 		Element timeline = (Element) docTEI.getElementsByTagName("timeline").item(0);
-		for(Element when : timeElements){
+		for (Element when : timeElements) {
 			timeline.appendChild(when);
 		}
 	}
 
-	public void setDurDate(){
+	public void setDurDate() {
 		Element sourceDesc = (Element) this.docTEI.getElementsByTagName("sourceDesc").item(0);
 		if (this.docTEI.getElementsByTagName("recordingStmt").getLength() == 0) {
 			Element recordingStmt = this.docTEI.createElement("recordingStmt");
@@ -1042,7 +1024,7 @@ public class TranscriberToTei {
 			Element recording = this.docTEI.createElement("recording");
 			recordingStmt.appendChild(recording);
 		}
-		Element recording =  (Element) this.docTEI.getElementsByTagName("recording").item(0);
+		Element recording = (Element) this.docTEI.getElementsByTagName("recording").item(0);
 		Element date = this.docTEI.createElement("date");
 		recording.appendChild(date);
 		String d = this.rootTRS.getAttribute("version_date");
@@ -1057,16 +1039,21 @@ public class TranscriberToTei {
 	 * Affiche la description et l'usage du programme principal.
 	 */
 	public static void usage() {
-		System.err.println("Description: TranscriberToTei convertit un fichier au format Transcriber en un fichier au format TEI");
+		System.err.println(
+				"Description: TranscriberToTei convertit un fichier au format Transcriber en un fichier au format TEI");
 		System.err.println("Usage: TranscriberToTei [-options] <file.trs>");
 		System.err.println("	:-i nom du fichier ou repertoire où se trouvent les fichiers Transcriber à convertir.");
 		System.err.println("		Les fichiers Transcriber ont pour extension .trs ou .trs.xml");
-		System.err.println("	:-o nom du fichier ou repertoire des résultats au format TEI (" + Utils.EXT+")");
-		System.err.println("		si cette option n'est pas spécifiée, le fichier de sortie aura le même nom que le fichier d'entrée, avec l'extension" + Utils.EXT);
+		System.err.println("	:-o nom du fichier ou repertoire des résultats au format TEI (" + Utils.EXT + ")");
+		System.err.println(
+				"		si cette option n'est pas spécifiée, le fichier de sortie aura le même nom que le fichier d'entrée, avec l'extension"
+						+ Utils.EXT);
 		System.err.println("		ou les résultats seont stockés dans le même dossier que le dossier d'entrée.\"");
-		System.err.println("	 :--dtd cette option permet de vérifier que les fichiers Transcriber sont conformes à leur dtd");
-		System.err.println("		si cette option est spécifiée, la dtd (Trans-14.dtd) doit se trouver dans le même repertoire que le fichier Transcriber\n" +
-				"\t\tTéléchargement de la DTD de Transcriber : http://sourceforge.net/p/trans/git/ci/master/tree/etc/trans-14.dtd");
+		System.err.println(
+				"	 :--dtd cette option permet de vérifier que les fichiers Transcriber sont conformes à leur dtd");
+		System.err.println(
+				"		si cette option est spécifiée, la dtd (Trans-14.dtd) doit se trouver dans le même repertoire que le fichier Transcriber\n"
+						+ "\t\tTéléchargement de la DTD de Transcriber : http://sourceforge.net/p/trans/git/ci/master/tree/etc/trans-14.dtd");
 		System.err.println("	:-usage ou -help = affichage de ce message");
 		System.exit(1);
 	}
@@ -1077,7 +1064,7 @@ public class TranscriberToTei {
 	 * 
 	 * @param args
 	 *            Liste des aruments du programme.
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static void main(String[] args) throws Exception {
 		Utils.printVersionMessage();
@@ -1115,34 +1102,34 @@ public class TranscriberToTei {
 			}
 		}
 
-		File f = new File (input);
+		File f = new File(input);
 
-		//Permet d'avoir le nom complet du fichier (chemin absolu, sans signes spéciaux (. et .. particulièrement))
+		// Permet d'avoir le nom complet du fichier (chemin absolu, sans signes
+		// spéciaux (. et .. particulièrement))
 		input = f.getCanonicalPath();
 
-		if (f.isDirectory()){
+		if (f.isDirectory()) {
 			File[] trsFiles = f.listFiles();
 
 			String outputDir = "";
-			if (output == null){
-				if(input.endsWith("/")){
-					outputDir = input.substring(0, input.length()-1);
-				}
-				else{
+			if (output == null) {
+				if (input.endsWith("/")) {
+					outputDir = input.substring(0, input.length() - 1);
+				} else {
 					outputDir = input + "/";
 				}
-			}
-			else{
+			} else {
 				outputDir = output;
-				if(!outputDir.endsWith("/")){
-					outputDir = output+"/";
+				if (!outputDir.endsWith("/")) {
+					outputDir = output + "/";
 				}
 			}
 
 			File outFile = new File(outputDir);
-			if(outFile.exists()){
-				if(!outFile.isDirectory()){
-					System.out.println("\n Erreur :"+ output + " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
+			if (outFile.exists()) {
+				if (!outFile.isDirectory()) {
+					System.out.println("\n Erreur :" + output
+							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
 					usage();
 					System.exit(1);
 				}
@@ -1150,15 +1137,14 @@ public class TranscriberToTei {
 
 			new File(outputDir).mkdir();
 
-			for (File file : trsFiles){
+			for (File file : trsFiles) {
 				String name = file.getName();
-				if (file.isFile() && (name.endsWith(".trs") || name.endsWith(".trs.xml"))){
-					TranscriberToTei tr = new TranscriberToTei(file, dtdValidation );
+				if (file.isFile() && (name.endsWith(".trs") || name.endsWith(".trs.xml"))) {
+					TranscriberToTei tr = new TranscriberToTei(file, dtdValidation);
 					String outputFileName = Utils.basename(file) + Utils.EXT;
-					System.out.println(outputDir+outputFileName);
-					Utils.createFile(outputDir+outputFileName, tr.docTEI);
-				}
-				else if(file.isDirectory()){
+					System.out.println(outputDir + outputFileName);
+					Utils.createFile(outputDir + outputFileName, tr.docTEI);
+				} else if (file.isDirectory()) {
 					args[0] = "-i";
 					args[1] = file.getAbsolutePath();
 					submain(args);
@@ -1166,24 +1152,22 @@ public class TranscriberToTei {
 			}
 		}
 
-		else{
+		else {
 			if (output == null) {
 				output = Utils.fullbasename(input) + Utils.EXT;
-			}
-			else if(new File(output).isDirectory()){
-				if(output.endsWith("/")){
+			} else if (new File(output).isDirectory()) {
+				if (output.endsWith("/")) {
 					output = output + Utils.basename(input) + Utils.EXT;
-				}
-				else{
-					output = output + "/"+ Utils.basename(input) + Utils.EXT;
+				} else {
+					output = output + "/" + Utils.basename(input) + Utils.EXT;
 				}
 			}
 
-			if (!(Utils.validFileFormat(input, ".trs")||Utils.validFileFormat(input, ".trs.xml"))) {
+			if (!(Utils.validFileFormat(input, ".trs") || Utils.validFileFormat(input, ".trs.xml"))) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension .trs ou .trs.xml");
 				usage();
 			}
-			
+
 			TranscriberToTei tr = new TranscriberToTei(new File(input), dtdValidation);
 			System.out.println("Lecture de " + input);
 			Utils.createFile(output, tr.docTEI);

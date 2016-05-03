@@ -81,18 +81,6 @@ public class ChatFile {
 	ArrayList<ID> ids= new ArrayList<ID>();
 	boolean inMainLine = false;
 
-	public String join(String[] s, String delimiter) {
-		StringBuffer buffer = new StringBuffer();
-		int i = 0;
-		while (i < s.length-1) {
-			buffer.append(s[i]);
-			buffer.append(delimiter);
-			i++;
-		}
-		buffer.append(s[i]);
-		return buffer.toString();
-	}
-
 	void findInfo(boolean verbose) {
 		// find all types of information and preprocess it.
 		int sz = nbMainLines();
