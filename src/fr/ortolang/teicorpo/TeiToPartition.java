@@ -27,8 +27,7 @@ public class TeiToPartition {
 	int idIncr = 1;
 
 	// timeline information
-	double xmaxTime = 0.0;
-	HashMap<String, Double> timeline;
+	TeiTimeline timeline;
 
 	Document teiDoc;
 	XPath teiXPath;
@@ -39,67 +38,11 @@ public class TeiToPartition {
 		teiDoc = tei;
 		teiXPath = xpath;
 		// récupérer la timeline
-		getTimeline();
+		timeline.buildTimeline(teiDoc);
 		// info tiers et types
 		getTierInfo();
 		// contenu des tiers
 		getTiers();
-	}
-	
-	//Remplissage de la timeline à partir de la timeline au format TEI : copie exacte: mêmes identifiants et valeurs
-	void getTimeline() {
-		try {
-			timeline = new HashMap<String, Double>();
-			//besoin units et time
-	        XPathExpression expr = teiXPath.compile("/TEI/text/timeline/when");
-	        NodeList nodes = (NodeList) expr.evaluate(this.teiDoc, XPathConstants.NODESET);
-			String prev_time_units = (String)teiXPath.compile("/TEI/text/timeline/@unit").evaluate(this.teiDoc, XPathConstants.STRING);
-			double ratio = 1.0;
-			if (prev_time_units.equals("s")) {
-				ratio = 1.0;
-			} else if (prev_time_units.equals("ms")) {
-				ratio = 1000.0;
-			} else {
-				ratio = -1.0;
-				System.err.println("unité inconnue pour la timeline: " + prev_time_units + " pas de réajustement");
-			}
-			// System.out.printf("ratio: %s %f %n", prev_time_units, ratio);
-			for(int i = 0; i<nodes.getLength(); i++){
-				String val = "";
-				try {
-					Element when = (Element)nodes.item(i);
-					if(when.hasAttribute("interval")){
-						String id = when.getAttribute("xml:id");
-						val = when.getAttribute("interval");
-						if (ratio < 0.0)
-							timeline.put(id, Double.parseDouble(val));
-						else if (!val.isEmpty()) {
-							double vald;
-							vald = Double.parseDouble(val);
-							vald /= ratio;
-							timeline.put(id, vald);
-							if (vald > xmaxTime)
-								xmaxTime = vald;
-						}
-					} else if (when.hasAttribute("absolute")) {
-						String id = when.getAttribute("xml:id");
-						// here we should decode absolute
-						// but it is not functional right now
-						val = when.getAttribute("absolute");
-						if (ratio < 0.0)
-							timeline.put(id, Double.parseDouble(val));
-						else {
-							timeline.put(id, 0.0);
-						}
-					}
-				} catch (Exception e) {
-					System.err.println("not a double: " + val);
-				}
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-			System.err.println("ERREUR dans le traitement de la timeline: " + e.toString());
-		}
 	}
 
 	public static String getLgqConstraint(ArrayList<TierInfo> ti, String type) {
@@ -135,6 +78,7 @@ public class TeiToPartition {
 		}
 		for(int i = 0; i<annotationGrps.getLength(); i++) {
 			Element annotGrp = (Element) annotationGrps.item(i);
+			AnnotatedUtterance au = new AnnotatedUtterance(annotGrp, this.timeline, null, null);
 			NodeList annotGrpElmts = annotGrp.getChildNodes();
 			String name = annotGrp.getAttribute("who");
 			if (!Utils.isNotEmptyOrNull(name)) continue; // this is a note and not an utterance
@@ -143,9 +87,9 @@ public class TeiToPartition {
 				if (!optionsOutput.isDoDisplay(name)) continue;
 			}
 			String start = Utils.refID(annotGrp.getAttribute("start"));
-			start = Double.toString(timeline.get(start));
+			start = timeline.getTimeValue(start);
 			String end = Utils.refID(annotGrp.getAttribute("end"));
-			end = Double.toString(timeline.get(end));
+			end = timeline.getTimeValue(end);
 			String id = annotGrp.getAttribute("xml:id");
 			String timeSG = (start.isEmpty() || end.isEmpty()) ? "ref" : "time";
 			for(int j = 0; j<annotGrpElmts.getLength(); j++){
@@ -247,10 +191,10 @@ public class TeiToPartition {
 				String tend = span.getAttribute("to");
 				// System.out.printf("YY: %s %s %n", tstart, tend);
 				if(Utils.isNotEmptyOrNull(tstart)){
-					annot.start = Double.toString(timeline.get(Utils.refID(tstart)));
+					annot.start = timeline.getTimeValue(Utils.refID(tstart));
 				}
 				if(Utils.isNotEmptyOrNull(tend)){
-					annot.end = Double.toString(timeline.get(Utils.refID(tend)));
+					annot.end = timeline.getTimeValue(Utils.refID(tend));
 				}
 				// System.out.printf("time %s %s %n", annot.start, annot.end);
 			}

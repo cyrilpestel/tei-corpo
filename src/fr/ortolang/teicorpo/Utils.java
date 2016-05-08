@@ -41,8 +41,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.033"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "04/05/2016 18:00";
+	public static String versionSoft = "1.034"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "09/05/2016 12:00";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
