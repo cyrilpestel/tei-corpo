@@ -17,9 +17,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import fr.ortolang.teicorpo.TeiFile.AnnotatedUtterance;
 import fr.ortolang.teicorpo.TeiFile.Div;
-import fr.ortolang.teicorpo.TeiFile.Participant;
 
 public class TeiToClan extends TeiConverter {
 
@@ -103,10 +101,10 @@ public class TeiToClan extends TeiConverter {
 	 * language|corpus|code|age|sex|group|SES|role|education|customField
 	 */
 	public void addParticipantProperties() {
-		ArrayList<Participant> participants = getParticipants();
+		ArrayList<TeiParticipant> participants = getParticipants();
 		String participantsLine = "";
 		String participantsIDS = "";
-		for (Participant p : participants) {
+		for (TeiParticipant p : participants) {
 			participantsLine += toString(p.id) + " " + toString(p.name) + " " + getRole(p) + ", ";
 			// Chaque locuteur doit obligatoirement avoir un langage, par défaut
 			// on mettre le français.
@@ -168,7 +166,7 @@ public class TeiToClan extends TeiConverter {
 	 */
 	public void addOtherProperties() {
 		// @media
-		TeiFile.TransInfo teiHeader = getTransInfo();
+		TransInfo teiHeader = getTransInfo();
 		// La spécification du type de média est obligatoire, par défaut on
 		// mettra video (les seules valeurs acceptées étant audio et video)
 		if (!Utils.isNotEmptyOrNull(teiHeader.mediatype)) {
@@ -225,7 +223,7 @@ public class TeiToClan extends TeiConverter {
 	 * faisant pas partie des informations attendues par Chat.
 	 */
 	public void partComment() {
-		for (Participant p : getParticipants()) {
+		for (TeiParticipant p : getParticipants()) {
 			if (!p.adds.isEmpty()) {
 				String com = p.id + " ";
 				for (Entry<String, String> att : p.adds.entrySet()) {
@@ -313,66 +311,48 @@ public class TeiToClan extends TeiConverter {
 		 * Chaque utterance a une liste d'énoncé, dans un format spécifique:
 		 * start;end__speech
 		 */
-		for (String s : u.speeches) {
-			s = s.replaceAll("\n", "");
+		for (int s=0; s<u.speeches.size(); s++) {
+//			System.out.printf("u.speeches: [%s]%n", u.speeches.get(s).toString());
 			String start = null;
 			String end = null;
-
-			String[] splitS = s.split("__");
-			if (splitS.length > 1)
-				speech = toChatLine(splitS[1]).trim();
-			else
-				speech = "";
-			if (splitS.length == 0) {
-				start = "";
-				end = "";
-			} else {
-				String times = splitS[0];
-				String[] tms = times.split(";");
-				if (tms.length == 2) {
-					start = tms[0];
-					end = tms[1];
-				} else {
-					start = "";
-					end = "";
-				}
-			}
+			speech = toChatLine(u.speeches.get(s).content).trim();
+			speech = speech.replaceAll("\n", "");
+			start = u.speeches.get(s).start;
+			end = u.speeches.get(s).end;
 
 			// Si le temps de début n'est pas renseigné, on prend le temps de
 			// fin de l'énoncé précédent(si présent)
 			if (!Utils.isNotEmptyOrNull(start)) {
-				try {
-					start = u.speeches.get(u.speeches.indexOf(s) - 1).split("__")[0].split(";")[1];
-				} catch (Exception e) {
-				}
+				if (s<1)
+					start = "";
+				else
+					start = u.speeches.get(s-1).end;
 			}
 
 			// Si le temps de fin n'est pas renseigné, on prend le temps de
 			// début de l'énoncé suivant(si présent)
 			if (!Utils.isNotEmptyOrNull(end)) {
-				try {
-					end = u.speeches.get(u.speeches.indexOf(s) + 1).split("__")[0].split(";")[0];
-					if (end.equals(start)) {
-						start = "";
-						end = "";
-					}
-				} catch (Exception e) {
-				}
+				if (s < u.speeches.size()-1)
+					end = u.speeches.get(s+1).start;
+				else
+					end = "";
 			}
+
 			// Si l'énoncé est le premier de la liste de l'utterance, son temps
 			// de début est égal au temps de début de l'utterance
-			if (u.speeches.indexOf(s) == 0 && !Utils.isNotEmptyOrNull(start)) {
+			if (s == 0 && !Utils.isNotEmptyOrNull(start)) {
 				start = u.start;
 			}
+
 			// Si l'énoncé est le dernier de la liste de l'utterance, son temps
 			// de fin est égal au temps de fin de l'utterance
-			if (u.speeches.indexOf(s) == u.speeches.size() - 1 && !Utils.isNotEmptyOrNull(end)) {
+			if (s == u.speeches.size()-1 && !Utils.isNotEmptyOrNull(end)) {
 				end = u.end;
 			}
 
 			// Ecriture de l'énoncé
+//			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, optionsOutput.forceEmpty);
 			writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
-
 		}
 		// écriture des tiers
 		for (Annot tier : u.tiers) {
@@ -507,7 +487,7 @@ public class TeiToClan extends TeiConverter {
 	 * @param p
 	 * @return
 	 */
-	public static String getRole(Participant p) {
+	public static String getRole(TeiParticipant p) {
 		String role = "";
 		if (Utils.isNotEmptyOrNull(p.role)) {
 			role = p.role;

@@ -72,7 +72,7 @@ public class TeiToPartition {
 		try {
 			annotationGrps = Utils.getAllAnnotationBloc(this.teiXPath, this.teiDoc);
 		} catch (XPathExpressionException e) {
-			System.out.println("Erreur de traitement de xpath annotationBloc");
+			System.out.println("Erreur de traitement de xpath annotationBlock");
 			e.printStackTrace();
 			System.exit(1);
 		}

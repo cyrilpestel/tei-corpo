@@ -1,6 +1,7 @@
 package fr.ortolang.teicorpo;
 
 import java.util.HashSet;
+import java.util.TreeMap;
 
 class TierParams {
 	boolean forceEmpty;
@@ -13,6 +14,7 @@ class TierParams {
 	boolean detectEncoding;
 	HashSet<String> doDisplay;
 	HashSet<String> dontDisplay;
+	TreeMap<String, String> txmInfo;
 	int level;
 	TierParams() {
 		input = null;
@@ -26,12 +28,21 @@ class TierParams {
 		forceEmpty = true;
 		options = "";
 		nospreadtime = false;
+		txmInfo = new TreeMap<String, String>();
 	}
 	void addDoDisplay(String s) {
 		doDisplay.add(s.toLowerCase());
 	}
 	void addDontDisplay(String s) {
 		dontDisplay.add(s.toLowerCase());
+	}
+	void addTxm(String info) {
+		int p = info.indexOf(":");
+		if (p<1 || p >= info.length()) {
+			System.err.println("error: txm information ignored (missing :) => " + info);
+		} else {
+			txmInfo.put(info.substring(0, p), info.substring(p+1));
+		}
 	}
 	void setLevel(int l) {
 		level = l;

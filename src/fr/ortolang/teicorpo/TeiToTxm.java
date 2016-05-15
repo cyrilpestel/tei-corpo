@@ -1,5 +1,5 @@
 /**
- * Conversion d'un fichier TEI en un fichier SRT.
+ * Conversion d'un fichier TEI en un fichier TXM.
  * @author Myriam Majdoub
  */
 package fr.ortolang.teicorpo;
@@ -11,54 +11,90 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import fr.ortolang.teicorpo.AnnotatedUtterance;
 import fr.ortolang.teicorpo.TeiFile.Div;
 
-public class TeiToSrt extends TeiConverter {
+public class TeiToTxm extends TeiConverter {
 
-	// Permet d'écrire le fichier de sortie
-	private PrintWriter out;
-	// Encodage du fichier de sortie
-	final static String outputEncoding = "UTF-8";
+	// Document Txm à écrire
+	public Document txmDoc;
 	// Extension du fichier de sortie
-	final static String EXT = ".srt";
+	final static String EXT = ".txm.xml";
 	TierParams optionsOutput;
-
-	int srtNumber = 1; // compte le nombre de sous-titres produits dans le
-						// fichier srt pour écrire les entêtes.
+	
+	Element txm; // root of document
+	Element text; // pout all utterances inside text
+	String typeDiv;
 
 	/**
-	 * Convertit le fichier TEI donné en argument en un fichier Srt.
+	 * Convertit le fichier TEI donné en argument en un fichier Txm.
 	 * 
 	 * @param inputName
 	 *            Nom du fichier d'entrée (fichier TEI, a donc l'extenstion
 	 *            .teiml)
 	 * @param outputName
-	 *            Nom du fichier de sortie (fichier SRT, a donc l'extenson .srt)
+	 *            Nom du fichier de sortie (fichier TXM, a donc l'extenson .txm.xml)
 	 */
-	public TeiToSrt(String inputName, String outputName, TierParams optionsTei) {
+	public TeiToTxm(String inputName, String outputName, TierParams optionsTei) {
 		super(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
 		optionsOutput = optionsTei;
 		outputWriter();
 		conversion();
+		createOutput();
 	}
 
-	/**
-	 * Ecriture de l'output
-	 */
+	@Override
 	public void outputWriter() {
-		out = null;
+		txmDoc = null;
+		DocumentBuilderFactory factory = null;
 		try {
-			FileOutputStream of = new FileOutputStream(outputName);
-			OutputStreamWriter outWriter = new OutputStreamWriter(of, outputEncoding);
-			out = new PrintWriter(outWriter, true);
+			factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			txmDoc = builder.newDocument();
+			txm = txmDoc.createElement("txm");
+			txmDoc.appendChild(txm);
 		} catch (Exception e) {
-			out = new PrintWriter(System.out, true);
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void createOutput() {
+		createFile(outputName);
+	}
+
+	public void createFile(String outputFileName) {
+		Source source = new DOMSource(this.txmDoc);
+		Result resultat = new StreamResult(outputFileName);
+		try {
+			// Configuration du transformer 
+			TransformerFactory fabrique2 = TransformerFactory.newInstance();
+			Transformer transformer = fabrique2.newTransformer();
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+			// Transformation
+			transformer.transform(source, resultat);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -66,10 +102,6 @@ public class TeiToSrt extends TeiConverter {
 	 * Conversion
 	 */
 	public void conversion() {
-		// System.out.println("Conversion (" +
-		// (Params.forceEmpty?"true":"false") + ") (" + Params.partDisplay + ")
-		// (" + Params.tierDisplay + ")");
-		srtNumber = 1;
 		// Etapes de conversion
 		buildHeader();
 		buildText();
@@ -80,13 +112,9 @@ public class TeiToSrt extends TeiConverter {
 	 * convertir
 	 */
 	public void buildHeader() {
-		if (srtNumber > 1)
-			out.println("");
-		out.printf("%d\n", srtNumber);
-		srtNumber++;
-		out.printf("%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n", 0, 0, 0, 0, TimeDivision.toHours(1),
-				TimeDivision.toMinutes(1), TimeDivision.toSeconds(1), TimeDivision.toMilliSeconds(1));
-		out.println(inputName);
+		txm.setAttribute("file", inputName);
+		text = txmDoc.createElement("text");
+		txm.appendChild(text);
 	}
 
 	/**
@@ -95,24 +123,19 @@ public class TeiToSrt extends TeiConverter {
 	public void buildText() {
 		ArrayList<TeiFile.Div> divs = tf.trans.divs;
 		for (Div d : divs) {
+			// System.out.println("DIV: " + d.type + " <" + d.theme + ">");
+			if (d.type.toLowerCase().equals("bg") || d.type.toLowerCase().equals("g")) {
+				typeDiv = d.theme;
+			} else {
+				typeDiv = "";
+			}
 			for (AnnotatedUtterance u : d.utterances) {
-				if (Utils.isNotEmptyOrNull(u.type)) {
-					if (!u.start.isEmpty()) {
-						float start = Float.parseFloat(u.start);
-						if (srtNumber > 1)
-							out.println("");
-						out.printf("%d\n", srtNumber);
-						srtNumber++;
-						out.printf("%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n", TimeDivision.toHours(start),
-								TimeDivision.toMinutes(start), TimeDivision.toSeconds(start),
-								TimeDivision.toMilliSeconds(start), TimeDivision.toHours(start + 1),
-								TimeDivision.toMinutes(start + 1), TimeDivision.toSeconds(start + 1),
-								TimeDivision.toMilliSeconds(start + 1));
-						String[] splitType = u.type.split("\t");
-						try {
-							writeDiv(splitType[0], splitType[1]);
-						} catch (ArrayIndexOutOfBoundsException e) {
-							out.println(splitType[0]);
+				if (u.type != null) {
+					String[] splitType = u.type.split("\t");
+					if (splitType != null && splitType.length >= 2) {
+						if (splitType[0].toLowerCase().equals("bg") || splitType[0].toLowerCase().equals("g")) {
+							String theme = Utils.cleanString(tf.transInfo.situations.get(splitType[1]));
+							typeDiv = theme;
 						}
 					}
 				}
@@ -129,11 +152,11 @@ public class TeiToSrt extends TeiConverter {
 	 *            le type de div à écrire
 	 * @param themeId
 	 *            le theme du div à écrire
-	 */
 	public void writeDiv(String type, String themeId) {
 		String theme = Utils.cleanString(tf.transInfo.situations.get(themeId));
-		out.println(type + "\t" + theme);
+		System.out.println("DIV" + type + "\t" + theme);
 	}
+	 */
 
 	/**
 	 * Ecriture d'un énonce: lignes qui commencent par le symbole étoile *
@@ -176,19 +199,40 @@ public class TeiToSrt extends TeiConverter {
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
 		if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
-			float start = Float.parseFloat(startTime);
-			float end = Float.parseFloat(endTime);
-			if (srtNumber > 1)
-				out.println("");
-			out.printf("%d\n", srtNumber);
-			srtNumber++;
-			out.printf("%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n", TimeDivision.toHours(start),
-					TimeDivision.toMinutes(start), TimeDivision.toSeconds(start), TimeDivision.toMilliSeconds(start),
-					TimeDivision.toHours(end), TimeDivision.toMinutes(end), TimeDivision.toSeconds(end),
-					TimeDivision.toMilliSeconds(end));
-			out.println(loc + ": " + speechContent);
-		} else if (optionsOutput.forceEmpty) {
-			out.println(loc + ": " + speechContent);
+			Element u = txmDoc.createElement("u");
+			u.setAttribute("who", loc);
+			u.setAttribute("start", Double.toString(Double.parseDouble(startTime)));
+			u.setAttribute("end", Double.toString(Double.parseDouble(endTime)));
+			writeUtterance(u, speechContent, loc);
+			// u.setTextContent(speechContent);
+			text.appendChild(u);
+		} else {
+			Element u = txmDoc.createElement("u");
+			u.setAttribute("who", loc);
+			u.setAttribute("start", "");
+			u.setAttribute("end", "");
+			writeUtterance(u, speechContent, loc);
+			// u.setTextContent(speechContent);
+			text.appendChild(u);
+		}
+	}
+
+	void writeUtterance(Element u, String speechContent, String loc) {
+		String[] s = speechContent.split("\\s+");
+		for (String w: s) {
+			Element we = txmDoc.createElement("w");
+			we.setTextContent(w);
+			if (!loc.isEmpty())
+				we.setAttribute("loc", loc);
+			for (Map.Entry<String, String> entry : optionsOutput.txmInfo.entrySet()) {
+			    String key = entry.getKey();
+			    String value = entry.getValue();
+				we.setAttribute(key, value);
+			}
+			if (!typeDiv.isEmpty()) {
+				we.setAttribute("div", typeDiv);
+			}
+			u.appendChild(we);
 		}
 	}
 
@@ -208,7 +252,7 @@ public class TeiToSrt extends TeiConverter {
 		for (String s : u.coms) {
 			String infoType = Utils.getInfoType(s);
 			String infoContent = Utils.getInfo(s);
-			out.println(infoType + ' ' + infoContent);
+//			out.println(infoType + ' ' + infoContent);
 		}
 	}
 
@@ -228,14 +272,11 @@ public class TeiToSrt extends TeiConverter {
 		String type = tier.name;
 		String tierContent = tier.content;
 		String tierLine = "%" + type + ": " + tierContent.trim();
-		out.println(tierLine);
-	}
-
-	public void createOutput() {
+//		out.println(tierLine);
 	}
 
 	public static void main(String args[]) throws IOException {
-		String usage = "Description: TeiToSrt convertit un fichier au format TEI en un fichier au format Srt%nUsage: TeiToSrt [-options] <file."
+		String usage = "Description: TeiToTxm convertit un fichier au format TEI en un fichier au format Txm%nUsage: TeiToTxm [-options] <file."
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
@@ -282,7 +323,7 @@ public class TeiToSrt extends TeiConverter {
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(Utils.EXT))) {
 					String outputFileName = Utils.basename(file.getName()) + EXT;
-					TeiToSrt ttc = new TeiToSrt(file.getAbsolutePath(), outputDir + outputFileName, options);
+					TeiToTxm ttc = new TeiToTxm(file.getAbsolutePath(), outputDir + outputFileName, options);
 					System.out.println(outputDir + outputFileName);
 					ttc.createOutput();
 				} else if (file.isDirectory()) {
@@ -303,9 +344,9 @@ public class TeiToSrt extends TeiConverter {
 			}
 
 			if (!Utils.validFileFormat(output, EXT)) {
-				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .srt ");
+				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .txm.xml ");
 			}
-			TeiToSrt ttc = new TeiToSrt(new File(input).getAbsolutePath(), output, options);
+			TeiToTxm ttc = new TeiToTxm(new File(input).getAbsolutePath(), output, options);
 			if (ttc.tf != null) {
 				System.out.println("Reading " + input);
 				ttc.createOutput();
@@ -314,5 +355,4 @@ public class TeiToSrt extends TeiConverter {
 		}
 
 	}
-
 }

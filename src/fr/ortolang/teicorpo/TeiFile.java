@@ -119,49 +119,66 @@ public class TeiFile {
 		public Trans(Element text, TeiFile tf) {
 			// Liste d'éléments contenus dans la transcription (élément text)
 			Element body = (Element) text.getElementsByTagName("body").item(0);
-			NodeList divList = body.getChildNodes();
 
-			// Div principal
-			try {
-				for (int i = 0; i < divList.getLength(); i++) {
-					if (Utils.isElement(divList.item(i))) {
-						Element elmt = (Element) divList.item(i);
-						if (elmt.getTagName().equals("div")) {
-							String attr = Utils.getDivHeadAttr(elmt, "subtype");
-							sit = tf.transInfo.situations.get(attr);
+			// TEST if there is only one div
+			NodeList bodyChildren = body.getChildNodes();
+			int first = -1;
+			for (int i = 0; i < bodyChildren.getLength(); i++) {
+				Node n = bodyChildren.item(i);
+				if (Utils.isElement(n)) {
+					if (n.getNodeName().equals("div")) {
+						if (first != -1) {
+							// more than one div: no episode
+							first = -2;
 							break;
 						}
+						first = i;
+					} else {
+						// not only divs
+						first = -2;
+						break;
 					}
 				}
-			} catch (Exception e) {
-				sit = "";
 			}
+
+			sit = "";
+			if (first >= 0) {
+				Element ep = (Element) bodyChildren.item(first);
+				// only one div so it's the episode
+				// un seul div c'est l'épisode
+				// on cherche les infos program et air_date
+				// sinon on met type + substype dans program
+				String attr = Utils.getDivHeadAttr(ep, "subtype");
+				if (Utils.isNotEmptyOrNull(attr))
+					sit = tf.transInfo.situations.get(attr);
+				bodyChildren = ep.getChildNodes();
+			}
+			processDivAndAnnotation(bodyChildren, tf);
+		}
+
+		private void processDivAndAnnotation(NodeList bodyChildren, TeiFile tf) {
+			// TODO Auto-generated method stub
 			/*
 			 * //Thème principal if(getDivOcc(divList) == 1) { NodeList subList
 			 * = divList.item(0).getChildNodes(); if (getDivOcc(subList) != 0)
 			 * divList = subList; }
 			 */
-			for (int i = 0; i < divList.getLength(); i++) {
-				if (Utils.isElement(divList.item(i))) {
-					Element elmt = (Element) divList.item(i);
+			for (int i = 0; i < bodyChildren.getLength(); i++) {
+				if (Utils.isElement(bodyChildren.item(i))) {
+					Element elmt = (Element) bodyChildren.item(i);
 					if (elmt.getTagName().equals("div")) {
 						String id = Utils.getDivHeadAttr(elmt, "subtype");
 						String theme = tf.transInfo.situations.get(id);
 						// System.out.printf("BeforeDiv: %s %s %n", id, theme);
 						Div d = new Div(tf, elmt, id, theme);
-						divs.add(d);
+						divs.add(d); // la situation
 						for (AnnotatedUtterance u : d.utterances) {
 							tierTypes.addAll(u.tierTypes);
 						}
 					}
 				}
 			}
-			/*
-			 * NodeList coms = text.getElementsByTagName("note"); for(int i = 0;
-			 * i<coms.getLength(); i++){ Element info = (Element) coms.item(i);
-			 * infos.add(info.getAttribute("type")+ "\t" +
-			 * info.getTextContent()); }
-			 */
+			
 		}
 	}
 

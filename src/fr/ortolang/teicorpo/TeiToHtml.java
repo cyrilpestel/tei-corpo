@@ -242,7 +242,7 @@ public class TeiToHtml {
 
 			for (int j = i; j<sp+i+1; j++) {
 				tmp_i = i;
-				TeiFile.AnnotatedUtterance u2 =  tf.mainLines.get(j);
+				AnnotatedUtterance u2 =  tf.mainLines.get(j);
 				String spkIdentifier = "";
 				if(tf.transInfo.format.equals("Clan")){
 					spkIdentifier = u2.speakerCode.replaceAll(":", "");
@@ -419,7 +419,7 @@ public class TeiToHtml {
 		out.println("}");
 	}
 
-	public void addInfo(TeiFile.AnnotatedUtterance u, String id){
+	public void addInfo(AnnotatedUtterance u, String id){
 		////////////////PHON
 		ArrayList<Annot> phons = u.getTier("pho");		
 		if(!phons.isEmpty()){
@@ -531,14 +531,14 @@ public class TeiToHtml {
 	}
 
 	public void addParticipantDivs(){
-		ArrayList<TeiFile.Participant> speakers = tf.transInfo.participants;
+		ArrayList<TeiParticipant> speakers = tf.transInfo.participants;
 		out.println( "<div id=\"speakers\">");
 		out.println("<ul>");
-		for (TeiFile.Participant p: speakers){
+		for (TeiParticipant p: speakers){
 			out.printf( "<li><a href=\"#%s\">%s</a></li>%n", p.id, p.name);
 		}
 		out.println("</ul>");
-		for (TeiFile.Participant p: speakers){
+		for (TeiParticipant p: speakers){
 			out.printf( "<div id=\"%s\" style=\"background-color:#F5F5F5;\">%n", p.id);
 			out.println("<table>");
 			if (p.id != null && !p.id.isEmpty()){
@@ -587,8 +587,8 @@ public class TeiToHtml {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 
-	public static float getStartTime(ArrayList<TeiFile.AnnotatedUtterance> mainlines, int i){
-		TeiFile.AnnotatedUtterance u = mainlines.get(i);
+	public static float getStartTime(ArrayList<AnnotatedUtterance> mainlines, int i){
+		AnnotatedUtterance u = mainlines.get(i);
 		if (!u.start.isEmpty() && u.start != null){
 			return Float.parseFloat(u.start);
 		}
@@ -596,7 +596,7 @@ public class TeiToHtml {
 			int nb=0;
 			for (int j = i; j>0; j--){
 				nb ++;
-				TeiFile.AnnotatedUtterance utt = mainlines.get(j);
+				AnnotatedUtterance utt = mainlines.get(j);
 				if (!utt.end.isEmpty() && utt.end != null){
 					return Float.parseFloat(utt.end)+((Float.parseFloat(utt.end)-Float.parseFloat(utt.start))*nb);
 				}
@@ -605,8 +605,8 @@ public class TeiToHtml {
 		return -1;
 	}
 
-	public static float getEndTime(ArrayList<TeiFile.AnnotatedUtterance> mainlines, int i){
-		TeiFile.AnnotatedUtterance u = mainlines.get(i);
+	public static float getEndTime(ArrayList<AnnotatedUtterance> mainlines, int i){
+		AnnotatedUtterance u = mainlines.get(i);
 		if (!u.end.isEmpty() && u.end != null){
 			return Float.parseFloat(u.end);
 		}
@@ -614,7 +614,7 @@ public class TeiToHtml {
 			int nb=0;
 			for (int j = i; j<mainlines.size(); j++){
 				nb ++;
-				TeiFile.AnnotatedUtterance utt = mainlines.get(j);
+				AnnotatedUtterance utt = mainlines.get(j);
 				if (!utt.start.isEmpty() && utt.start != null){
 					return Float.parseFloat(utt.start)-((Float.parseFloat(utt.end)-Float.parseFloat(utt.start))*nb);
 				}
@@ -623,7 +623,7 @@ public class TeiToHtml {
 		return -1;
 	}
 
-	public static String tiersToString(ArrayList<String> tiersTypes, TeiFile.AnnotatedUtterance u){
+	public static String tiersToString(ArrayList<String> tiersTypes, AnnotatedUtterance u){
 		String tiersToString = "";
 		for (Annot t : u.tiers){
 			tiersToString += t.name + " " + t.content + "\n";

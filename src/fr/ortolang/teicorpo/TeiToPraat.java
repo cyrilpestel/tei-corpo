@@ -119,7 +119,7 @@ public class TeiToPraat {
 		out.println("Object class = \"TextGrid\"");
 		out.println("");
 		out.println("xmin = 0");
-		out.printf("xmax = %s%n", printDouble(ttp.xmaxTime));
+		out.printf("xmax = %s%n", printDouble(ttp.timeline.xmaxTime));
 		out.println("tiers? <exists>");
 		out.printf("size = %d%n", ttp.tiers.size()); 
 	}

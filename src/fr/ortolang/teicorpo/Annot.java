@@ -12,6 +12,7 @@ public class Annot {
 	String link;
 	String previous;
 	String timereftype; // time ou ref
+	String cleanedContent; // the content without oral markers
 
 	public Annot() {
 		id = "";
@@ -67,6 +68,18 @@ public class Annot {
 		timereftype = "time";
 	}
 
+	public Annot(String tierName, String pstart, String pend, String value, String cleanedValue) {
+		id = "";
+		name = tierName;
+		start = pstart;
+		end = pend;
+		dependantAnnotations = null;
+		content = value;
+		cleanedContent = cleanedValue;
+		link = "";
+		timereftype = "time";
+	}
+
 	public Annot(String tierName, String value, String beginTime, String endTime) {
 		id = "";
 		name = tierName;
@@ -98,14 +111,15 @@ public class Annot {
 		}
 		s += "; CONTENT = " + content;
 		int i = 0;
-		while (i < dependantAnnotations.size()) {
-			s += "\n\t" + dependantAnnotations.get(i).toString();
-			i++;
-			if (i >= 10) {
-				s += "\n\t...";
-				break;
+		if (dependantAnnotations != null)
+			while (i < dependantAnnotations.size()) {
+				s += "\n\t" + dependantAnnotations.get(i).toString();
+				i++;
+				if (i >= 10) {
+					s += "\n\t...";
+					break;
+				}
 			}
-		}
 		return s;
 	}
 

@@ -117,8 +117,8 @@ public class AnonymousVideo extends TeiConverter {
 				String st = Utils.getDivHeadAttr(ne, "subtype");
 				String sit = tf.transInfo.situations.get(st);
 				if (sit.startsWith("private")) {
-					String start = tf.getTimeValue(Utils.getDivHeadAttr(ne, "start"));
-					String end = tf.getTimeValue(Utils.getDivHeadAttr(ne, "end"));
+					String start = tf.teiTimeline.getTimeValue(Utils.getDivHeadAttr(ne, "start"));
+					String end = tf.teiTimeline.getTimeValue(Utils.getDivHeadAttr(ne, "end"));
 					if (Double.parseDouble(start) != 0.0) {
 						String fn = baseurl + "-" + npart + ".mp4";
 						npart++;
@@ -244,5 +244,11 @@ public class AnonymousVideo extends TeiConverter {
 			return;
 		}
 		AnonymousVideo av = new AnonymousVideo(input, mediaName);
+	}
+
+	@Override
+	public void writeSpeech(String loc, String speechContent, String startTime, String endTime) {
+		// TODO Auto-generated method stub
+		
 	}
 }

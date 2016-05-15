@@ -18,8 +18,6 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import fr.ortolang.teicorpo.TeiFile.Participant;
-
 /**
  DC Format:
 1. TITLE  
@@ -258,7 +256,7 @@ public class TeiToDC_colaje {
 		String description;
 		ArrayList<String> subjects = new ArrayList<String>();
 		ArrayList<String> publishers = new ArrayList<String>();
-		ArrayList<Participant> contributors = new ArrayList<Participant>();
+		ArrayList<TeiParticipant> contributors = new ArrayList<TeiParticipant>();
 		String date;
 		ArrayList<String> types = new ArrayList<String>();
 		String language;

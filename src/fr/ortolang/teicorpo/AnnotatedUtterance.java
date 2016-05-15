@@ -40,7 +40,7 @@ public class AnnotatedUtterance {
 	// Commentaires additionnels hors tiers
 	public ArrayList<String> coms = new ArrayList<String>();
 	// Liste d'énoncés
-	public ArrayList<String> speeches = new ArrayList<String>();
+	public ArrayList<Annot> speeches = new ArrayList<Annot>();
 	// Liste de tiers
 	public ArrayList<Annot> tiers = new ArrayList<Annot>();
 	// Liste des types de tiers
@@ -59,7 +59,7 @@ public class AnnotatedUtterance {
 		System.out.println(
 				id + "-" + type + "-" + start + "-" + end + " :-: " + this.speakerName + "   ->   " + speech);
 		for (Annot tier : tiers) {
-			System.out.println(" :: " + tier.tierToString());
+			System.out.println("\t" + tier.name + " :: " + tier.content);
 		}
 	}
 
@@ -85,8 +85,6 @@ public class AnnotatedUtterance {
 		else
 			speakerName = "";
 		NodeList annotUElements = annotatedU.getChildNodes();
-		cleanedSpeech = "";
-		speech = "";
 		// Parcours des éléments contenus dans u et construction des
 		// variables speech, cleanedSpeech et speeches en fonction.
 		for (int i = 0; i < annotUElements.getLength(); i++) {
@@ -101,8 +99,15 @@ public class AnnotatedUtterance {
 				 * prédéfinie). On ajoute tous les énoncés dans speeches.
 				 */
 				if (nodeName.equals("u")) {
+					cleanedSpeech = "";
+					speech = "";
 					NodeList us = annotUEl.getChildNodes();
 					processSeg(us);
+					speech = Utils.cleanString(speech);
+					cleanedSpeech = Utils.cleanString(cleanedSpeech);
+					Annot a = new Annot(speakerName, start, end, speech, cleanedSpeech);
+					speeches.add(a);
+//					System.out.printf("TTTTT endofseg: %s %s %s%n", start, end, speech);
 				}
 				// Ajout des tiers
 				else if (nodeName.equals("spanGrp")) {
@@ -130,81 +135,50 @@ public class AnnotatedUtterance {
 				}
 			}
 		}
-		speech = Utils.cleanString(speech);
-		cleanedSpeech = Utils.cleanString(cleanedSpeech);
 	}
 
 	public void processSeg(NodeList us) {
-		String utt = "";
+//		System.out.printf("KKKKK processSeg%n");
 		for (int z = 0; z < us.getLength(); z++) {
 			Node segChild = us.item(z);
 			String segChildName = segChild.getNodeName();
+			int segType = segChild.getNodeType();
+//			System.out.printf("%d %s %d%n", z, segChildName, segType);
+
 			// Ajout des pauses: syntaxe = # pour les pauses courtes, sinon
 			// ### pour les pauses longues
 			if (Utils.isElement(segChild)) {
 				Element segChildEl = (Element) segChild;
 				if (segChildName.equals("pause")) {
 					if (segChildEl.getAttribute("type").equals("short")) {
-						cleanedSpeech += shortPause;
+						// cleanedSpeech += genericPause;
 						speech += shortPause;
-						utt += shortPause;
 					} else if (segChildEl.getAttribute("type").equals("long")) {
-						cleanedSpeech += longPause;
+						// cleanedSpeech += genericPause;
 						speech += longPause;
-						utt += longPause;
 					} else if (segChildEl.getAttribute("type").equals("verylong")) {
-						cleanedSpeech += veryLongPause;
+						// cleanedSpeech += genericPause;
 						speech += veryLongPause;
-						utt += veryLongPause;
 					} else if (segChildEl.getAttribute("type").equals("chrono")) {
 						String chronoPause = " " + Utils.specificPause + segChildEl.getAttribute("dur") + " ";
-						cleanedSpeech += chronoPause;
+						// cleanedSpeech += genericPause;
 						speech += chronoPause;
-						utt += chronoPause;
 					}
 				}
 
 				// Ajout des évènement (éléments incident & vocal):
-				// syntaxe = * type|subtype|desc1 desc2 ... descN /*
+				// syntaxe = * type|subtype|desc1 desc2 ... descN
 				else if (segChildName.equals("incident")) {
 					String st = segChildEl.getAttribute("subtype");
 					String val = getIncidentDesc(segChildEl);
 					if (segChildEl.getAttribute("type").equals("pronounce")) {
-						/*
-						String[] speechSplit = speech.split("\\s");
-						String lastW = "";
-						try {
-							lastW = speechSplit[speechSplit.length - 1];
-						} catch (Exception e) {
-						}
-						if (lastW.contains("]")) {
-							lastW = "";
-						}
-						String v = joinString(speechSplit, 0, speechSplit.length);
-						speech += v;
-						utt += v;
-						String pron = "[" + lastW + ", " + getIncidentDesc(segChildEl, "desc") + "] ";
-						if (!Utils.isNotEmptyOrNull(speech.trim())) {
-							speech += pron;
-							utt += pron;
-						}
-						*/
 						String ann = Utils.leftEvent + val;
 						if (Utils.isNotEmptyOrNull(st)) 
 							ann += " /" + st + "/PHO" + Utils.rightEvent + " ";
 						else
 							ann += Utils.rightEvent + " ";
 						speech += ann;
-						utt += ann;
 					} else if (segChildEl.getAttribute("type").equals("language")) {
-						/*
-						String[] speechSplit = speech.split("\\s");
-						// String lastW = speechSplit[speechSplit.length-1];
-						String v = joinString(speechSplit, 0, speechSplit.length) + " $ lang="
-								+ getIncidentDesc(segChildEl, "desc") + " X/$ ";
-						speech += v;
-						utt += v;
-						*/
 						String ann = Utils.leftCode;
 						if (Utils.isNotEmptyOrNull(st)) ann += "/" + st;
 						if (Utils.isNotEmptyOrNull(val)) 
@@ -212,21 +186,18 @@ public class AnnotatedUtterance {
 						else
 							ann += "/LG" + Utils.rightCode + " ";
 						speech += ann;
-						utt += ann;
 					} else if (segChildEl.getAttribute("type").equals("noise")) {
 						String ann = Utils.leftEvent + val;
 						ann += " /";
 						if (Utils.isNotEmptyOrNull(st)) ann += st + "/";
 						ann += "N" + Utils.rightEvent + " ";
 						speech += ann;
-						utt += ann;
 					} else if (segChildEl.getAttribute("type").equals("comment")) {
 						String ann = Utils.leftEvent + val;
 						ann += " /";
 						if (Utils.isNotEmptyOrNull(st)) ann += st + "/";
 						ann += "COM" + Utils.rightEvent + " ";
 						speech += ann;
-						utt += ann;
 					} else if (segChildEl.getAttribute("type").equals("background")) {
 						String ann = Utils.leftEvent + val;
 						String tm = getIncidentDescAttr(segChildEl, "time");
@@ -240,7 +211,6 @@ public class AnnotatedUtterance {
 						if (Utils.isNotEmptyOrNull(lv)) ann += lv;
 						ann += "/B" + Utils.rightEvent + " ";
 						speech += ann;
-						utt += ann;
 					} else {
 						String ann = Utils.leftCode + val;
 						if (Utils.isNotEmptyOrNull(st)) 
@@ -256,26 +226,26 @@ public class AnnotatedUtterance {
 						}
 						ann += Utils.rightCode + " ";
 						speech += ann;
-						utt += ann;
 					}
 				} else if (segChildName.equals("vocal")) {
-					String vocal = Utils.leftCode;
+					String vocal = "";
 					try {
 						vocal += segChildEl.getElementsByTagName("desc").item(0).getTextContent();
 					} finally {
-						speech += vocal + "/VOC " + Utils.rightCode;
-						utt += vocal + "/VOC " + Utils.rightCode;
+						cleanedSpeech += vocal + " ";
+						speech += Utils.leftCode + vocal + "/VOC " + Utils.rightCode;
 					}
 				} else if (segChildName.equals("seg")) {
 					processSeg(segChildEl.getChildNodes());
 				} else if (segChildName.equals("anchor") && !segChildEl.getAttribute("synch").startsWith("#au")) {
 					String sync = teiTimeline.getTimeValue(segChildEl.getAttribute("synch"));
 					// creer une ligne avec speech, cleanedSpeech, addspeech
-					speeches.add(start + ";" + sync + "__" + utt);
+					Annot a = new Annot(speakerName, start, sync, speech, cleanedSpeech);
+					speeches.add(a);
+//					System.out.printf("anchor: %s %s %s %s%n", speakerName, start, sync, speech);
 					start = sync;
-					// System.out.printf("anchor: %s %s %s%n", start, sync,
-					// utt);
-					utt = "";
+					speech = "";
+					cleanedSpeech = "";
 				}
 				// Tiers de type "morpho"
 				else if (segChildName.equals("morpho")) {
@@ -295,7 +265,8 @@ public class AnnotatedUtterance {
 					tiers.add(new Annot(tierName, tierMorpho));
 					tierTypes.add("morpho");
 				}
-			} else if (segChild.getNodeName().equals("#text")) {
+			} else
+			if (segChild.getNodeName().equals("#text")) {
 				String content = segChild.getTextContent() + " ";
 				if (Utils.isNotEmptyOrNull(content.trim())) {
 					speech += content;
@@ -304,11 +275,9 @@ public class AnnotatedUtterance {
 					// avoir des marques temporelles
 					// On ajoute donc chaque énoncé sous cette forme
 					// start;end__speech
-					utt += content;
 				}
 			}
 		}
-		speeches.add(start + ";" + end + "__" + utt);
 	}
 
 	// Récupération d'un type de tier donné (passé en paramètre)

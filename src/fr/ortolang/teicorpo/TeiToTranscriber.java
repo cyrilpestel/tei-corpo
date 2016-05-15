@@ -24,8 +24,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import fr.ortolang.teicorpo.TeiFile.Participant;
-
 public class TeiToTranscriber extends TeiConverter {
 	// Document transcriber
 	Document trsDoc;
@@ -110,14 +108,14 @@ public class TeiToTranscriber extends TeiConverter {
 		if (!tf.transInfo.participants.isEmpty()) {
 			Element spks = trsDoc.createElement("Speakers");
 			trans.appendChild(spks);
-			for (Participant p : tf.transInfo.participants) {
+			for (TeiParticipant p : tf.transInfo.participants) {
 				addSpk(spks, p);
 			}
 		}
 	}
 
 	// Ajout d'un speaker
-	public void addSpk(Element spks, Participant p) {
+	public void addSpk(Element spks, TeiParticipant p) {
 		// Attributs speaker: id, name, check, type, dialect, accent, scope
 		// Problème: transcriber ne prend que les informations citées ci-dessus,
 		// pas de possibilité de commentaires dans
@@ -231,7 +229,7 @@ public class TeiToTranscriber extends TeiConverter {
 					}
 					first = i;
 				} else {
-					// no only divs
+					// not only divs
 					first = -2;
 					break;
 				}
@@ -286,10 +284,10 @@ public class TeiToTranscriber extends TeiConverter {
 					section = trsDoc.createElement("Section");
 					episode.appendChild(section);
 					turns = new ArrayList<TranscriberTurn>();
-					String startTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "start")));
+					String startTime = timeSimplification(tf.teiTimeline.getTimeValue(Utils.getDivHeadAttr(d, "start")));
 					if (shiftNextStart && !startTime.isEmpty())
 						startTime = Utils.printDouble(Double.parseDouble(startTime) + 0.001, 4);
-					String endTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "end")));
+					String endTime = timeSimplification(tf.teiTimeline.getTimeValue(Utils.getDivHeadAttr(d, "end")));
 					setAttr(section, "startTime", startTime, true);
 					setAttr(section, "endTime", endTime, true);
 					sectionStartSet = true;
@@ -316,8 +314,8 @@ public class TeiToTranscriber extends TeiConverter {
 						episode.appendChild(section);
 						turns = new ArrayList<TranscriberTurn>();
 					}
-					String startTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "start")));
-					String endTime = timeSimplification(tf.getTimeValue(Utils.getDivHeadAttr(d, "end")));
+					String startTime = timeSimplification(tf.teiTimeline.getTimeValue(Utils.getDivHeadAttr(d, "start")));
+					String endTime = timeSimplification(tf.teiTimeline.getTimeValue(Utils.getDivHeadAttr(d, "end")));
 					if (shiftNextStart && !startTime.isEmpty())
 						startTime = Utils.printDouble(Double.parseDouble(startTime) + 0.001, 4);
 					if (sectionStartSet == false) {
@@ -435,13 +433,13 @@ public class TeiToTranscriber extends TeiConverter {
 	// Les turns seront modifiés et compactés dans addTurnsToSectin
 	public void buildTurn(Element elt) {
 		String spk = cleanId(Utils.getAttrAnnotationBloc(elt, "who"));
-		String startTime = timeSimplification(tf.getTimeValue(Utils.getAttrAnnotationBloc(elt, "start")));
+		String startTime = timeSimplification(tf.teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(elt, "start")));
 		if (shiftNextStart && !startTime.isEmpty()) {
 			// System.err.println(startTime);
 			startTime = Utils.printDouble(Double.parseDouble(startTime) + 0.001, 4);
 			shiftNextStart = false;
 		}
-		String endTime = timeSimplification(tf.getTimeValue(Utils.getAttrAnnotationBloc(elt, "end")));
+		String endTime = timeSimplification(tf.teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(elt, "end")));
 		if (startTime.isEmpty() || endTime.isEmpty()) {
 			if (oldEndTime.isEmpty())
 				return;
@@ -598,9 +596,9 @@ public class TeiToTranscriber extends TeiConverter {
 					}
 				} else if (uChildName.equals("anchor") && uChild.getNodeValue() != null) {
 					// System.out.println(uChild.getNodeValue());
-					if (!tf.getTimeValue(uChild.getAttribute("synch")).equals(turn.startTime)) {
+					if (!tf.teiTimeline.getTimeValue(uChild.getAttribute("synch")).equals(turn.startTime)) {
 						turn.add(TranscriberTurn.Sync,
-								timeSimplification(tf.getTimeValue(uChild.getAttribute("synch"))));
+								timeSimplification(tf.teiTimeline.getTimeValue(uChild.getAttribute("synch"))));
 					}
 				} else if (uChildName.equals("comment")) {
 					turn.add(TranscriberTurn.Comment, uChildContent);
@@ -840,5 +838,11 @@ public class TeiToTranscriber extends TeiConverter {
 				System.out.println("New file created " + output);
 			}
 		}
+	}
+
+	@Override
+	public void writeSpeech(String loc, String speechContent, String startTime, String endTime) {
+		// TODO Auto-generated method stub
+		
 	}
 }

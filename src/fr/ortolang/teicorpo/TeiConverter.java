@@ -7,6 +7,8 @@ package fr.ortolang.teicorpo;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class TeiConverter {
 
@@ -42,14 +44,16 @@ public abstract class TeiConverter {
 
 	//Finalisation du fichier de sortie
 	public abstract void createOutput();
+	
+	public abstract void writeSpeech(String loc, String speechContent, String startTime, String endTime);
 
 	//Récupération des informations générales sur la transcription
-	public TeiFile.TransInfo getTransInfo(){
+	public TransInfo getTransInfo(){
 		return this.tf.transInfo;
 	}
 
 	//Récupération de la liste des locuteurs
-	public ArrayList<TeiFile.Participant> getParticipants(){
+	public ArrayList<TeiParticipant> getParticipants(){
 		return tf.transInfo.participants;
 	}
 
@@ -79,5 +83,95 @@ public abstract class TeiConverter {
 		else{
 			return "19" + year;
 		}
+	}
+
+	public static String convertSpecialCodes(String initial) {
+		initial = initial.replaceAll("yy(\\s|$)", "yyy ");
+		initial = initial.replaceAll("xx(\\s|$)", "xxx ");
+		initial = initial.replaceAll("ww(\\s|$)", "www ");
+		initial = initial.replaceAll("\\*\\*\\*", "xxx");
+		return ConventionsToChat.setConv(initial);
+	}
+
+	/**
+	 * Dans Chat, les lignes principales doivent se terminer par un symbole de
+	 * fin de ligne (spécifié dans le fichier depfile.cut). Cette méthode
+	 * vérifie si c'est bien le cas et si ça ne l'est pas elle rajoute le signe
+	 * point (par défaut) à la fin de la ligne à écrire.
+	 * 
+	 * @param line
+	 *            Ligne à renvoyer.
+	 * @return
+	 */
+	public String toChatLine(String line) {
+		String patternStr = "(\\+\\.\\.\\.|\\+/\\.|\\+!\\?|\\+//\\.|\\+/\\?|\\+\"/\\.|\\+\"\\.|\\+//\\?|\\+\\.\\.\\?|\\+\\.|\\.|\\?|!)\\s*$";
+		Pattern pattern = Pattern.compile(patternStr);
+		Matcher matcher = pattern.matcher(line);
+		if (!matcher.find()) {
+			line += ".";
+		}
+		return line;
+	}
+
+	/**
+	 * Ecriture des utterances
+	 * 
+	 * @param u
+	 *            L'utterance à écrire
+	 */
+	public void writeUtterance(AnnotatedUtterance u) {
+		String speech;
+		/*
+		 * Chaque utterance a une liste d'énoncé, dans un format spécifique:
+		 * start;end__speech
+		 */
+		for (int s=0; s<u.speeches.size(); s++) {
+			String start = null;
+			String end = null;
+			speech = toChatLine(u.speeches.get(s).content).trim();
+			speech = speech.replaceAll("\n", "");
+			start = u.speeches.get(s).start;
+			end = u.speeches.get(s).end;
+
+			// Si le temps de début n'est pas renseigné, on prend le temps de
+			// fin de l'énoncé précédent(si présent)
+			if (!Utils.isNotEmptyOrNull(start)) {
+				if (s<1)
+					start = "";
+				else
+					start = u.speeches.get(s-1).end;
+			}
+
+			// Si le temps de fin n'est pas renseigné, on prend le temps de
+			// début de l'énoncé suivant(si présent)
+			if (!Utils.isNotEmptyOrNull(end)) {
+				if (s < u.speeches.size()-1)
+					end = u.speeches.get(s+1).start;
+				else
+					end = "";
+			}
+
+			// Si l'énoncé est le premier de la liste de l'utterance, son temps
+			// de début est égal au temps de début de l'utterance
+			if (s == 0 && !Utils.isNotEmptyOrNull(start)) {
+				start = u.start;
+			}
+
+			// Si l'énoncé est le dernier de la liste de l'utterance, son temps
+			// de fin est égal au temps de fin de l'utterance
+			if (s == u.speeches.size()-1 && !Utils.isNotEmptyOrNull(end)) {
+				end = u.end;
+			}
+
+			// Ecriture de l'énoncé
+			writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
+		}
+		// écriture des tiers
+		/*
+		for (Annot tier : u.tiers) {
+			writeTier(tier);
+		}
+		writeAddInfo(u);
+		*/
 	}
 }

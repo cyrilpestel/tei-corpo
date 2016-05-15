@@ -208,4 +208,29 @@ public class TransInfo {
 			System.out.println("Note: " + note);
 		}
 	}
+
+	/**
+	 * Impression de TransInfo dans une chaine
+	 */
+	public String toString() {
+		String s = "";
+		s += "medianame\t" + medianame + "\n";
+		s += "version\t" + version + "\n";
+		s += "place\t" + place + "\n";
+		s += "date\t" + date + "\n";
+		s += "transcriber\t" + transcriber + "\n";
+
+		for (TeiParticipant p : participants) {
+			s += p.toString() + "\n";
+		}
+
+		for (Map.Entry<String, String> entry : situations.entrySet()) {
+			s += "desc\t" + entry.getKey() + "\t" + entry.getValue() + "\n";
+		}
+
+		for (String note : notes) {
+			s += "Note: " + note + "\n";
+		}
+		return s;
+	}
 }

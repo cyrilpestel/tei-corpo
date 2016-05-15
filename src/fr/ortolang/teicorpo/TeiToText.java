@@ -17,18 +17,15 @@ import java.util.regex.Pattern;
 import fr.ortolang.teicorpo.AnnotatedUtterance;
 import fr.ortolang.teicorpo.TeiFile.Div;
 
-public class TeiToSrt extends TeiConverter {
+public class TeiToText extends TeiConverter {
 
 	// Permet d'écrire le fichier de sortie
 	private PrintWriter out;
 	// Encodage du fichier de sortie
 	final static String outputEncoding = "UTF-8";
 	// Extension du fichier de sortie
-	final static String EXT = ".srt";
+	final static String EXT = ".txt";
 	TierParams optionsOutput;
-
-	int srtNumber = 1; // compte le nombre de sous-titres produits dans le
-						// fichier srt pour écrire les entêtes.
 
 	/**
 	 * Convertit le fichier TEI donné en argument en un fichier Srt.
@@ -37,13 +34,13 @@ public class TeiToSrt extends TeiConverter {
 	 *            Nom du fichier d'entrée (fichier TEI, a donc l'extenstion
 	 *            .teiml)
 	 * @param outputName
-	 *            Nom du fichier de sortie (fichier SRT, a donc l'extenson .srt)
+	 *            Nom du fichier de sortie (fichier SRT, a donc l'extenson .txt)
 	 */
-	public TeiToSrt(String inputName, String outputName, TierParams optionsTei) {
+	public TeiToText(String inputName, String outputName, TierParams optionsTei) {
 		super(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
-		optionsOutput = optionsTei;
+		optionsOutput = null; // optionsTei;
 		outputWriter();
 		conversion();
 	}
@@ -69,7 +66,6 @@ public class TeiToSrt extends TeiConverter {
 		// System.out.println("Conversion (" +
 		// (Params.forceEmpty?"true":"false") + ") (" + Params.partDisplay + ")
 		// (" + Params.tierDisplay + ")");
-		srtNumber = 1;
 		// Etapes de conversion
 		buildHeader();
 		buildText();
@@ -80,13 +76,9 @@ public class TeiToSrt extends TeiConverter {
 	 * convertir
 	 */
 	public void buildHeader() {
-		if (srtNumber > 1)
-			out.println("");
-		out.printf("%d\n", srtNumber);
-		srtNumber++;
-		out.printf("%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n", 0, 0, 0, 0, TimeDivision.toHours(1),
-				TimeDivision.toMinutes(1), TimeDivision.toSeconds(1), TimeDivision.toMilliSeconds(1));
-		out.println(inputName);
+		out.println("@Fichier_input:\t" + inputName);
+		out.println("@Fichier_output:\t" + outputName);
+		out.print(tf.transInfo.toString());
 	}
 
 	/**
@@ -96,18 +88,11 @@ public class TeiToSrt extends TeiConverter {
 		ArrayList<TeiFile.Div> divs = tf.trans.divs;
 		for (Div d : divs) {
 			for (AnnotatedUtterance u : d.utterances) {
+				// u.print();
 				if (Utils.isNotEmptyOrNull(u.type)) {
 					if (!u.start.isEmpty()) {
 						float start = Float.parseFloat(u.start);
-						if (srtNumber > 1)
-							out.println("");
-						out.printf("%d\n", srtNumber);
-						srtNumber++;
-						out.printf("%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n", TimeDivision.toHours(start),
-								TimeDivision.toMinutes(start), TimeDivision.toSeconds(start),
-								TimeDivision.toMilliSeconds(start), TimeDivision.toHours(start + 1),
-								TimeDivision.toMinutes(start + 1), TimeDivision.toSeconds(start + 1),
-								TimeDivision.toMilliSeconds(start + 1));
+						out.printf("%f:%f\t", start, start+1);
 						String[] splitType = u.type.split("\t");
 						try {
 							writeDiv(splitType[0], splitType[1]);
@@ -178,17 +163,10 @@ public class TeiToSrt extends TeiConverter {
 		if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
 			float start = Float.parseFloat(startTime);
 			float end = Float.parseFloat(endTime);
-			if (srtNumber > 1)
-				out.println("");
-			out.printf("%d\n", srtNumber);
-			srtNumber++;
-			out.printf("%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n", TimeDivision.toHours(start),
-					TimeDivision.toMinutes(start), TimeDivision.toSeconds(start), TimeDivision.toMilliSeconds(start),
-					TimeDivision.toHours(end), TimeDivision.toMinutes(end), TimeDivision.toSeconds(end),
-					TimeDivision.toMilliSeconds(end));
-			out.println(loc + ": " + speechContent);
-		} else if (optionsOutput.forceEmpty) {
-			out.println(loc + ": " + speechContent);
+			out.printf("%f:%f\t", start, end);
+			out.println(loc + "\t" + speechContent);
+		} else {
+			out.println("\t\t" + loc + "\t" + speechContent);
 		}
 	}
 
@@ -204,11 +182,11 @@ public class TeiToSrt extends TeiConverter {
 			if (!optionsOutput.isDoDisplay("com"))
 				return;
 		}
-		// Ajout des informations additionnelles présents dans les fichiers srt
+		// Ajout des informations additionnelles présents dans les fichiers txt
 		for (String s : u.coms) {
 			String infoType = Utils.getInfoType(s);
 			String infoContent = Utils.getInfo(s);
-			out.println(infoType + ' ' + infoContent);
+			out.println("\t\t" + infoType + "\t" + infoContent);
 		}
 	}
 
@@ -227,7 +205,7 @@ public class TeiToSrt extends TeiConverter {
 		}
 		String type = tier.name;
 		String tierContent = tier.content;
-		String tierLine = "%" + type + ": " + tierContent.trim();
+		String tierLine = "\t\t\t%" + type + "\t" + tierContent.trim();
 		out.println(tierLine);
 	}
 
@@ -235,7 +213,7 @@ public class TeiToSrt extends TeiConverter {
 	}
 
 	public static void main(String args[]) throws IOException {
-		String usage = "Description: TeiToSrt convertit un fichier au format TEI en un fichier au format Srt%nUsage: TeiToSrt [-options] <file."
+		String usage = "Description: TeiToText convertit un fichier au format TEI en un fichier au format Text (txt)%nUsage: TeiToText [-options] <file."
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
@@ -282,7 +260,7 @@ public class TeiToSrt extends TeiConverter {
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(Utils.EXT))) {
 					String outputFileName = Utils.basename(file.getName()) + EXT;
-					TeiToSrt ttc = new TeiToSrt(file.getAbsolutePath(), outputDir + outputFileName, options);
+					TeiToText ttc = new TeiToText(file.getAbsolutePath(), outputDir + outputFileName, options);
 					System.out.println(outputDir + outputFileName);
 					ttc.createOutput();
 				} else if (file.isDirectory()) {
@@ -303,9 +281,9 @@ public class TeiToSrt extends TeiConverter {
 			}
 
 			if (!Utils.validFileFormat(output, EXT)) {
-				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .srt ");
+				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .txt ");
 			}
-			TeiToSrt ttc = new TeiToSrt(new File(input).getAbsolutePath(), output, options);
+			TeiToText ttc = new TeiToText(new File(input).getAbsolutePath(), output, options);
 			if (ttc.tf != null) {
 				System.out.println("Reading " + input);
 				ttc.createOutput();

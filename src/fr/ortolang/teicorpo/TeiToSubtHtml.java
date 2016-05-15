@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import fr.ortolang.teicorpo.TeiFile.AnnotatedUtterance;
+import fr.ortolang.teicorpo.AnnotatedUtterance;
 import fr.ortolang.teicorpo.TeiFile.Div;
 
 public class TeiToSubtHtml extends TeiConverter{
@@ -211,85 +211,13 @@ public class TeiToSubtHtml extends TeiConverter{
 	}
 
 	/**
-	 * Ecriture des utterances
-	 * @param u	L'utterance à écrire
-	 */
-	public void writeUtterance(AnnotatedUtterance u) {
-		String speech;
-		/*Chaque utterance a une liste d'énoncé, dans un format spécifique:
-		 * start;end__speech
-		 */
-		for(String s : u.speeches){
-			s = s.replaceAll("\n", "");
-			String start = null;
-			String end = null;
-
-			String[] splitS = s.split("__");
-			if (splitS.length > 1)
-				speech = toChatLine(splitS[1]).trim();
-			else
-				speech = "";
-			if (splitS.length == 0) {
-				start = "";
-				end = "";
-			} else {
-				String times = splitS[0];
-				String[] tms = times.split(";");
-				if (tms.length == 2) {
-					start = tms[0];
-					end = tms[1];
-				} else {
-					start = "";
-					end = "";
-				}
-			}
-
-			//Si le temps de début n'est pas renseigné, on prend le temps de fin de l'énoncé précédent(si présent)
-			if(!Utils.isNotEmptyOrNull(start)){
-				try{
-					start = u.speeches.get(u.speeches.indexOf(s)-1).split("__")[0].split(";")[1];
-				}
-				catch(Exception e){}
-			}
-
-			//Si le temps de fin n'est pas renseigné, on prend le temps de début de l'énoncé suivant(si présent)
-			if(!Utils.isNotEmptyOrNull(end)){
-				try{
-					end = u.speeches.get(u.speeches.indexOf(s)+1).split("__")[0].split(";")[0];
-					if(end.equals(start)){
-						start = "";
-						end = "";
-					}
-				}
-				catch(Exception e){}
-			}
-			//Si l'énoncé est le premier de la liste de l'utterance, son temps de début est égal au temps de début de l'utterance
-			if(u.speeches.indexOf(s) == 0 && !Utils.isNotEmptyOrNull(start)){
-				start = u.start;
-			}
-			//Si l'énoncé est le dernier de la liste de l'utterance, son temps de fin est égal au temps de fin de l'utterance
-			if(u.speeches.indexOf(s) == u.speeches.size()-1 && !Utils.isNotEmptyOrNull(end)){
-				end = u.end;
-			}
-
-			//Ecriture de l'énoncé
-			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, optionsOutput.forceEmpty);
-		}
-		// écriture des tiers
-		for(Annot tier : u.tiers){
-			writeTier(tier);
-		}
-		writeAddInfo(u);
-	}
-
-	/**
 	 * Ecriture d'un énonce: lignes qui commencent par le symbole étoile *
 	 * @param loc	Locuteur
 	 * @param speechContent	Contenu de l'énoncé
 	 * @param startTime	Temps de début de l'énoncé
 	 * @param endTime	Temps de fin de l'énoncé
 	 */
-	public void writeSpeech(String loc, String speechContent, String startTime, String endTime, boolean force){
+	public void writeSpeech(String loc, String speechContent, String startTime, String endTime){
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay(loc)) return;
 			if (!optionsOutput.isDoDisplay(loc)) return;
@@ -313,7 +241,7 @@ public class TeiToSubtHtml extends TeiConverter{
 		//On ajoute les informations temporelles seulement si on a un temps de début et un temps de fin 
 		if(Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)){
 			printLine(startTime, endTime, loc, speechContent);
-		} else if (force) {
+		} else if (optionsOutput.forceEmpty) {
 			printContinuation(loc, speechContent);
 		}
 	}
@@ -350,31 +278,7 @@ public class TeiToSubtHtml extends TeiConverter{
 		printContinuation("%"+type+":", tierLine);	
 	}
 
-	/**
-	 * Dans Chat, les lignes principales doivent se terminer par un symbole de fin de ligne (spécifié dans le fichier depfile.cut).
-	 * Cette méthode vérifie si c'est bien le cas et si ça ne l'est pas elle rajoute le signe point (par défaut) à la fin de la ligne à écrire.
-	 * @param line	Ligne à renvoyer.
-	 * @return
-	 */
-	public String toChatLine(String line){
-		String patternStr = "(\\+\\.\\.\\.|\\+/\\.|\\+!\\?|\\+//\\.|\\+/\\?|\\+\"/\\.|\\+\"\\.|\\+//\\?|\\+\\.\\.\\?|\\+\\.|\\.|\\?|!)\\s*$";
-		Pattern pattern = Pattern.compile(patternStr);
-		Matcher matcher = pattern.matcher(line);
-		if (!matcher.find()) {
-			line += ".";
-		}
-		return line;
-	}
-
 	public void createOutput() {
-	}
-
-	public static String convertSpecialCodes(String initial){
-		initial = initial.replaceAll("yy(\\s|$)", "yyy ");
-		initial = initial.replaceAll("xx(\\s|$)", "xxx ");
-		initial = initial.replaceAll("ww(\\s|$)", "www ");
-		initial = initial.replaceAll("\\*\\*\\*", "xxx");
-		return ConventionsToChat.setConv(initial);
 	}
 
 	public static void main(String args[]) throws IOException {
