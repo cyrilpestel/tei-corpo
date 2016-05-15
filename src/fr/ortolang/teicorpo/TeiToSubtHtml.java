@@ -25,7 +25,6 @@ public class TeiToSubtHtml extends TeiConverter{
 	final static String outputEncoding = "UTF-8";
 	//Extension du fichier de sortie
 	final static String EXT = ".subt.html";
-	TierParams optionsOutput;
 
 	/**
 	 * Convertit le fichier TEI donné en argument en un fichier Srt.

@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 class TierParams {
 	boolean forceEmpty;
+	boolean cleanLine;
 	String input;
 	String output;
 	String mediaName;
@@ -14,7 +15,7 @@ class TierParams {
 	boolean detectEncoding;
 	HashSet<String> doDisplay;
 	HashSet<String> dontDisplay;
-	TreeMap<String, String> txmInfo;
+	TreeMap<String, String> tv;
 	int level;
 	TierParams() {
 		input = null;
@@ -26,9 +27,10 @@ class TierParams {
 		dontDisplay = new HashSet<String>();
 		level = 0; // all levels
 		forceEmpty = true;
+		cleanLine = false;
 		options = "";
 		nospreadtime = false;
-		txmInfo = new TreeMap<String, String>();
+		tv = new TreeMap<String, String>();
 	}
 	void addDoDisplay(String s) {
 		doDisplay.add(s.toLowerCase());
@@ -36,12 +38,12 @@ class TierParams {
 	void addDontDisplay(String s) {
 		dontDisplay.add(s.toLowerCase());
 	}
-	void addTxm(String info) {
+	void addTv(String info) {
 		int p = info.indexOf(":");
 		if (p<1 || p >= info.length()) {
 			System.err.println("error: txm information ignored (missing :) => " + info);
 		} else {
-			txmInfo.put(info.substring(0, p), info.substring(p+1));
+			tv.put(info.substring(0, p), info.substring(p+1));
 		}
 	}
 	void setLevel(int l) {

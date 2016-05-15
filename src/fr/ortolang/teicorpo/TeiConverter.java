@@ -18,6 +18,8 @@ public abstract class TeiConverter {
 	String inputName;
 	//Nom du fichier de sortie
 	String outputName;
+	// options de production du résultat
+	TierParams optionsOutput;
 
 	/**
 	 * Conversion du fichier teiml: initialisation des variables d'instances puis création du nouveau fichier.
@@ -34,6 +36,7 @@ public abstract class TeiConverter {
 		this.tf = new TeiFile(new File(inputName), options);
 		this.inputName = inputName;
 		this.outputName = outputName;
+		this.optionsOutput = options;
 	}
 
 	//Initialisation du fichier de sortie
@@ -128,7 +131,8 @@ public abstract class TeiConverter {
 		for (int s=0; s<u.speeches.size(); s++) {
 			String start = null;
 			String end = null;
-			speech = toChatLine(u.speeches.get(s).content).trim();
+			String str = optionsOutput.cleanLine == true ? u.speeches.get(s).cleanedContent : u.speeches.get(s).content;
+			speech = toChatLine(str).trim();
 			speech = speech.replaceAll("\n", "");
 			start = u.speeches.get(s).start;
 			end = u.speeches.get(s).end;

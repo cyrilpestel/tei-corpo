@@ -1,6 +1,6 @@
 /**
- * Conversion d'un fichier TEI en un fichier SRT.
- * @author Myriam Majdoub
+ * Conversion d'un fichier TEI en un fichier Lexico.
+ * @author Christophe Parisse
  */
 package fr.ortolang.teicorpo;
 
@@ -11,13 +11,14 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import fr.ortolang.teicorpo.AnnotatedUtterance;
 import fr.ortolang.teicorpo.TeiFile.Div;
 
-public class TeiToText extends TeiConverter {
+public class TeiToLexico extends TeiConverter {
 
 	// Permet d'écrire le fichier de sortie
 	private PrintWriter out;
@@ -26,20 +27,21 @@ public class TeiToText extends TeiConverter {
 	// Extension du fichier de sortie
 	final static String EXT = ".txt";
 
+	String typeDiv;
+
 	/**
-	 * Convertit le fichier TEI donné en argument en un fichier Srt.
+	 * Convertit le fichier TEI donné en argument en un fichier Lexico avec balises.
 	 * 
 	 * @param inputName
 	 *            Nom du fichier d'entrée (fichier TEI, a donc l'extenstion
 	 *            .teiml)
 	 * @param outputName
-	 *            Nom du fichier de sortie (fichier SRT, a donc l'extenson .txt)
+	 *            Nom du fichier de sortie (fichier Lexico, a donc l'extension .txt)
 	 */
-	public TeiToText(String inputName, String outputName, TierParams optionsTei) {
+	public TeiToLexico(String inputName, String outputName, TierParams optionsTei) {
 		super(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
-		optionsOutput = null; // optionsTei;
 		outputWriter();
 		conversion();
 	}
@@ -75,9 +77,14 @@ public class TeiToText extends TeiConverter {
 	 * convertir
 	 */
 	public void buildHeader() {
-		out.println("@Fichier_input:\t" + inputName);
-		out.println("@Fichier_output:\t" + outputName);
-		out.print(tf.transInfo.toString());
+		out.printf("<file=%s>%n", inputName);
+//		out.println("@Fichier_output:\t" + outputName);
+//		out.print(tf.transInfo.toString());
+		for (Map.Entry<String, String> entry : optionsOutput.tv.entrySet()) {
+		    String key = entry.getKey();
+		    String value = entry.getValue();
+			out.printf("<%s=%s>%n", key, value);
+		}
 	}
 
 	/**
@@ -86,17 +93,24 @@ public class TeiToText extends TeiConverter {
 	public void buildText() {
 		ArrayList<TeiFile.Div> divs = tf.trans.divs;
 		for (Div d : divs) {
+			// System.out.println("DIV: " + d.type + " <" + d.theme + ">");
+			/*
+			if (d.type.toLowerCase().equals("bg") || d.type.toLowerCase().equals("g")) {
+				typeDiv = d.theme;
+				out.printf("<gem2=%s>%n", typeDiv);
+			} else {
+				typeDiv = "";
+			}
+			*/
 			for (AnnotatedUtterance u : d.utterances) {
-				// u.print();
-				if (Utils.isNotEmptyOrNull(u.type)) {
-					if (!u.start.isEmpty()) {
-						float start = Float.parseFloat(u.start);
-						out.printf("%f:%f\t", start, start+1);
-						String[] splitType = u.type.split("\t");
-						try {
-							writeDiv(splitType[0], splitType[1]);
-						} catch (ArrayIndexOutOfBoundsException e) {
-							out.println(splitType[0]);
+				if (u.type != null) {
+					String[] splitType = u.type.split("\t");
+					if (splitType != null && splitType.length >= 2) {
+						if (splitType[0].toLowerCase().equals("bg") || splitType[0].toLowerCase().equals("g")) {
+							// System.out.println("DIV: " + splitType[0] + " <" + splitType[1] + ">");
+							String theme = Utils.cleanString(tf.transInfo.situations.get(splitType[1]));
+							typeDiv = theme;
+							out.printf("<gem=%s>%n", typeDiv);
 						}
 					}
 				}
@@ -115,8 +129,8 @@ public class TeiToText extends TeiConverter {
 	 *            le theme du div à écrire
 	 */
 	public void writeDiv(String type, String themeId) {
-		String theme = Utils.cleanString(tf.transInfo.situations.get(themeId));
-		out.println(type + "\t" + theme);
+//		String theme = Utils.cleanString(tf.transInfo.situations.get(themeId));
+//		out.println(type + "\t" + theme);
 	}
 
 	/**
@@ -159,21 +173,13 @@ public class TeiToText extends TeiConverter {
 
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
-		if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
-			float start = Float.parseFloat(startTime);
-			float end = Float.parseFloat(endTime);
-			out.printf("%f:%f\t", start, end);
-			out.println(loc + "\t" + speechContent);
-		} else {
-			out.println("\t\t" + loc + "\t" + speechContent);
-		}
+		out.printf("<loc=%s>%s%n", loc, speechContent);
 	}
 
 	/**
 	 * Ajout des info additionnelles (hors-tiers)
 	 * 
 	 * @param u
-	 */
 	public void writeAddInfo(AnnotatedUtterance u) {
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay("com"))
@@ -188,13 +194,13 @@ public class TeiToText extends TeiConverter {
 			out.println("\t\t" + infoType + "\t" + infoContent);
 		}
 	}
+	 */
 
 	/**
 	 * Ecriture des tiers: lignes qui commencent par le signe pourcent %
 	 * 
 	 * @param tier
 	 *            Le tier à écrire, au format : Nom du tier \t Contenu du tier
-	 */
 	public void writeTier(Annot tier) {
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay(tier.name))
@@ -207,12 +213,13 @@ public class TeiToText extends TeiConverter {
 		String tierLine = "\t\t\t%" + type + "\t" + tierContent.trim();
 		out.println(tierLine);
 	}
+	 */
 
 	public void createOutput() {
 	}
 
 	public static void main(String args[]) throws IOException {
-		String usage = "Description: TeiToText convertit un fichier au format TEI en un fichier au format Text (txt)%nUsage: TeiToText [-options] <file."
+		String usage = "Description: TeiToLexico convertit un fichier au format TEI en un fichier au format Lexico (txt)%nUsage: TeiToLexico [-options] <file."
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
@@ -259,7 +266,7 @@ public class TeiToText extends TeiConverter {
 				String name = file.getName();
 				if (file.isFile() && (name.endsWith(Utils.EXT))) {
 					String outputFileName = Utils.basename(file.getName()) + EXT;
-					TeiToText ttc = new TeiToText(file.getAbsolutePath(), outputDir + outputFileName, options);
+					TeiToLexico ttc = new TeiToLexico(file.getAbsolutePath(), outputDir + outputFileName, options);
 					System.out.println(outputDir + outputFileName);
 					ttc.createOutput();
 				} else if (file.isDirectory()) {
@@ -282,7 +289,7 @@ public class TeiToText extends TeiConverter {
 			if (!Utils.validFileFormat(output, EXT)) {
 				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .txt ");
 			}
-			TeiToText ttc = new TeiToText(new File(input).getAbsolutePath(), output, options);
+			TeiToLexico ttc = new TeiToLexico(new File(input).getAbsolutePath(), output, options);
 			if (ttc.tf != null) {
 				System.out.println("Reading " + input);
 				ttc.createOutput();

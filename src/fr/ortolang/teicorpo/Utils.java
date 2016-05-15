@@ -41,7 +41,7 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.04"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionSoft = "1.041"; // full version with Elan, Clan, Transcriber and Praat
 	public static String versionDate = "16/05/2016 09:00";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
@@ -622,7 +622,7 @@ public class Utils {
 		System.err.println("	     :-n niveau: niveau d'imbrication (1 pour lignes principales)");
 		System.err.println("	     :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
 		System.err.println("	     :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
-		System.err.println("	     :-txm \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm");
+		System.err.println("	     :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm");
 		System.err.println("	     :-usage ou -help = affichage ce message");
 		// System.exit(1);
 	}
@@ -689,7 +689,7 @@ public class Utils {
 					} else if (args[i].equals("-s")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-txm")) {
+					} else if (args[i].equals("-tv")) {
 						i++;
 						continue;
 					} else if (args[i].equals("-p")) {
@@ -750,15 +750,18 @@ public class Utils {
 						}
 						i++;
 						options.addDontDisplay(args[i]);
-					} else if (args[i].equals("-txm")) {
+					} else if (args[i].equals("-tv")) {
 						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2);
 							return false;
 						}
 						i++;
-						options.addTxm(args[i]);
+						options.addTv(args[i]);
 					} else if (args[i].equals("-p")) {
 						i++;
+						continue;
+					} else if (args[i].equals("-cleanline")) {
+						options.cleanLine = true;
 						continue;
 					} else {
 						Utils.printUsageMessage(usage, ext1, ext2);

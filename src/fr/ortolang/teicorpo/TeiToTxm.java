@@ -1,6 +1,6 @@
 /**
  * Conversion d'un fichier TEI en un fichier TXM.
- * @author Myriam Majdoub
+ * @author Christophe Parisse
  */
 package fr.ortolang.teicorpo;
 
@@ -37,7 +37,6 @@ public class TeiToTxm extends TeiConverter {
 	public Document txmDoc;
 	// Extension du fichier de sortie
 	final static String EXT = ".txm.xml";
-	TierParams optionsOutput;
 	
 	Element txm; // root of document
 	Element text; // pout all utterances inside text
@@ -56,7 +55,6 @@ public class TeiToTxm extends TeiConverter {
 		super(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
-		optionsOutput = optionsTei;
 		outputWriter();
 		conversion();
 		createOutput();
@@ -124,11 +122,13 @@ public class TeiToTxm extends TeiConverter {
 		ArrayList<TeiFile.Div> divs = tf.trans.divs;
 		for (Div d : divs) {
 			// System.out.println("DIV: " + d.type + " <" + d.theme + ">");
+			/*
 			if (d.type.toLowerCase().equals("bg") || d.type.toLowerCase().equals("g")) {
 				typeDiv = d.theme;
 			} else {
 				typeDiv = "";
 			}
+			*/
 			for (AnnotatedUtterance u : d.utterances) {
 				if (u.type != null) {
 					String[] splitType = u.type.split("\t");
@@ -224,7 +224,7 @@ public class TeiToTxm extends TeiConverter {
 			we.setTextContent(w);
 			if (!loc.isEmpty())
 				we.setAttribute("loc", loc);
-			for (Map.Entry<String, String> entry : optionsOutput.txmInfo.entrySet()) {
+			for (Map.Entry<String, String> entry : optionsOutput.tv.entrySet()) {
 			    String key = entry.getKey();
 			    String value = entry.getValue();
 				we.setAttribute(key, value);
