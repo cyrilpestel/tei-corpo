@@ -284,7 +284,7 @@ public class TeiToSubtHtml extends TeiConverter{
 		String usage = "Description: TeiToSubtHtml convertit un fichier au format TEI en un fichier au format Sous-titre HTML%nUsage: TeiToSubtHtml [-options] <file.subt.html>%n";
 		TierParams options = new TierParams();
 		//Parcours des arguments
-		Utils.processArgs(args, options, usage, Utils.EXT, EXT);
+		Utils.processArgs(args, options, usage, Utils.EXT, EXT, 0);
 		String input = options.input;
 		String output = options.output;
 

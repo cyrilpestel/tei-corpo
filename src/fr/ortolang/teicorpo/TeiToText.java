@@ -216,7 +216,7 @@ public class TeiToText extends TeiConverter {
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT))
+		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, 0))
 			System.exit(1);
 		String input = options.input;
 		String output = options.output;

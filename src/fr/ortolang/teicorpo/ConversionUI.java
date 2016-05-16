@@ -333,7 +333,7 @@ public class ConversionUI extends JFrame {
 					if (Utils.isNotEmptyOrNull(argumentsOutput)) {
 						String usage = "Description: Conversions convertit un fichier au format TEI en un fichier au format Chat, Praat, Elan, Transcriber\n";
 						String[] addArgs = argumentsOutput.split("\\s+");
-						if (Utils.processArgs(addArgs, options, usage, Utils.EXT, f) == false) {
+						if (Utils.processArgs(addArgs, options, usage, Utils.EXT, f, 2) == false) {
 							JOptionPane.showMessageDialog(null, "Erreur sur les paramètres.", "Erreur",
 									JOptionPane.WARNING_MESSAGE);
 						}

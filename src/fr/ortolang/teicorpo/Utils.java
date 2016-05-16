@@ -37,12 +37,13 @@ import org.xml.sax.InputSource;
 
 public class Utils {
 	
+	public static final int styleLexicoTxm = 2;
 	public static String EXT = ".tei_corpo.xml";
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.041"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "16/05/2016 09:00";
+	public static String versionSoft = "1.042"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "16/05/2016 12:00";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
@@ -609,10 +610,10 @@ public class Utils {
 	}
 
 	public static void printVersionMessage() {
-    	System.out.println("Conversions (version "+ Utils.versionSoft +") 11/04/2016 10:00" + " Version TEI_CORPO: " + Utils.versionTEI);
+    	System.out.println("Conversions (version "+ Utils.versionSoft +") " + Utils.versionDate + " Version TEI_CORPO: " + Utils.versionTEI);
 	}
 	
-	public static void printUsageMessage(String mess, String ext1, String ext2) {
+	public static void printUsageMessage(String mess, String ext1, String ext2, int style) {
 		System.err.printf(mess);
 		System.err.println("	     :-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension " + ext1);
 		System.err.println("	     :-o nom du fichier de sortie au format Elan (.eaf) ou du repertoire de résultats");
@@ -622,7 +623,10 @@ public class Utils {
 		System.err.println("	     :-n niveau: niveau d'imbrication (1 pour lignes principales)");
 		System.err.println("	     :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
 		System.err.println("	     :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
-		System.err.println("	     :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm");
+		if (style == 2)
+			System.err.println("	     :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm ou lexico ou le trameur");
+		if (style == 2)
+			System.err.println("	     :-section : ajoute un indicateur de section en fin de chaque énoncé (pour lexico/le trameur)");
 		System.err.println("	     :-usage ou -help = affichage ce message");
 		// System.exit(1);
 	}
@@ -666,10 +670,10 @@ public class Utils {
 		return tp;
 	}
 
-	public static boolean processArgs(String[] args, TierParams options, String usage, String ext1, String ext2) {
+	public static boolean processArgs(String[] args, TierParams options, String usage, String ext1, String ext2, int style) {
 		if (args.length == 0) {
 			System.err.println("Vous n'avez spécifié aucun argument\n");
-			Utils.printUsageMessage(usage, ext1, ext2);
+			Utils.printUsageMessage(usage, ext1, ext2, style);
 			return true;
 		} else {
 			for (int i = 0; i < args.length; i++) {
@@ -694,7 +698,7 @@ public class Utils {
 						continue;
 					} else if (args[i].equals("-p")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
@@ -703,7 +707,7 @@ public class Utils {
 						continue;
 					}
 				} catch (Exception e) {
-					Utils.printUsageMessage(usage, ext1, ext2);
+					Utils.printUsageMessage(usage, ext1, ext2, style);
 					return false;
 				}
 			}
@@ -711,21 +715,21 @@ public class Utils {
 				try {
 					if (args[i].equals("-i")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.input = args[i];
 					} else if (args[i].equals("-o")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.output = args[i];
 					} else if (args[i].equals("-n")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
@@ -733,26 +737,26 @@ public class Utils {
 							options.setLevel(Integer.parseInt(args[i]));
 						} catch(Exception e) {
 							System.err.println("Le paramètre -n n'est pas suivi d'un entier.");
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 					} else if (args[i].equals("-a")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.addDoDisplay(args[i]);
 					} else if (args[i].equals("-s")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.addDontDisplay(args[i]);
 					} else if (args[i].equals("-tv")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2);
+							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
@@ -763,12 +767,15 @@ public class Utils {
 					} else if (args[i].equals("-cleanline")) {
 						options.cleanLine = true;
 						continue;
+					} else if (args[i].equals("-section")) {
+						options.sectionDisplay = true;
+						continue;
 					} else {
-						Utils.printUsageMessage(usage, ext1, ext2);
+						Utils.printUsageMessage(usage, ext1, ext2, style);
 						return false;
 					}
 				} catch (Exception e) {
-					Utils.printUsageMessage(usage, ext1, ext2);
+					Utils.printUsageMessage(usage, ext1, ext2, style);
 					return false;
 				}
 			}

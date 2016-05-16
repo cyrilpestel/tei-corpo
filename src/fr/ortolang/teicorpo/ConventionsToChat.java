@@ -53,6 +53,25 @@ public class ConventionsToChat {
 		s = term(s);
 		return Utils.cleanString(s);
 	}
+
+	public static String clean(String l) {
+		l = l.replaceAll( "\\([.\\d]\\)", "" );
+		l = l.replaceAll( "\\(", "" );
+		l = l.replaceAll( "\\)", "" );
+		l = l.replaceAll( "\\[.*\\]", "" );
+		l = l.replaceAll( "\\x01", "" );
+		l = l.replaceAll( "\\x02", "" );
+		l = l.replaceAll( "\\x03", "" );
+		l = l.replaceAll( "\\x04", "" );
+		l = l.replaceAll( "\\x07", "" );
+		l = l.replaceAll( "\\x08", "" );
+		l = l.replaceAll( "\\+\\<", "" );
+		l = l.replaceAll( "<", "" );
+		l = l.replaceAll( ">", "" );
+		l = l.replaceAll( "0", "" );
+		//l = l.replaceAll( " +", " " ); // garder les marqueurs de fin d'énoncé
+		return l;
+	}
 	
 	public static void main(String [] args){
 		

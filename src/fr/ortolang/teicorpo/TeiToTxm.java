@@ -280,7 +280,7 @@ public class TeiToTxm extends TeiConverter {
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT))
+		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, Utils.styleLexicoTxm))
 			System.exit(1);
 		String input = options.input;
 		String output = options.output;

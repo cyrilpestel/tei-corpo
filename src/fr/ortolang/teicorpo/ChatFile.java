@@ -379,24 +379,6 @@ public class ChatFile {
 		int nl;
 		List<Tier> tiers;
 
-		String clean(String l) {
-			l = l.replaceAll( "\\([.\\d]\\)", "" );
-			l = l.replaceAll( "\\(", "" );
-			l = l.replaceAll( "\\)", "" );
-			l = l.replaceAll( "\\[.*\\]", "" );
-			l = l.replaceAll( "\\x01", "" );
-			l = l.replaceAll( "\\x02", "" );
-			l = l.replaceAll( "\\x03", "" );
-			l = l.replaceAll( "\\x04", "" );
-			l = l.replaceAll( "\\x07", "" );
-			l = l.replaceAll( "\\x08", "" );
-			l = l.replaceAll( "<", "" );
-			l = l.replaceAll( ">", "" );
-			l = l.replaceAll( "0", "" );
-			//l = l.replaceAll( " +", " " ); // garder les marqueurs de fin d'énoncé
-			return l;
-		}
-
 		MainTier(String ml) {
 			mainRaw = ml;
 			String patternStr = ".*\\x15(\\d+)_(\\d+)\\x15";
@@ -411,7 +393,7 @@ public class ChatFile {
 				endTime = -1;
 				mainLine = ml;
 			}
-			mainCleaned = clean(mainLine);
+			mainCleaned = ConventionsToChat.clean(mainLine);
 			nl = -1;
 			tiers = null;
 		}

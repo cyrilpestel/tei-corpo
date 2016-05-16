@@ -77,13 +77,13 @@ public class TeiToLexico extends TeiConverter {
 	 * convertir
 	 */
 	public void buildHeader() {
-		out.printf("<file=%s>%n", inputName);
+		out.printf("<file=%s>%n", inputName.replaceAll("\\s+", "%20"));
 //		out.println("@Fichier_output:\t" + outputName);
 //		out.print(tf.transInfo.toString());
 		for (Map.Entry<String, String> entry : optionsOutput.tv.entrySet()) {
 		    String key = entry.getKey();
 		    String value = entry.getValue();
-			out.printf("<%s=%s>%n", key, value);
+			out.printf("<%s=%s>%n", key, value.replaceAll("\\s+", "_"));
 		}
 	}
 
@@ -97,7 +97,7 @@ public class TeiToLexico extends TeiConverter {
 			/*
 			if (d.type.toLowerCase().equals("bg") || d.type.toLowerCase().equals("g")) {
 				typeDiv = d.theme;
-				out.printf("<gem2=%s>%n", typeDiv);
+				out.printf("<gem2=%s>%n", typeDiv.replaceAll("\\s+", "_"));
 			} else {
 				typeDiv = "";
 			}
@@ -110,7 +110,7 @@ public class TeiToLexico extends TeiConverter {
 							// System.out.println("DIV: " + splitType[0] + " <" + splitType[1] + ">");
 							String theme = Utils.cleanString(tf.transInfo.situations.get(splitType[1]));
 							typeDiv = theme;
-							out.printf("<gem=%s>%n", typeDiv);
+							out.printf("<gem=%s>%n", typeDiv.replaceAll("\\s+", "_"));
 						}
 					}
 				}
@@ -173,7 +173,10 @@ public class TeiToLexico extends TeiConverter {
 
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
-		out.printf("<loc=%s>%s%n", loc, speechContent);
+		String sc = ConventionsToChat.clean(speechContent);
+		if (optionsOutput.sectionDisplay)
+			sc += " §";
+		out.printf("<loc=%s>%s%n", loc.replaceAll("\\s+", "_"), sc);
 	}
 
 	/**
@@ -223,7 +226,7 @@ public class TeiToLexico extends TeiConverter {
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT))
+		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, Utils.styleLexicoTxm))
 			System.exit(1);
 		String input = options.input;
 		String output = options.output;

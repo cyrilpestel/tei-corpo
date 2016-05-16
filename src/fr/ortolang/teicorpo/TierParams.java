@@ -6,6 +6,7 @@ import java.util.TreeMap;
 class TierParams {
 	boolean forceEmpty;
 	boolean cleanLine;
+	boolean sectionDisplay;
 	String input;
 	String output;
 	String mediaName;
@@ -28,6 +29,7 @@ class TierParams {
 		level = 0; // all levels
 		forceEmpty = true;
 		cleanLine = false;
+		sectionDisplay = false;
 		options = "";
 		nospreadtime = false;
 		tv = new TreeMap<String, String>();
