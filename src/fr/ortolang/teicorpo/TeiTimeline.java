@@ -8,10 +8,13 @@ import org.w3c.dom.NodeList;
 
 public class TeiTimeline {
 	// Map pour représenter la timeline
-	public HashMap<String, String> timeline = new HashMap<String, String>();
+	public HashMap<String, String> timeline;
 	double xmaxTime;
-	public void buildTimeline(Document teiDoc) {
+	TeiTimeline() {
+		timeline = new HashMap<String, String>();
 		xmaxTime = 0.0;
+	}
+	public void buildTimeline(Document teiDoc) {
 		timeline.put("T0", "0");
 		Element tl = (Element) teiDoc.getElementsByTagName("timeline").item(0);
 		String unit = tl.getAttribute("unit");
@@ -35,13 +38,14 @@ public class TeiTimeline {
 				if (vald > xmaxTime)
 					xmaxTime = vald;
 				tms = Utils.printDouble(vald, 10);
-				// System.out.println(tms + " --> " + ntms);
+//				System.out.println(tms + " --> " + when.getAttribute("xml:id"));
 				timeline.put(when.getAttribute("xml:id"), tms);
 			} else if (when.hasAttribute("absolute")) {
 				String tms = when.getAttribute("absolute");
 				double vald = Double.parseDouble(tms);
 				vald *= ratio;
 				tms = Utils.printDouble(vald, 10);
+//				System.out.println(tms + " (abs)--> " + when.getAttribute("xml:id"));
 				timeline.put(when.getAttribute("xml:id"), tms);
 			}
 		}
@@ -49,11 +53,8 @@ public class TeiTimeline {
 
 	public String getTimeValue(String timeId) {
 		if (Utils.isNotEmptyOrNull(timeId)) {
-			String[] spl = timeId.split("#");
-			if (spl.length > 1)
-				return timeline.get(spl[1]);
-			else
-				return "";
+			String spl = Utils.refID(timeId);
+			return timeline.get(spl);
 		}
 		return "";
 	}

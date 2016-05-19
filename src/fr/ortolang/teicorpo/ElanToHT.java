@@ -144,11 +144,15 @@ public class ElanToHT {
 			Element tier = (Element) tiers.item(i);
 			tierInfo.type.lgq_type_id = tier.getAttribute("LINGUISTIC_TYPE_REF");
 			Element lgqTypeElement = getlgqType(tierInfo.type.lgq_type_id, lgqTypes);
+			if (lgqTypeElement == null) {
+				System.err.printf("No type for %s:%s (ignored)%n", tier.getAttribute("TIER_ID"), tierInfo.type.lgq_type_id);
+				continue;
+			}
 			String name = tier.getAttribute("TIER_ID");
 			tierInfo.tier_id = tier.getAttribute("TIER_ID");
 			tierInfo.participant = tier.getAttribute("PARTICIPANT");
-			tierInfo.type.cv_ref = lgqTypeElement.getAttribute("CONTROLLED_VOCABULARY_REF");
-			tierInfo.type.graphic_ref = lgqTypeElement.getAttribute("GRAPHIC_REFERENCES");
+			//System.err.printf("%s (%s)%n", lgqTypeElement.toString(), tierInfo.type.lgq_type_id);
+			//System.err.println(lgqTypeElement.getAttribute("CONTROLLED_VOCABULARY_REF"));
 			tierInfo.parent = tier.getAttribute("PARENT_REF");
 			tierInfo.annotator = tier.getAttribute("ANNOTATOR");
 			tierInfo.type.time_align = Boolean.parseBoolean(lgqTypeElement.getAttribute("TIME_ALIGNABLE"));
