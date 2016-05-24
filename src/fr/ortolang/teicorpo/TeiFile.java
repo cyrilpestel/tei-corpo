@@ -140,6 +140,7 @@ public class TeiFile {
 					}
 				}
 			}
+			// System.out.println("first= " + first);
 
 			sit = "";
 			if (first >= 0) {
@@ -151,18 +152,27 @@ public class TeiFile {
 				String attr = Utils.getDivHeadAttr(ep, "subtype");
 				if (Utils.isNotEmptyOrNull(attr))
 					sit = tf.transInfo.situations.get(attr);
-				bodyChildren = ep.getChildNodes();
+				String theme = tf.transInfo.situations.get(ep);
+				Div d = new Div(tf, ep, attr, theme);
+				divs.add(d); // la situation
+				for (AnnotatedUtterance u : d.utterances) {
+					tierTypes.addAll(u.tierTypes);
+				}
+			} else {
+				String attr = Utils.getDivHeadAttr(body, "subtype");
+				if (Utils.isNotEmptyOrNull(attr))
+					sit = tf.transInfo.situations.get(attr);
+				String theme = tf.transInfo.situations.get(body);
+				Div d = new Div(tf, body, attr, theme);
+				divs.add(d); // la situation
+				for (AnnotatedUtterance u : d.utterances) {
+					tierTypes.addAll(u.tierTypes);
+				}
 			}
-			processDivAndAnnotation(bodyChildren, tf);
 		}
 
+		/*
 		private void processDivAndAnnotation(NodeList bodyChildren, TeiFile tf) {
-			// TODO Auto-generated method stub
-			/*
-			 * //Thème principal if(getDivOcc(divList) == 1) { NodeList subList
-			 * = divList.item(0).getChildNodes(); if (getDivOcc(subList) != 0)
-			 * divList = subList; }
-			 */
 			for (int i = 0; i < bodyChildren.getLength(); i++) {
 				if (Utils.isElement(bodyChildren.item(i))) {
 					Element elmt = (Element) bodyChildren.item(i);
@@ -178,8 +188,8 @@ public class TeiFile {
 					}
 				}
 			}
-			
 		}
+		*/
 	}
 
 	/**

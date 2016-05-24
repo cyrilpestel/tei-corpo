@@ -92,8 +92,9 @@ public class TeiToLexico extends TeiConverter {
 	 */
 	public void buildText() {
 		ArrayList<TeiFile.Div> divs = tf.trans.divs;
+		// System.out.println("divs size= " + divs.size());
 		for (Div d : divs) {
-			// System.out.println("DIV: " + d.type + " <" + d.theme + ">");
+			System.out.println("DIV: " + d.type + " <" + d.theme + ">");
 			/*
 			if (d.type.toLowerCase().equals("bg") || d.type.toLowerCase().equals("g")) {
 				typeDiv = d.theme;
@@ -102,6 +103,7 @@ public class TeiToLexico extends TeiConverter {
 				typeDiv = "";
 			}
 			*/
+//			System.out.println("utt size= " + d.utterances.size());
 			for (AnnotatedUtterance u : d.utterances) {
 				if (u.type != null) {
 					String[] splitType = u.type.split("\t");

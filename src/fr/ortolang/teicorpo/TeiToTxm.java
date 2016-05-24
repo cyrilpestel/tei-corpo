@@ -39,7 +39,7 @@ public class TeiToTxm extends TeiConverter {
 	final static String EXT = ".txm.xml";
 	
 	Element txm; // root of document
-	Element text; // pout all utterances inside text
+	Element head; // put all utterances inside text
 	String typeDiv;
 
 	/**
@@ -55,6 +55,7 @@ public class TeiToTxm extends TeiConverter {
 		super(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
+		typeDiv = "";
 		outputWriter();
 		conversion();
 		createOutput();
@@ -111,8 +112,17 @@ public class TeiToTxm extends TeiConverter {
 	 */
 	public void buildHeader() {
 		txm.setAttribute("file", inputName);
-		text = txmDoc.createElement("text");
-		txm.appendChild(text);
+		head = txmDoc.createElement("text");
+		txm.appendChild(head);
+		for (Map.Entry<String, String> entry : optionsOutput.tv.entrySet()) {
+		    String key = entry.getKey();
+		    String value = entry.getValue();
+		    Element elt = txmDoc.createElement("div");
+		    elt.setAttribute(key, value.replaceAll("\\s+", "_"));
+		    head.appendChild(elt);
+		    head = elt;
+			// out.printf("<%s=%s>%n", key, value.replaceAll("\\s+", "_"));
+		}
 	}
 
 	/**
@@ -203,21 +213,21 @@ public class TeiToTxm extends TeiConverter {
 			u.setAttribute("who", loc);
 			u.setAttribute("start", Double.toString(Double.parseDouble(startTime)));
 			u.setAttribute("end", Double.toString(Double.parseDouble(endTime)));
-			writeUtterance(u, speechContent, loc);
+			generateU(u, speechContent, loc);
 			// u.setTextContent(speechContent);
-			text.appendChild(u);
+			head.appendChild(u);
 		} else {
 			Element u = txmDoc.createElement("u");
 			u.setAttribute("who", loc);
 			u.setAttribute("start", "");
 			u.setAttribute("end", "");
-			writeUtterance(u, speechContent, loc);
+			generateU(u, speechContent, loc);
 			// u.setTextContent(speechContent);
-			text.appendChild(u);
+			head.appendChild(u);
 		}
 	}
 
-	void writeUtterance(Element u, String speechContent, String loc) {
+	void generateU(Element u, String speechContent, String loc) {
 		String[] s = speechContent.split("\\s+");
 		for (String w: s) {
 			Element we = txmDoc.createElement("w");
@@ -229,9 +239,8 @@ public class TeiToTxm extends TeiConverter {
 			    String value = entry.getValue();
 				we.setAttribute(key, value);
 			}
-			if (!typeDiv.isEmpty()) {
+			if (!typeDiv.isEmpty())
 				we.setAttribute("div", typeDiv);
-			}
 			u.appendChild(we);
 		}
 	}

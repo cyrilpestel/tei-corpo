@@ -47,6 +47,10 @@ La conversion depuis Praat dispose de paramètres supplémentaires
       * java -cp conversions.jar fr.ortolang.teicorpo.TeiToElan [paramètres]
   * TEI_CORPO -> Praat :
       * java -cp conversions.jar fr.ortolang.teicorpo.TeiToPraat [paramètres]
+  * TEI_CORPO -> Txm :
+      * java -cp conversions.jar fr.ortolang.teicorpo.TeiToTxm [paramètres]
+  * TEI_CORPO -> Lexico :
+      * java -cp conversions.jar fr.ortolang.teicorpo.TeiToLexico [paramètres]
 
 Toutes les commandes de conversion inverse utilisent les mêmes paramètres, en plus des paramètres -i et -o
   * -p fichier_de_paramètres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.
@@ -54,5 +58,10 @@ Toutes les commandes de conversion inverse utilisent les mêmes paramètres, en 
   * -a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)
   * -s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)
 
+Paramètres supplémentaires pour les exports vers Txm et vers Lexico
+  * -tv "type:valeur" : un champ type:valeur est ajouté dans les &lt;w&gt; de txm ou lexico ou le trameur
+  * -cleanline : produit des fichiers sans codes spécifiques de transcription orale
+  * -section : ajoute un indicateur de section en fin de chaque énoncé (pour lexico/le trameur)
 
-Il est possible de télécharger la version (provisoire) de la DTD: [DTD TEI Oral](http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd)
+
+Il est possible de télécharger la DTD: [DTD TEI Oral](http://ct3.ortolang.fr/tei-corpo/tei_all.dtd)
