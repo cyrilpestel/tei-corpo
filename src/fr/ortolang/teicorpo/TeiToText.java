@@ -39,7 +39,6 @@ public class TeiToText extends TeiConverter {
 		super(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
-		optionsOutput = null; // optionsTei;
 		outputWriter();
 		conversion();
 	}

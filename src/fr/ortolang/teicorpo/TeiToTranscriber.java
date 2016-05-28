@@ -121,6 +121,12 @@ public class TeiToTranscriber extends TeiConverter {
 		// pas de possibilité de commentaires dans
 		// un élément Speaker, donc si autres infos, sont perdues ...
 		Element spk = trsDoc.createElement("Speaker");
+		System.err.println(p);
+		p.print();
+		if (!Utils.isNotEmptyOrNull(p.id)) {
+			System.out.printf("Warning: speaker ignored %s%n", p.toString());
+			return;
+		}
 		// Les attributs id et name sont obligatoires
 		setAttr(spk, "id", cleanId(p.id), true);
 		if (Utils.isNotEmptyOrNull(p.name)) {
@@ -576,24 +582,14 @@ public class TeiToTranscriber extends TeiConverter {
 				String uChildName = uChild.getNodeName();
 				String uChildContent = uChild.getTextContent().replaceAll("\\s+", " ");
 				if (uChildName.equals("seg")) {
-					NodeList segChildNodes = uChild.getChildNodes();
-					for (int d = 0; d < segChildNodes.getLength(); d++) {
-						Node segChild = segChildNodes.item(d);
-						if (Utils.isElement(segChild)) {
-							Element segChildEl = (Element) segChild;
-							String segChildElName = segChildEl.getNodeName();
-							if (segChildElName.equals("pause")) {
-								addPause(turn, segChildEl);
-							} else if (segChildElName.equals("incident")) {
-								addIncident(turn, segChildEl);
-							} else if (segChildElName.equals("vocal")) {
-								turn.add(TranscriberTurn.Vocal,
-										segChildEl.getTextContent().replaceAll("\\s+", " ").trim());
-							}
-						} else if (segChild.getNodeName().equals("#text")) {
-							turn.addText(segChild.getTextContent().replaceAll("\\s+", " "));
-						}
-					}
+					addU(turn, uChild);
+				} else if (uChildName.equals("pause")) {
+					addPause(turn, uChild);
+				} else if (uChildName.equals("incident")) {
+					addIncident(turn, uChild);
+				} else if (uChildName.equals("vocal")) {
+					turn.add(TranscriberTurn.Vocal,
+							uChild.getTextContent().replaceAll("\\s+", " ").trim());
 				} else if (uChildName.equals("anchor") && uChild.getNodeValue() != null) {
 					// System.out.println(uChild.getNodeValue());
 					if (!tf.teiTimeline.getTimeValue(uChild.getAttribute("synch")).equals(turn.startTime)) {
@@ -602,7 +598,13 @@ public class TeiToTranscriber extends TeiConverter {
 					}
 				} else if (uChildName.equals("comment")) {
 					turn.add(TranscriberTurn.Comment, uChildContent);
+				} else if (uChild.getNodeName().equals("#text")) {
+					System.err.println("add text");
+					turn.addText(uChild.getTextContent().replaceAll("\\s+", " "));
 				}
+			} else {
+				System.err.println("add not element");
+				turn.addText(uChildNodes.item(t).getTextContent().replaceAll("\\s+", " "));
 			}
 		}
 	}

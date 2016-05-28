@@ -12,21 +12,25 @@ import java.util.regex.Pattern;
 
 public abstract class TeiConverter {
 
-	//Représentation du fichier teiml à convertir
+	// Représentation du fichier teiml à convertir
 	TeiFile tf;
-	//Nom du fichier teiml à convertir
+	// Nom du fichier teiml à convertir
 	String inputName;
-	//Nom du fichier de sortie
+	// Nom du fichier de sortie
 	String outputName;
 	// options de production du résultat
 	TierParams optionsOutput;
 
 	/**
-	 * Conversion du fichier teiml: initialisation des variables d'instances puis création du nouveau fichier.
-	 * @param inputName	Nom du fichier à convertir
-	 * @param outputName	Nom du fichier de sortie
+	 * Conversion du fichier teiml: initialisation des variables d'instances
+	 * puis création du nouveau fichier.
+	 * 
+	 * @param inputName
+	 *            Nom du fichier à convertir
+	 * @param outputName
+	 *            Nom du fichier de sortie
 	 */
-	public TeiConverter(String inputName, String outputName, TierParams options){
+	public TeiConverter(String inputName, String outputName, TierParams options) {
 		File inputFile = new File(inputName);
 		if (!inputFile.exists()) {
 			System.out.printf("%s n'existe pas: pas de conversion%n", inputName);
@@ -39,51 +43,51 @@ public abstract class TeiConverter {
 		this.optionsOutput = options;
 	}
 
-	//Initialisation du fichier de sortie
+	// Initialisation du fichier de sortie
 	public abstract void outputWriter();
 
-	//Conversion des données
+	// Conversion des données
 	public abstract void conversion();
 
-	//Finalisation du fichier de sortie
+	// Finalisation du fichier de sortie
 	public abstract void createOutput();
-	
+
 	public abstract void writeSpeech(String loc, String speechContent, String startTime, String endTime);
 
-	//Récupération des informations générales sur la transcription
-	public TransInfo getTransInfo(){
+	// Récupération des informations générales sur la transcription
+	public TransInfo getTransInfo() {
 		return this.tf.transInfo;
 	}
 
-	//Récupération de la liste des locuteurs
-	public ArrayList<TeiParticipant> getParticipants(){
+	// Récupération de la liste des locuteurs
+	public ArrayList<TeiParticipant> getParticipants() {
 		return tf.transInfo.participants;
 	}
 
-	//Récupération de la transcription
-	public TeiFile.Trans getTrans(){
+	// Récupération de la transcription
+	public TeiFile.Trans getTrans() {
 		return this.tf.trans;
 	}
 
-	//Renvoie la chaîne de caractère passée en argument si elle n'est pas vide, sinon renvoir une chaîne de caractère vide.
-	public static String toString(String s){
-		if(!Utils.isNotEmptyOrNull(s)){
+	// Renvoie la chaîne de caractère passée en argument si elle n'est pas vide,
+	// sinon renvoir une chaîne de caractère vide.
+	public static String toString(String s) {
+		if (!Utils.isNotEmptyOrNull(s)) {
 			s = "";
 		}
 		return s;
 	}
 
-	//Convertit des secondes en millisecondes
-	public static int toMilliseconds(float t){
-		return (int)(t * 1000);
+	// Convertit des secondes en millisecondes
+	public static int toMilliseconds(float t) {
+		return (int) (t * 1000);
 	}
 
-	//Convertit le format de date YY en YYYY
-	public static String convertYear(String year){
-		if(Integer.parseInt(year) < 50){
+	// Convertit le format de date YY en YYYY
+	public static String convertYear(String year) {
+		if (Integer.parseInt(year) < 50) {
 			return "20" + year;
-		}
-		else{
+		} else {
 			return "19" + year;
 		}
 	}
@@ -128,10 +132,11 @@ public abstract class TeiConverter {
 		 * Chaque utterance a une liste d'énoncé, dans un format spécifique:
 		 * start;end__speech
 		 */
-		for (int s=0; s<u.speeches.size(); s++) {
+		// System.err.print(u.toString());
+		for (int s = 0; s < u.speeches.size(); s++) {
 			String start = null;
 			String end = null;
-			String str = optionsOutput.cleanLine == true ? u.speeches.get(s).cleanedContent : u.speeches.get(s).content;
+			String str = (optionsOutput.cleanLine == true) ? u.speeches.get(s).cleanedContent : u.speeches.get(s).content;
 			speech = toChatLine(str).trim();
 			speech = speech.replaceAll("\n", "");
 			start = u.speeches.get(s).start;
@@ -140,17 +145,17 @@ public abstract class TeiConverter {
 			// Si le temps de début n'est pas renseigné, on prend le temps de
 			// fin de l'énoncé précédent(si présent)
 			if (!Utils.isNotEmptyOrNull(start)) {
-				if (s<1)
+				if (s < 1)
 					start = "";
 				else
-					start = u.speeches.get(s-1).end;
+					start = u.speeches.get(s - 1).end;
 			}
 
 			// Si le temps de fin n'est pas renseigné, on prend le temps de
 			// début de l'énoncé suivant(si présent)
 			if (!Utils.isNotEmptyOrNull(end)) {
-				if (s < u.speeches.size()-1)
-					end = u.speeches.get(s+1).start;
+				if (s < u.speeches.size() - 1)
+					end = u.speeches.get(s + 1).start;
 				else
 					end = "";
 			}
@@ -163,7 +168,7 @@ public abstract class TeiConverter {
 
 			// Si l'énoncé est le dernier de la liste de l'utterance, son temps
 			// de fin est égal au temps de fin de l'utterance
-			if (s == u.speeches.size()-1 && !Utils.isNotEmptyOrNull(end)) {
+			if (s == u.speeches.size() - 1 && !Utils.isNotEmptyOrNull(end)) {
 				end = u.end;
 			}
 
@@ -172,10 +177,7 @@ public abstract class TeiConverter {
 		}
 		// écriture des tiers
 		/*
-		for (Annot tier : u.tiers) {
-			writeTier(tier);
-		}
-		writeAddInfo(u);
-		*/
+		 * for (Annot tier : u.tiers) { writeTier(tier); } writeAddInfo(u);
+		 */
 	}
 }

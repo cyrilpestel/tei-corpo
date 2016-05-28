@@ -120,7 +120,8 @@ public class TeiFile {
 			// Liste d'éléments contenus dans la transcription (élément text)
 			Element body = (Element) text.getElementsByTagName("body").item(0);
 
-			// TEST if there is only one div
+			// TEST if there is one div and nothing else
+			// at top level there can be only elements nodes
 			NodeList bodyChildren = body.getChildNodes();
 			int first = -1;
 			for (int i = 0; i < bodyChildren.getLength(); i++) {
@@ -140,7 +141,6 @@ public class TeiFile {
 					}
 				}
 			}
-			// System.out.println("first= " + first);
 
 			sit = "";
 			if (first >= 0) {
@@ -162,7 +162,7 @@ public class TeiFile {
 				String attr = Utils.getDivHeadAttr(body, "subtype");
 				if (Utils.isNotEmptyOrNull(attr))
 					sit = tf.transInfo.situations.get(attr);
-				String theme = tf.transInfo.situations.get(body);
+				String theme = Utils.getDivHeadAttr(body, "type");;
 				Div d = new Div(tf, body, attr, theme);
 				divs.add(d); // la situation
 				for (AnnotatedUtterance u : d.utterances) {
@@ -253,6 +253,7 @@ public class TeiFile {
 							// de la transcription
 							this.utterances.add(utt);
 							mainLines.add(utt);
+							//System.out.printf("%d %s%n", utt.tierTypes.size(), utt.speeches.get(0));
 						}
 					}
 					// Cas sous-div
@@ -335,7 +336,7 @@ public class TeiFile {
 		TeiFile tf = new TeiFile(new File(args[0]), null);
 		for (Div d : tf.trans.divs) {
 			for (AnnotatedUtterance u : d.utterances) {
-				u.print();
+				System.out.print(u.toString());
 			}
 		}
 	}

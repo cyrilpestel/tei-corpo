@@ -1289,7 +1289,7 @@ public class ClanToTei {
 					addPause = addPause(seg, pause, "chrono", el.substring(1, el.length() - 1));
 				}
 				if (addPause) {
-					uContent = convTerm(uContent);// deleteControlChars(convTerm(uContent));
+					// uContent = convTerm(uContent);// deleteControlChars(convTerm(uContent));
 					Node content = docTEI.createTextNode(uContent);
 					seg.appendChild(content);
 					annotatedU.appendChild(u);
@@ -1302,7 +1302,8 @@ public class ClanToTei {
 				uContent += el += " ";
 			}
 		}
-		uContent = convTerm(uContent).replaceAll("\\s+", " ");// deleteControlChars(convTerm(uContent));
+		// uContent = convTerm(uContent).replaceAll("\\s+", " ");// deleteControlChars(convTerm(uContent));
+		uContent = uContent.replaceAll("\\s+", " "); // deleteControlChars(convTerm(uContent));
 		Node content = docTEI.createTextNode(uContent);
 		seg.appendChild(content);
 		seg.appendChild(content);
@@ -1521,7 +1522,7 @@ public class ClanToTei {
 		Pattern pattern = Pattern.compile(patternStr);
 		Matcher matcher = pattern.matcher(s);
 		if (matcher.find()) {
-			s = s.replace(matcher.group(), matcher.group(1) + " #" + matcher.group(2));
+			s = s.replace(matcher.group(), matcher.group(1) + " {" + matcher.group(2)) + " /T}";
 		}
 		return s;
 	}

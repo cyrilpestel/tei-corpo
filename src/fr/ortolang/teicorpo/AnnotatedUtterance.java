@@ -30,37 +30,42 @@ public class AnnotatedUtterance {
 	// Nom du locuteur
 	public String speakerName;
 	// énoncé (avec bruits, pauses...)
-	public String speech;
+	static public String speech;
 	// Enoncé pur
-	public String cleanedSpeech;
+	static public String cleanedSpeech;
 	// Marque de div: si l'utterance marque le début d'un div, le type de
 	// div est spécifié dans ce champ
 	// Servira à repérer les divisions dans la transcription
 	public String type;
 	// Commentaires additionnels hors tiers
-	public ArrayList<String> coms = new ArrayList<String>();
+	public ArrayList<String> coms;
 	// Liste d'énoncés
-	public ArrayList<Annot> speeches = new ArrayList<Annot>();
+	public ArrayList<Annot> speeches;
 	// Liste de tiers
-	public ArrayList<Annot> tiers = new ArrayList<Annot>();
+	public ArrayList<Annot> tiers;
 	// Liste des types de tiers
-	public HashSet<String> tierTypes = new HashSet<String>();
+	public HashSet<String> tierTypes;
 
 	public String shortPause;
 	public String longPause;
 	public String veryLongPause;
-	
+
 	public TeiTimeline teiTimeline;
 
 	/**
 	 * Impression des utterances : liste des énoncés
 	 */
-	public void print() {
-		System.out.println(
-				id + "-" + type + "-" + start + "-" + end + " :-: " + this.speakerName + "   ->   " + speech);
-		for (Annot tier : tiers) {
-			System.out.println("\t" + tier.name + " :: " + tier.content);
+	public String toString() {
+		String s = "Id[" + id + "] Type[" + type + "] Start[" + start + "] End[" + end + "] SpkName[" + speakerName + "]\n";
+		s += "Speeches[" + speeches.size() + "]\n";
+		for (Annot utt : speeches) {
+			s += "{" + utt.content + "} {" + utt.cleanedContent + "}\n";
 		}
+		s += "Tiers[" + tiers.size() + "]\n";
+		for (Annot tier : tiers) {
+			s += "/" + tier.name + "/ /" + tier.content + "/\n";
+		}
+		return s;
 	}
 
 	public AnnotatedUtterance(Element annotatedU, TeiTimeline teiTimeline, TransInfo transInfo, TierParams options) {
@@ -74,6 +79,10 @@ public class AnnotatedUtterance {
 		start = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "start"));
 		end = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "end"));
 		speakerCode = Utils.getAttrAnnotationBloc(annotatedU, "who");
+		coms = new ArrayList<String>();
+		speeches = new ArrayList<Annot>();
+		tiers = new ArrayList<Annot>();
+		tierTypes = new HashSet<String>();
 		if (options != null) {
 			if (options.isDontDisplay(speakerCode))
 				return;
@@ -92,25 +101,26 @@ public class AnnotatedUtterance {
 				Element annotUEl = (Element) annotUElements.item(i);
 				String nodeName = annotUEl.getNodeName();
 				/*
-				 * Cas élément "u": dans ce cas, on concatène tous les u
-				 * pour former cleanedSpeech, de même pour speech mais en
-				 * incluant les éventuels bruits/incidents qui ont lieu lors
-				 * de l'énoncé (sous la forme d'une chaîne de caractère
-				 * prédéfinie). On ajoute tous les énoncés dans speeches.
+				 * Cas élément "u": dans ce cas, on concatène tous les u pour
+				 * former cleanedSpeech, de même pour speech mais en incluant
+				 * les éventuels bruits/incidents qui ont lieu lors de l'énoncé
+				 * (sous la forme d'une chaîne de caractère prédéfinie). On
+				 * ajoute tous les énoncés dans speeches.
 				 */
 				if (nodeName.equals("u")) {
 					cleanedSpeech = "";
 					speech = "";
 					NodeList us = annotUEl.getChildNodes();
 					processSeg(us);
+					//System.out.printf("TTTTT : %s%n", speech);
 					speech = Utils.cleanString(speech);
 					cleanedSpeech = Utils.cleanString(cleanedSpeech);
 					Annot a = new Annot(speakerName, start, end, speech, cleanedSpeech);
 					speeches.add(a);
-//					System.out.printf("TTTTT endofseg: %s %s %s%n", start, end, speech);
-				}
-				// Ajout des tiers
-				else if (nodeName.equals("spanGrp")) {
+					// System.out.printf("TTTTT endofseg: %s %s %s%n", start,
+					// end, speech);
+				} else if (nodeName.equals("spanGrp")) {
+					// Ajout des tiers
 					String type = annotUEl.getAttribute("type");
 					if (options != null) {
 						if (options.level == 1)
@@ -138,12 +148,12 @@ public class AnnotatedUtterance {
 	}
 
 	public void processSeg(NodeList us) {
-//		System.out.printf("KKKKK processSeg%n");
+		//System.out.printf("KKKKK processSeg%n");
 		for (int z = 0; z < us.getLength(); z++) {
 			Node segChild = us.item(z);
 			String segChildName = segChild.getNodeName();
-			int segType = segChild.getNodeType();
-//			System.out.printf("%d %s %d%n", z, segChildName, segType);
+			//int segType = segChild.getNodeType();
+			//System.out.printf("%d %s %d%n", z, segChildName, segType);
 
 			// Ajout des pauses: syntaxe = # pour les pauses courtes, sinon
 			// ### pour les pauses longues
@@ -173,15 +183,16 @@ public class AnnotatedUtterance {
 					String val = getIncidentDesc(segChildEl);
 					if (segChildEl.getAttribute("type").equals("pronounce")) {
 						String ann = Utils.leftEvent + val;
-						if (Utils.isNotEmptyOrNull(st)) 
+						if (Utils.isNotEmptyOrNull(st))
 							ann += " /" + st + "/PHO" + Utils.rightEvent + " ";
 						else
 							ann += Utils.rightEvent + " ";
 						speech += ann;
 					} else if (segChildEl.getAttribute("type").equals("language")) {
 						String ann = Utils.leftCode;
-						if (Utils.isNotEmptyOrNull(st)) ann += "/" + st;
-						if (Utils.isNotEmptyOrNull(val)) 
+						if (Utils.isNotEmptyOrNull(st))
+							ann += "/" + st;
+						if (Utils.isNotEmptyOrNull(val))
 							ann += "/LG:" + val + Utils.rightCode + " ";
 						else
 							ann += "/LG" + Utils.rightCode + " ";
@@ -189,34 +200,40 @@ public class AnnotatedUtterance {
 					} else if (segChildEl.getAttribute("type").equals("noise")) {
 						String ann = Utils.leftEvent + val;
 						ann += " /";
-						if (Utils.isNotEmptyOrNull(st)) ann += st + "/";
+						if (Utils.isNotEmptyOrNull(st))
+							ann += st + "/";
 						ann += "N" + Utils.rightEvent + " ";
 						speech += ann;
 					} else if (segChildEl.getAttribute("type").equals("comment")) {
 						String ann = Utils.leftEvent + val;
 						ann += " /";
-						if (Utils.isNotEmptyOrNull(st)) ann += st + "/";
+						if (Utils.isNotEmptyOrNull(st))
+							ann += st + "/";
 						ann += "COM" + Utils.rightEvent + " ";
 						speech += ann;
 					} else if (segChildEl.getAttribute("type").equals("background")) {
 						String ann = Utils.leftEvent + val;
 						String tm = getIncidentDescAttr(segChildEl, "time");
-						if (tm != null) tm = teiTimeline.getTimeValue(tm);
+						if (tm != null)
+							tm = teiTimeline.getTimeValue(tm);
 						String lv = getIncidentDescAttr(segChildEl, "level");
 						ann += " /";
-						if (Utils.isNotEmptyOrNull(st)) ann += st;
-						ann += "/"; 
-						if (Utils.isNotEmptyOrNull(tm)) ann += tm;
-						ann += "/"; 
-						if (Utils.isNotEmptyOrNull(lv)) ann += lv;
+						if (Utils.isNotEmptyOrNull(st))
+							ann += st;
+						ann += "/";
+						if (Utils.isNotEmptyOrNull(tm))
+							ann += tm;
+						ann += "/";
+						if (Utils.isNotEmptyOrNull(lv))
+							ann += lv;
 						ann += "/B" + Utils.rightEvent + " ";
 						speech += ann;
 					} else {
 						String ann = Utils.leftCode + val;
-						if (Utils.isNotEmptyOrNull(st)) 
+						if (Utils.isNotEmptyOrNull(st))
 							ann += " /" + st;
 						ann += "/";
-						switch(segChildEl.getAttribute("type")) {
+						switch (segChildEl.getAttribute("type")) {
 						case "lexical":
 							ann += "LX";
 							break;
@@ -242,7 +259,8 @@ public class AnnotatedUtterance {
 					// creer une ligne avec speech, cleanedSpeech, addspeech
 					Annot a = new Annot(speakerName, start, sync, speech, cleanedSpeech);
 					speeches.add(a);
-//					System.out.printf("anchor: %s %s %s %s%n", speakerName, start, sync, speech);
+					// System.out.printf("anchor: %s %s %s %s%n", speakerName,
+					// start, sync, speech);
 					start = sync;
 					speech = "";
 					cleanedSpeech = "";
@@ -265,8 +283,7 @@ public class AnnotatedUtterance {
 					tiers.add(new Annot(tierName, tierMorpho));
 					tierTypes.add("morpho");
 				}
-			} else
-			if (segChild.getNodeName().equals("#text")) {
+			} else if (segChild.getNodeName().equals("#text")) {
 				String content = segChild.getTextContent() + " ";
 				if (Utils.isNotEmptyOrNull(content.trim())) {
 					speech += content;
