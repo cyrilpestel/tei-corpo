@@ -8,6 +8,8 @@ package fr.ortolang.teicorpo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -23,6 +25,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import fr.ortolang.teicorpo.TeiFile.Div;
 
 public class TeiToTranscriber extends TeiConverter {
 	// Document transcriber
@@ -105,12 +109,33 @@ public class TeiToTranscriber extends TeiConverter {
 
 	// Construction de l'élément Speakers
 	public void buildSpks() {
+		Element spks = trsDoc.createElement("Speakers");
+		trans.appendChild(spks);
+		Set<String> ec = new HashSet<String>(); 
 		if (!tf.transInfo.participants.isEmpty()) {
-			Element spks = trsDoc.createElement("Speakers");
-			trans.appendChild(spks);
 			for (TeiParticipant p : tf.transInfo.participants) {
-				addSpk(spks, p);
+				if (Utils.isNotEmptyOrNull(p.id) && !ec.contains(p.id)) {
+					System.err.println(p.toString());
+					ec.add(p.id);
+					addSpk(spks, p);
+				}
 			}
+		}
+		Set<String> nc = new HashSet<String>(); 
+		for (Div d : tf.trans.divs) {
+			for (AnnotatedUtterance u : d.utterances) {
+				String spk = u.speakerCode;
+				if (!ec.contains(spk)) {
+					nc.add(spk);
+				}
+			}
+		}
+		for (String s: nc) {
+			TeiParticipant p = new TeiParticipant();
+			p.id = s;
+			p.name = s;
+			addSpk(spks, p);
+			System.err.println("add " + s);
 		}
 	}
 
@@ -121,10 +146,8 @@ public class TeiToTranscriber extends TeiConverter {
 		// pas de possibilité de commentaires dans
 		// un élément Speaker, donc si autres infos, sont perdues ...
 		Element spk = trsDoc.createElement("Speaker");
-		System.err.println(p);
-		p.print();
 		if (!Utils.isNotEmptyOrNull(p.id)) {
-			System.out.printf("Warning: speaker ignored %s%n", p.toString());
+			System.err.printf("Warning: speaker ignored %s%n", p.toString());
 			return;
 		}
 		// Les attributs id et name sont obligatoires
@@ -603,7 +626,7 @@ public class TeiToTranscriber extends TeiConverter {
 					turn.addText(uChild.getTextContent().replaceAll("\\s+", " "));
 				}
 			} else {
-				System.err.println("add not element");
+				// System.err.println("add not element");
 				turn.addText(uChildNodes.item(t).getTextContent().replaceAll("\\s+", " "));
 			}
 		}

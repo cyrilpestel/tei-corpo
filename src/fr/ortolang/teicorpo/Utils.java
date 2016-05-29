@@ -84,6 +84,24 @@ public class Utils {
 		return s.trim().replaceAll(" {2,}", " ").replaceAll("\n", "").trim();
 	}
 
+	public static String cleanStringPlusEntities(String s){
+		return s.replaceAll(" {2,}", " ")
+				.replaceAll("\n", "").trim()
+				.replaceAll("&quot;", "\"") // 34 22
+				.replaceAll("&amp;", "&") // 38 26
+				.replaceAll("&#39;", "\'") // 39 27
+				.replaceAll("&lt;", "<") // 60 3C
+				.replaceAll("&gt;", ">"); // 62 3E
+	}
+
+	public static String cleanEntities(String s){
+		return s.replaceAll("&quot;", "\"") // 34 22
+				.replaceAll("&amp;", "&") // 38 26
+				.replaceAll("&#39;", "\'") // 39 27
+				.replaceAll("&lt;", "<") // 60 3C
+				.replaceAll("&gt;", ">"); // 62 3E
+	}
+
 	public static String join(String... args) {
 		String result = "";
 		for(String st : args){

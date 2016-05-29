@@ -113,8 +113,8 @@ public class AnnotatedUtterance {
 					NodeList us = annotUEl.getChildNodes();
 					processSeg(us);
 					//System.out.printf("TTTTT : %s%n", speech);
-					speech = Utils.cleanString(speech);
-					cleanedSpeech = Utils.cleanString(cleanedSpeech);
+					speech = Utils.cleanStringPlusEntities(speech);
+					cleanedSpeech = Utils.cleanStringPlusEntities(cleanedSpeech);
 					Annot a = new Annot(speakerName, start, end, speech, cleanedSpeech);
 					speeches.add(a);
 					// System.out.printf("TTTTT endofseg: %s %s %s%n", start,
@@ -134,7 +134,7 @@ public class AnnotatedUtterance {
 					for (int y = 0; y < spans.getLength(); y++) {
 						Element span = (Element) spans.item(y);
 
-						tiers.add(new Annot(type, span.getTextContent()));
+						tiers.add(new Annot(type, Utils.cleanEntities(span.getTextContent())));
 
 						tierTypes.add(type);//
 						if (!type.equals("pho") && !type.equals("act") && !type.equals("sit") && !type.equals("com")

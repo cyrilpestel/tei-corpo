@@ -372,10 +372,15 @@ public class TeiToClan extends TeiConverter {
 	 */
 	public void writeProperty(String propertyName, String propertyContent) {
 		if (Utils.isNotEmptyOrNull(propertyContent)) {
-			out.println("@" + propertyName + ":\t" + propertyContent);
+			String[] lines = propertyContent.split("[\\r\\n]+");
+			if (lines.length > 0) {
+				out.printf("@%s:\t%s%n", propertyName, lines[0]);
+				for (int i = 1; i < lines.length; i++)
+					out.printf("\t%s%n", lines[i]);
+			}
 		}
 		/*
-		 * else{ out.println("@" + propertyName); }
+		 * else { out.println("@" + propertyName); }
 		 */
 	}
 
@@ -539,7 +544,7 @@ public class TeiToClan extends TeiConverter {
 	public static void main(String args[]) throws IOException {
 		Utils.printVersionMessage();
 
-		String usageString = "Description: TeiToChat convertit un fichier au format TEI en un fichier au format Chat%nUsage: TeiToChat [-options] <file."
+		String usageString = "Description: TeiToClan convertit un fichier au format TEI en un fichier au format Clan/Chat%nUsage: TeiToClan [-options] <file."
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments

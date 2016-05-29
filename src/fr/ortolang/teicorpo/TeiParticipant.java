@@ -29,6 +29,16 @@ public class TeiParticipant {
 	// Informations supplémentaires concernant le locuteur
 	public Map<String, String> adds = new HashMap<String, String>();
 
+	public TeiParticipant() {
+		id = "";
+		name = "";
+		role = "";
+		sex = "";
+		language = "";
+		corpus = "";
+		age = "";
+	}
+
 	public TeiParticipant(Element participant) {
 		NamedNodeMap attrs = participant.getAttributes();
 		for (int i = 0; i < attrs.getLength(); i++) {
@@ -97,12 +107,24 @@ public class TeiParticipant {
 	 * Impression de Participant.
 	 */
 	public void print() {
-		System.out.print("Participant");
+		System.out.print("XParticipant");
 		System.out.print(
 				"\tid " + id + "\tname " + name + "\trole " + role + "\tsex " + sex + "\tlang " + language + "\t");
 		for (Map.Entry<String, String> e : adds.entrySet()) {
 			System.out.print(e.getKey() + " " + e.getValue() + "\t");
 		}
 		System.out.println();
+	}
+
+	/**
+	 * Impression de Participant.
+	 */
+	public String toString() {
+		String s = "Participant";
+		s += "\tid " + id + "\tname " + name + "\trole " + role + "\tsex " + sex + "\tlang " + language + "\t";
+		for (Map.Entry<String, String> e : adds.entrySet()) {
+			s += e.getKey() + " " + e.getValue() + "\t";
+		}
+		return s;
 	}
 }
