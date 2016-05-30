@@ -21,6 +21,7 @@ public class AnnotatedUtterance {
 	public Element annotU;
 	// Identifiant
 	public String id;
+	private int nthid;
 	// Temps de début(chaîne de caractère, unité = secondes)
 	public String start;
 	//// Temps de fin(chaîne de caractère, unité = secondes)
@@ -76,6 +77,7 @@ public class AnnotatedUtterance {
 		veryLongPause = Utils.veryLongPause;
 		annotU = annotatedU;
 		id = Utils.getAttrAnnotationBloc(annotatedU, "xml:id");
+		nthid = 0;
 		start = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "start"));
 		end = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "end"));
 		speakerCode = Utils.getAttrAnnotationBloc(annotatedU, "who");
@@ -116,6 +118,13 @@ public class AnnotatedUtterance {
 					speech = Utils.cleanStringPlusEntities(speech);
 					cleanedSpeech = Utils.cleanStringPlusEntities(cleanedSpeech);
 					Annot a = new Annot(speakerName, start, end, speech, cleanedSpeech);
+					if (nthid == 0) {
+						a.id = id;
+						nthid++;
+					} else {
+						a.id = id + nthid;
+						nthid++;
+					}
 					speeches.add(a);
 					// System.out.printf("TTTTT endofseg: %s %s %s%n", start,
 					// end, speech);
@@ -258,6 +267,13 @@ public class AnnotatedUtterance {
 					String sync = teiTimeline.getTimeValue(segChildEl.getAttribute("synch"));
 					// creer une ligne avec speech, cleanedSpeech, addspeech
 					Annot a = new Annot(speakerName, start, sync, speech, cleanedSpeech);
+					if (nthid == 0) {
+						a.id = id;
+						nthid++;
+					} else {
+						a.id = id + nthid;
+						nthid++;
+					}
 					speeches.add(a);
 					// System.out.printf("anchor: %s %s %s %s%n", speakerName,
 					// start, sync, speech);
