@@ -236,7 +236,8 @@ public class TeiFile {
 								lastU.coms.add(note.getAttribute("type") + "\t" + note.getTextContent());
 							}
 						} else {
-							AnnotatedUtterance utt = new AnnotatedUtterance(el, teiTimeline, transInfo, optionsOutput);
+							AnnotatedUtterance utt = new AnnotatedUtterance();
+							utt.process(el, teiTimeline, transInfo, optionsOutput, true);
 							// Si c'est le premier u, on lui ajoute le type du
 							// div
 							if (first == true) {

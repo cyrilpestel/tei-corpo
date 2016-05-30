@@ -80,9 +80,10 @@ public class TeiToPartition {
 		}
 		for (int i = 0; i < annotationGrps.getLength(); i++) {
 			Element annotGrp = (Element) annotationGrps.item(i);
-			AnnotatedUtterance au = new AnnotatedUtterance(annotGrp, this.timeline, null, null);
+			AnnotatedUtterance au = new AnnotatedUtterance();
+			au.process(annotGrp, this.timeline, null, optionsOutput, false);
 			NodeList annotGrpElmts = annotGrp.getChildNodes();
-			String name = annotGrp.getAttribute("who");
+			String name = au.speakerCode;
 			if (!Utils.isNotEmptyOrNull(name))
 				continue; // this is a note and not an utterance
 			if (optionsOutput != null) {
@@ -91,33 +92,43 @@ public class TeiToPartition {
 				if (!optionsOutput.isDoDisplay(name))
 					continue;
 			}
-			String start = Utils.refID(annotGrp.getAttribute("start"));
+//			String start = Utils.refID(annotGrp.getAttribute("start"));
 //			System.err.println("Start1: " + start);
-			start = timeline.getTimeValue(start);
+//			start = timeline.getTimeValue(start);
 //			System.err.println("Start2: " + start);
-			String end = Utils.refID(annotGrp.getAttribute("end"));
-			end = timeline.getTimeValue(end);
-			String id = annotGrp.getAttribute("xml:id");
-			String timeSG = (start.isEmpty() || end.isEmpty()) ? "ref" : "time";
+//			String end = Utils.refID(annotGrp.getAttribute("end"));
+//			end = timeline.getTimeValue(end);
+			String start = au.start;
+			String end = au.end;
+			String id = au.id;
+			// String timeSG = (start.isEmpty() || end.isEmpty()) ? "ref" : "time"; // ref is impossible on u tags in ELAN
+			// si le nombre d'annotation de au.speeches > 1 il faudrait changer le statut des spans qui en dépendent
+			for (Annot a: au.speeches) {
+				/*
+				Annot annot = new Annot();
+				annot.content = annotElmt.getTextContent().trim();
+				annot.start = start;
+				annot.end = end;
+				annot.id = id;
+				annot.name = name;
+				*/
+				a.timereftype = "time";
+				String lgqt = "";
+				for (TierInfo ti : tierInfos) {
+					if (ti.tier_id.equals(name))
+						lgqt = ti.type.lgq_type_id == null ? "-" : ti.type.lgq_type_id;
+				}
+				addElementToMap(tiers, name, a, lgqt, "-");
+			}
+			
 			for (int j = 0; j < annotGrpElmts.getLength(); j++) {
 				if (Utils.isElement(annotGrpElmts.item(j))) {
 					Element annotElmt = (Element) annotGrpElmts.item(j);
-					if (annotElmt.getNodeName().equals("u")) {
-						Annot annot = new Annot();
-						annot.content = annotElmt.getTextContent().trim();
-						annot.start = start;
-						annot.end = end;
-						annot.id = id;
-						annot.name = name;
-						annot.timereftype = timeSG;
-						String lgqt = "";
-						for (TierInfo ti : tierInfos) {
-							if (ti.tier_id.equals(name))
-								lgqt = ti.type.lgq_type_id == null ? "-" : ti.type.lgq_type_id;
-						}
-						addElementToMap(tiers, name, annot, lgqt, "-");
-					} else if (annotElmt.getNodeName().equals("spanGrp")) {
-						spanGrpCase(tiers, annotElmt, id, name, timeSG, start, end);
+					if (annotElmt.getNodeName().equals("spanGrp")) {
+						String at = annotElmt.getAttribute("type");
+						if (at != null && at.equals("TurnInformation"))
+							continue;
+						spanGrpCase(tiers, annotElmt, id, name, "time", start, end);
 					}
 				}
 			}

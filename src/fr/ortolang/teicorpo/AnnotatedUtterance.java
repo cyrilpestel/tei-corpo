@@ -1,5 +1,5 @@
 /**
- * @author Myriam Majdoub
+ * @author Myriam Majdoub & Christophe Parisse
  * Représentations des informations d'un énoncé en format texte à partir d'un format TEI.
  */
 
@@ -68,7 +68,7 @@ public class AnnotatedUtterance {
 		return s;
 	}
 
-	public AnnotatedUtterance(Element annotatedU, TeiTimeline teiTimeline, TransInfo transInfo, TierParams options) {
+	public void process(Element annotatedU, TeiTimeline teiTimeline, TransInfo transInfo, TierParams options, boolean doSpan) {
 		this.teiTimeline = teiTimeline;
 		// Initialisation des variables d'instances
 		shortPause = Utils.shortPause;
@@ -119,7 +119,7 @@ public class AnnotatedUtterance {
 					speeches.add(a);
 					// System.out.printf("TTTTT endofseg: %s %s %s%n", start,
 					// end, speech);
-				} else if (nodeName.equals("spanGrp")) {
+				} else if (nodeName.equals("spanGrp") && doSpan == true) {
 					// Ajout des tiers
 					String type = annotUEl.getAttribute("type");
 					if (options != null) {
