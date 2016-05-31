@@ -582,9 +582,9 @@ public class TeiToClan extends TeiConverter {
 							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
 					System.exit(1);
 				}
+			} else {
+				new File(outputDir).mkdir();
 			}
-
-			new File(outputDir).mkdir();
 
 			for (File file : teiFiles) {
 				String name = file.getName();

@@ -14,6 +14,7 @@ class TierParams {
 	String options;
 	boolean nospreadtime;
 	boolean detectEncoding;
+	HashSet<String> commands;  // for -c parameter
 	HashSet<String> doDisplay;
 	HashSet<String> dontDisplay;
 	TreeMap<String, String> tv;
@@ -24,6 +25,7 @@ class TierParams {
 		mediaName = null;
 		encoding = null;
 		detectEncoding = true;
+		commands = new HashSet<String>();
 		doDisplay = new HashSet<String>();
 		dontDisplay = new HashSet<String>();
 		level = 0; // all levels
@@ -33,6 +35,9 @@ class TierParams {
 		options = "";
 		nospreadtime = false;
 		tv = new TreeMap<String, String>();
+	}
+	void addCommand(String s) {
+		commands.add(s);
 	}
 	void addDoDisplay(String s) {
 		doDisplay.add(s.toLowerCase());

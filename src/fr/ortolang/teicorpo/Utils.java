@@ -42,8 +42,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.047"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "30/05/2016 14:00";
+	public static String versionSoft = "1.05"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "31/05/2016 17:30";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
@@ -712,6 +712,9 @@ public class Utils {
 					} else if (args[i].equals("-s")) {
 						i++;
 						continue;
+					} else if (args[i].equals("-c")) {
+						i++;
+						continue;
 					} else if (args[i].equals("-tv")) {
 						i++;
 						continue;
@@ -759,6 +762,13 @@ public class Utils {
 							Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
+					} else if (args[i].equals("-c")) {
+						if (i+1 >= args.length) {
+							Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.addCommand(args[i]);
 					} else if (args[i].equals("-a")) {
 						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2, style);
