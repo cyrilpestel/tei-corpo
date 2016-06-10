@@ -74,9 +74,11 @@ public class TeiToText extends TeiConverter {
 	 * convertir
 	 */
 	public void buildHeader() {
-		out.println("@Fichier_input:\t" + inputName);
-		out.println("@Fichier_output:\t" + outputName);
-		out.print(tf.transInfo.toString());
+		if (tf.optionsOutput.raw != true) {
+			out.println("@Fichier_input:\t" + inputName);
+			out.println("@Fichier_output:\t" + outputName);
+			out.print(tf.transInfo.toString());
+		}
 	}
 
 	/**
@@ -88,7 +90,7 @@ public class TeiToText extends TeiConverter {
 			for (AnnotatedUtterance u : d.utterances) {
 				// u.print();
 				if (Utils.isNotEmptyOrNull(u.type)) {
-					if (!u.start.isEmpty()) {
+					if (!u.start.isEmpty() && tf.optionsOutput.raw != true) {
 						float start = Float.parseFloat(u.start);
 						out.printf("%f:%f\t", start, start+1);
 						String[] splitType = u.type.split("\t");
@@ -158,13 +160,17 @@ public class TeiToText extends TeiConverter {
 
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
-		if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
-			float start = Float.parseFloat(startTime);
-			float end = Float.parseFloat(endTime);
-			out.printf("%f:%f\t", start, end);
-			out.println(loc + "\t" + speechContent);
-		} else {
-			out.println("\t\t" + loc + "\t" + speechContent);
+		if (tf.optionsOutput.raw == true)
+			out.println(speechContent);
+		else {
+			if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
+				float start = Float.parseFloat(startTime);
+				float end = Float.parseFloat(endTime);
+				out.printf("%f:%f\t", start, end);
+				out.println(loc + "\t" + speechContent);
+			} else {
+				out.println("\t\t" + loc + "\t" + speechContent);
+			}
 		}
 	}
 
@@ -201,10 +207,14 @@ public class TeiToText extends TeiConverter {
 			if (!optionsOutput.isDoDisplay(tier.name))
 				return;
 		}
-		String type = tier.name;
-		String tierContent = tier.content;
-		String tierLine = "\t\t\t%" + type + "\t" + tierContent.trim();
-		out.println(tierLine);
+		if (tf.optionsOutput.raw == true)
+			out.println(tier.content.trim());
+		else {
+			String type = tier.name;
+			String tierContent = tier.content;
+			String tierLine = "\t\t\t%" + type + "\t" + tierContent.trim();
+			out.println(tierLine);
+		}
 	}
 
 	public void createOutput() {
@@ -217,6 +227,7 @@ public class TeiToText extends TeiConverter {
 		// Parcours des arguments
 		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, 0))
 			System.exit(1);
+		if (options.raw) options.cleanLine = true;
 		String input = options.input;
 		String output = options.output;
 

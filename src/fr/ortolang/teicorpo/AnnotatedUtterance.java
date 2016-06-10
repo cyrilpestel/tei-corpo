@@ -116,7 +116,7 @@ public class AnnotatedUtterance {
 					processSeg(us);
 					//System.out.printf("TTTTT : %s%n", speech);
 					speech = Utils.cleanStringPlusEntities(speech);
-					cleanedSpeech = Utils.cleanStringPlusEntities(cleanedSpeech);
+					cleanedSpeech = ConventionsToChat.clean(Utils.cleanStringPlusEntities(cleanedSpeech));
 					Annot a = new Annot(speakerName, start, end, speech, cleanedSpeech);
 					if (nthid == 0) {
 						a.id = id;

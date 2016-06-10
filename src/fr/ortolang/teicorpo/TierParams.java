@@ -19,6 +19,7 @@ class TierParams {
 	HashSet<String> dontDisplay;
 	TreeMap<String, String> tv;
 	int level;
+	public boolean raw;
 	TierParams() {
 		input = null;
 		output = null;
@@ -31,6 +32,7 @@ class TierParams {
 		level = 0; // all levels
 		forceEmpty = true;
 		cleanLine = false;
+		raw = false;
 		sectionDisplay = false;
 		options = "";
 		nospreadtime = false;

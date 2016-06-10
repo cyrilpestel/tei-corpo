@@ -68,6 +68,10 @@ public class ConventionsToChat {
 		l = l.replaceAll( "\\+\\<", "" );
 		l = l.replaceAll( "<", "" );
 		l = l.replaceAll( ">", "" );
+		l = l.replaceAll( "⟪", "" );
+		l = l.replaceAll( "⟫", "" );
+		l = l.replaceAll( "‹", "" );
+		l = l.replaceAll( "›", "" );
 		l = l.replaceAll( "0", "" );
 		//l = l.replaceAll( " +", " " ); // garder les marqueurs de fin d'énoncé
 		return l;

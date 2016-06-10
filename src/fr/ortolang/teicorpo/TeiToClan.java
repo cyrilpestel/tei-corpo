@@ -374,9 +374,9 @@ public class TeiToClan extends TeiConverter {
 		if (Utils.isNotEmptyOrNull(propertyContent)) {
 			String[] lines = propertyContent.split("[\\r\\n]+");
 			if (lines.length > 0) {
-				out.printf("@%s:\t%s%n", propertyName, lines[0]);
+				out.printf("@%s:\t%s%n", propertyName, lines[0].trim());
 				for (int i = 1; i < lines.length; i++)
-					out.printf("\t%s%n", lines[i]);
+					out.printf("\t%s%n", lines[i].trim());
 			}
 		}
 		/*
@@ -549,7 +549,7 @@ public class TeiToClan extends TeiConverter {
 		TierParams options = new TierParams();
 		// Parcours des arguments
 		if (!Utils.processArgs(args, options, usageString, Utils.EXT, EXT, 0))
-			System.exit(1);
+			return;
 		String input = options.input;
 		String output = options.output;
 

@@ -283,7 +283,7 @@ public class TeiEdit {
 		TierParams options = new TierParams();
 		// Parcours des arguments
 		if (!Utils.processArgs(args, options, usageString, Utils.EXT, Utils.EXT, 0))
-			System.exit(1);
+			return;
 		String input = options.input;
 		String output = options.output;
 
