@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.management.OperationsException;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -292,6 +293,8 @@ public class TeiToElan {
 			for (Map.Entry<String, ArrayList<Annot>> entry : ttp.tiers.entrySet()) {
 				for (Annot a : entry.getValue()) {
 					if (a.timereftype.equals("time")) {
+						if (!Utils.isNotEmptyOrNull(a.start)) continue;
+						if (!Utils.isNotEmptyOrNull(a.end)) continue;
 						Double start = Double.parseDouble(a.start) * 1000.0;
 						Double end = Double.parseDouble(a.end) * 1000.0;
 						String s = Integer.toString((int) Math.round(start));
@@ -485,7 +488,10 @@ public class TeiToElan {
 					align_annot.setAttribute("TIME_SLOT_REF2", timelineValueOf(a.end));
 					annot.appendChild(align_annot);
 					Element annotationValue = elanDoc.createElement("ANNOTATION_VALUE");
-					annotationValue.setTextContent(a.content);
+					if (ttp.optionsOutput.cleanLine == true)
+						annotationValue.setTextContent(a.cleanedContent);
+					else
+						annotationValue.setTextContent(a.content);
 					if (Utils.isNotEmptyOrNull(cvref)) {
 						Map<String, String> cvi = cvs.get(cvref);
 						String cve = cvi.get(a.content);

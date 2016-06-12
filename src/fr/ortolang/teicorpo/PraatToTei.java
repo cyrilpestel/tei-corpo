@@ -525,6 +525,7 @@ public class PraatToTei {
 				reader.close();
 			}
 
+			fe.printStackTrace();
 			throw new IOException("Error occurred while reading the file: " + fe.getMessage());
 		}
 	}
@@ -961,6 +962,7 @@ public class PraatToTei {
 			Utils.createFile(outputfile, hiertransToTei.docTEI);
 
 		} catch (IOException ioe) {
+			ioe.printStackTrace();
 			System.err.println("Interrompu!"); // ioe.toString());
 			return false;
 		}

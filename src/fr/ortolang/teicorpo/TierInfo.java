@@ -15,6 +15,7 @@ public class TierInfo {
 	ArrayList<String> dependantsNames;
 
 	TierInfo() {
+		tier_id = "";
 		type = new LgqType();
 		dependantsNames = new ArrayList<String>();
 	}

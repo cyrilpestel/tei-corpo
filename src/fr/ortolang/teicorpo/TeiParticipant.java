@@ -121,9 +121,9 @@ public class TeiParticipant {
 	 */
 	public String toString() {
 		String s = "Participant";
-		s += "\tid " + id + "\tname " + name + "\trole " + role + "\tsex " + sex + "\tlang " + language + "\t";
+		s += "\tid " + Utils.justSpaces(id) + "\tname " + Utils.justSpaces(name) + "\trole " + Utils.justSpaces(role) + "\tsex " + Utils.justSpaces(sex) + "\tlang " + Utils.justSpaces(language) + "\t";
 		for (Map.Entry<String, String> e : adds.entrySet()) {
-			s += e.getKey() + " " + e.getValue() + "\t";
+			s += Utils.justSpaces(e.getKey()) + " " + Utils.justSpaces(e.getValue()) + "\t";
 		}
 		return s;
 	}

@@ -20,6 +20,7 @@ class TierParams {
 	TreeMap<String, String> tv;
 	int level;
 	public boolean raw;
+	public boolean noHeader;
 	TierParams() {
 		input = null;
 		output = null;
@@ -32,6 +33,7 @@ class TierParams {
 		level = 0; // all levels
 		forceEmpty = true;
 		cleanLine = false;
+		noHeader = false;
 		raw = false;
 		sectionDisplay = false;
 		options = "";

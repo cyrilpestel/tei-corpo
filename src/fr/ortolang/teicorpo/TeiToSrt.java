@@ -204,6 +204,7 @@ public class TeiToSrt extends TeiConverter {
 			if (!optionsOutput.isDoDisplay("com"))
 				return;
 		}
+		if (optionsOutput.noHeader == true) return;
 		// Ajout des informations additionnelles présents dans les fichiers srt
 		for (String s : u.coms) {
 			String infoType = Utils.getInfoType(s);
@@ -225,6 +226,7 @@ public class TeiToSrt extends TeiConverter {
 			if (!optionsOutput.isDoDisplay(tier.name))
 				return;
 		}
+		if (optionsOutput.level <= 1) return;
 		String type = tier.name;
 		String tierContent = tier.content;
 		String tierLine = "%" + type + ": " + tierContent.trim();

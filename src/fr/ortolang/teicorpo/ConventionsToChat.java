@@ -37,7 +37,7 @@ public class ConventionsToChat {
 	}
 	
 	public static String term(String s){
-		String patternStr = "#(\\+\\.\\.\\.|\\+/\\.|\\+!\\?|\\+//\\.|\\+/\\?|\\+\"/\\.|\\+\"\\.|\\+//\\?|\\+\\.\\.\\?|\\+\\.|\\.|\\?|!\\s*$)";
+		String patternStr = "#(\\+\\.\\.\\.|\\+/\\.|\\+!\\?|\\+//\\.|\\+/\\?|\\+\"/\\.|\\+\"\\.|\\+//\\?|\\+\\.\\.\\?|\\+\\.|\\.|\\?|!)\\s*$";
 		Pattern pattern = Pattern.compile(patternStr);
 		Matcher matcher = pattern.matcher(s);
 		if (matcher.find()) {
@@ -52,6 +52,18 @@ public class ConventionsToChat {
 		s = noise(s);
 		s = term(s);
 		return Utils.cleanString(s);
+	}
+	
+	public static String chatToText(String s) {
+		String patternStr = "(\\+\\.\\.\\.|\\+/\\.|\\+!\\?|\\+//\\.|\\+/\\?|\\+\"/\\.|\\+\"\\.|\\+//\\?|\\+\\.\\.\\?|\\+\\.)\\s*$";
+		Pattern pattern = Pattern.compile(patternStr);
+		Matcher matcher = pattern.matcher(s);
+		if (matcher.find()) {
+			s  = s.replace(matcher.group(), ".");
+		}
+		s = s.replaceAll("\\+", "-");
+		s = s.replaceAll("_", " ");
+		return s;
 	}
 
 	public static String clean(String l) {
@@ -80,5 +92,6 @@ public class ConventionsToChat {
 	public static void main(String [] args){
 		
 		System.out.println(setConv(" tr * Event|noise|desc:pi extent:previous B/* quand on #2. s'en re-souvient c'est c'est amélioré #.!"));
+		System.out.println(chatToText("des+faux +..."));
 	}
 }

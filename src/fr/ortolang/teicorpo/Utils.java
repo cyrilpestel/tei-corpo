@@ -42,8 +42,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.051"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "10/06/2016 10:00";
+	public static String versionSoft = "1.052"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "13/06/2016 10:00";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
@@ -82,6 +82,11 @@ public class Utils {
 
 	public static String cleanString(String s){
 		return s.trim().replaceAll(" {2,}", " ").replaceAll("\n", "").trim();
+	}
+
+	public static String justSpaces(String s) {
+		if (s == null) return "";
+		return s.replaceAll("\\s+", " ").trim();
 	}
 
 	public static String cleanStringPlusEntities(String s){
@@ -554,6 +559,7 @@ public class Utils {
 		return refid;
 	}
 
+	/*
 	public static void main(String[] args) {
         final String xmlStr = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"+
                                 "<Emp id=\"1\"><name>Pankaj</name><age>25</age>\n"+
@@ -563,6 +569,7 @@ public class Utils {
         String str = convertDocumentToString(doc, false);
         System.out.println(str);
     }
+    */
  
     public static String convertDocumentToString(Document doc, boolean withHeader) {
         TransformerFactory tf = TransformerFactory.newInstance();
@@ -797,6 +804,9 @@ public class Utils {
 					} else if (args[i].equals("-cleanline")) {
 						options.cleanLine = true;
 						continue;
+					} else if (args[i].equals("-noheader")) {
+						options.noHeader = true;
+						continue;
 					} else if (args[i].equals("-raw")) {
 						options.raw = true;
 						continue;
@@ -857,4 +867,31 @@ public class Utils {
 		sg.appendChild(s);
 		annotatedU.appendChild(sg);
 	}
+	
+	public static ArrayList<String> splitText(String s) {
+		// caractères blancs : [\p{Z}\p{C}]+
+		// ponctuations séparateurs: [\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}]
+		// apostrophes : ['‘’]
+		// fin de phrase : [.!?]+|\.\.|\.\.\.|…|\|
+		System.err.println(s);
+		String[] b = s.split("[\\p{Z}\\p{C}]+");
+		ArrayList<String> p = new ArrayList<String>();
+		for (String be: b) {
+			System.err.println("be: " + be);
+			String[] bes = be.split("([\\p{Ps}\\p{Pe}\\p{Pi}\\p{Pf}\\p{Po}\\p{S}]+)");
+			for (String bese: bes) {
+				System.err.println("bese: " + bese);
+				p.add(bese);
+			}
+		}
+		return p;
+	}
+
+	public static void main(String[] args) {
+		String ns = join(args);
+		ArrayList<String> p = splitText(ns);
+		for (int i=0; i<p.size(); i++)
+			System.out.print(" {" + p.get(i) + "}");
+		System.out.println("");
+    }
 }

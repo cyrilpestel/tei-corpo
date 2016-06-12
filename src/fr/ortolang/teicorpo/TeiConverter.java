@@ -93,9 +93,9 @@ public abstract class TeiConverter {
 	}
 
 	public static String convertSpecialCodes(String initial) {
-		initial = initial.replaceAll("yy(\\s|$)", "yyy ");
-		initial = initial.replaceAll("xx(\\s|$)", "xxx ");
-		initial = initial.replaceAll("ww(\\s|$)", "www ");
+		initial = initial.replaceAll("\\byy(\\s|$)\\b", "yyy ");
+		initial = initial.replaceAll("\\bxx(\\s|$)\\b", "xxx ");
+		initial = initial.replaceAll("\\bww(\\s|$)\\b", "www ");
 		initial = initial.replaceAll("\\*\\*\\*", "xxx");
 		return ConventionsToChat.setConv(initial);
 	}
@@ -176,8 +176,18 @@ public abstract class TeiConverter {
 			writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
 		}
 		// écriture des tiers
-		/*
-		 * for (Annot tier : u.tiers) { writeTier(tier); } writeAddInfo(u);
-		 */
+		for (Annot tier : u.tiers)
+			writeTier(tier);
+		writeAddInfo(u);
+	}
+
+	public void writeAddInfo(AnnotatedUtterance u) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void writeTier(Annot tier) {
+		// TODO Auto-generated method stub
+		
 	}
 }

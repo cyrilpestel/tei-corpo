@@ -298,71 +298,9 @@ public class TeiToClan extends TeiConverter {
 		}
 		return eg;
 	}
-
+	
 	/**
-	 * Ecriture des utterances
-	 * 
-	 * @param u
-	 *            L'utterance à écrire
-	 */
-	public void writeUtterance(AnnotatedUtterance u) {
-		String speech;
-		/*
-		 * Chaque utterance a une liste d'énoncé, dans un format spécifique:
-		 * start;end__speech
-		 */
-		for (int s=0; s<u.speeches.size(); s++) {
-//			System.out.printf("u.speeches: [%s]%n", u.speeches.get(s).toString());
-			String start = null;
-			String end = null;
-			speech = toChatLine(u.speeches.get(s).content).trim();
-			speech = speech.replaceAll("\n", "");
-			start = u.speeches.get(s).start;
-			end = u.speeches.get(s).end;
-
-			// Si le temps de début n'est pas renseigné, on prend le temps de
-			// fin de l'énoncé précédent(si présent)
-			if (!Utils.isNotEmptyOrNull(start)) {
-				if (s<1)
-					start = "";
-				else
-					start = u.speeches.get(s-1).end;
-			}
-
-			// Si le temps de fin n'est pas renseigné, on prend le temps de
-			// début de l'énoncé suivant(si présent)
-			if (!Utils.isNotEmptyOrNull(end)) {
-				if (s < u.speeches.size()-1)
-					end = u.speeches.get(s+1).start;
-				else
-					end = "";
-			}
-
-			// Si l'énoncé est le premier de la liste de l'utterance, son temps
-			// de début est égal au temps de début de l'utterance
-			if (s == 0 && !Utils.isNotEmptyOrNull(start)) {
-				start = u.start;
-			}
-
-			// Si l'énoncé est le dernier de la liste de l'utterance, son temps
-			// de fin est égal au temps de fin de l'utterance
-			if (s == u.speeches.size()-1 && !Utils.isNotEmptyOrNull(end)) {
-				end = u.end;
-			}
-
-			// Ecriture de l'énoncé
-//			writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, optionsOutput.forceEmpty);
-			writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
-		}
-		// écriture des tiers
-		for (Annot tier : u.tiers) {
-			writeTier(tier);
-		}
-		writeAddInfo(u);
-	}
-
-	/**
-	 * Ecrtiture d'une propriété du fichier : lignes qui commencent par le
+	 * Ecriture d'une propriété du fichier : lignes qui commencent par le
 	 * symbole arobase
 	 * 
 	 * @param propertyName
@@ -478,9 +416,9 @@ public class TeiToClan extends TeiConverter {
 	}
 
 	public static String convertSpecialCodes(String initial) {
-		initial = initial.replaceAll("yy(\\s|$)", "yyy ");
-		initial = initial.replaceAll("xx(\\s|$)", "xxx ");
-		initial = initial.replaceAll("ww(\\s|$)", "www ");
+		initial = initial.replaceAll("\\byy(\\s|$)\\b", "yyy ");
+		initial = initial.replaceAll("\\bxx(\\s|$)\\b", "xxx ");
+		initial = initial.replaceAll("\\bww(\\s|$)\\b", "www ");
 		initial = initial.replaceAll("\\*\\*\\*", "xxx");
 		return ConventionsToChat.setConv(initial);
 	}
@@ -622,3 +560,63 @@ public class TeiToClan extends TeiConverter {
 		}
 	}
 }
+
+/**
+ * Ecriture des utterances
+ * 
+ * @param u
+ *            L'utterance à écrire
+public void writeUtterance(AnnotatedUtterance u) {
+	String speech;
+	 // Chaque utterance a une liste d'énoncé, dans un format spécifique:
+	 // start;end__speech
+	for (int s=0; s<u.speeches.size(); s++) {
+//		System.out.printf("u.speeches: [%s]%n", u.speeches.get(s).toString());
+		String start = null;
+		String end = null;
+		speech = toChatLine(u.speeches.get(s).content).trim();
+		speech = speech.replaceAll("\n", "");
+		start = u.speeches.get(s).start;
+		end = u.speeches.get(s).end;
+
+		// Si le temps de début n'est pas renseigné, on prend le temps de
+		// fin de l'énoncé précédent(si présent)
+		if (!Utils.isNotEmptyOrNull(start)) {
+			if (s<1)
+				start = "";
+			else
+				start = u.speeches.get(s-1).end;
+		}
+
+		// Si le temps de fin n'est pas renseigné, on prend le temps de
+		// début de l'énoncé suivant(si présent)
+		if (!Utils.isNotEmptyOrNull(end)) {
+			if (s < u.speeches.size()-1)
+				end = u.speeches.get(s+1).start;
+			else
+				end = "";
+		}
+
+		// Si l'énoncé est le premier de la liste de l'utterance, son temps
+		// de début est égal au temps de début de l'utterance
+		if (s == 0 && !Utils.isNotEmptyOrNull(start)) {
+			start = u.start;
+		}
+
+		// Si l'énoncé est le dernier de la liste de l'utterance, son temps
+		// de fin est égal au temps de fin de l'utterance
+		if (s == u.speeches.size()-1 && !Utils.isNotEmptyOrNull(end)) {
+			end = u.end;
+		}
+
+		// Ecriture de l'énoncé
+//		writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, optionsOutput.forceEmpty);
+		writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
+	}
+	// écriture des tiers
+	for (Annot tier : u.tiers) {
+		writeTier(tier);
+	}
+	writeAddInfo(u);
+}
+*/

@@ -74,10 +74,10 @@ public class TeiToText extends TeiConverter {
 	 * convertir
 	 */
 	public void buildHeader() {
-		if (tf.optionsOutput.raw != true) {
+		if (tf.optionsOutput.raw != true && tf.optionsOutput.noHeader != true) {
 			out.println("@Fichier_input:\t" + inputName);
 			out.println("@Fichier_output:\t" + outputName);
-			out.print(tf.transInfo.toString());
+			out.print(tf.transInfo.toString().replaceAll("\t", " "));
 		}
 	}
 
@@ -90,7 +90,7 @@ public class TeiToText extends TeiConverter {
 			for (AnnotatedUtterance u : d.utterances) {
 				// u.print();
 				if (Utils.isNotEmptyOrNull(u.type)) {
-					if (!u.start.isEmpty() && tf.optionsOutput.raw != true) {
+					if (!u.start.isEmpty() && tf.optionsOutput.raw != true && tf.optionsOutput.level != 1) {
 						float start = Float.parseFloat(u.start);
 						out.printf("%f:%f\t", start, start+1);
 						String[] splitType = u.type.split("\t");
@@ -117,7 +117,7 @@ public class TeiToText extends TeiConverter {
 	 */
 	public void writeDiv(String type, String themeId) {
 		String theme = Utils.cleanString(tf.transInfo.situations.get(themeId));
-		out.println(type + "\t" + theme);
+		out.println(type + "\t" + theme.replaceAll("\\s+", " "));
 	}
 
 	/**
@@ -161,15 +161,15 @@ public class TeiToText extends TeiConverter {
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
 		if (tf.optionsOutput.raw == true)
-			out.println(speechContent);
+			out.println(tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent);
 		else {
 			if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
 				float start = Float.parseFloat(startTime);
 				float end = Float.parseFloat(endTime);
 				out.printf("%f:%f\t", start, end);
-				out.println(loc + "\t" + speechContent);
+				out.println(loc + "\t" + (tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent));
 			} else {
-				out.println("\t\t" + loc + "\t" + speechContent);
+				out.println("\t\t" + loc + "\t" + (tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent));
 			}
 		}
 	}
@@ -186,6 +186,7 @@ public class TeiToText extends TeiConverter {
 			if (!optionsOutput.isDoDisplay("com"))
 				return;
 		}
+		if (optionsOutput.raw == true || optionsOutput.noHeader == true) return;
 		// Ajout des informations additionnelles présents dans les fichiers txt
 		for (String s : u.coms) {
 			String infoType = Utils.getInfoType(s);
@@ -207,6 +208,7 @@ public class TeiToText extends TeiConverter {
 			if (!optionsOutput.isDoDisplay(tier.name))
 				return;
 		}
+		if (optionsOutput.level == 1) return;
 		if (tf.optionsOutput.raw == true)
 			out.println(tier.content.trim());
 		else {

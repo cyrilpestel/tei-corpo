@@ -35,6 +35,9 @@ public class TeiToTranscriber extends TeiConverter {
 	Element trans;
 	// Element Episode: contient la transcription de l'enregistrement
 	Element episode;
+	// node that point to speakers (useful to add new speakers if necessary such as subsection
+	Element spks;
+	boolean subsectionAdded;
 	// temporary variables used to construct the sections and turns
 	String speakers;
 	Element section;
@@ -59,6 +62,7 @@ public class TeiToTranscriber extends TeiConverter {
 		sectionStartSet = false;
 		sectionEndSet = false;
 		shiftNextStart = false;
+		subsectionAdded = false;
 		outputWriter();
 		conversion();
 	}
@@ -109,13 +113,13 @@ public class TeiToTranscriber extends TeiConverter {
 
 	// Construction de l'élément Speakers
 	public void buildSpks() {
-		Element spks = trsDoc.createElement("Speakers");
+		spks = trsDoc.createElement("Speakers");
 		trans.appendChild(spks);
 		Set<String> ec = new HashSet<String>(); 
 		if (!tf.transInfo.participants.isEmpty()) {
 			for (TeiParticipant p : tf.transInfo.participants) {
 				if (Utils.isNotEmptyOrNull(p.id) && !ec.contains(p.id)) {
-					System.err.println(p.toString());
+					// System.err.println(p.toString());
 					ec.add(p.id);
 					addSpk(spks, p);
 				}
@@ -367,6 +371,14 @@ public class TeiToTranscriber extends TeiConverter {
 					TranscriberTurn tt = new TranscriberTurn(startTime, endTime, "subsection");
 					tt.add(TranscriberTurn.Comment, tc);
 					turns.add(tt);
+					// need to add a speaker if not already defined.
+					if (subsectionAdded == false) {
+						Element spk = trsDoc.createElement("Speaker");
+						spk.setAttribute("id", "subsection");
+						spk.setAttribute("name", "subsection");
+						spks.appendChild(spk);
+						subsectionAdded = true;
+					}
 				}
 			} else if (d.getTagName().equals(Utils.ANNOTATIONBLOC)) {
 				// this an annotatedU

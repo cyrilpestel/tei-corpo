@@ -132,7 +132,10 @@ public class TeiToPraat {
 		BigDecimal bd = new BigDecimal(value);
 		BigDecimal bdintpart = new BigDecimal(intpart);
 		bd = bd.setScale(15, RoundingMode.HALF_UP);
-		return bdintpart.toString() + "." + (bd.subtract(bdintpart)).toString().substring(2);
+		String decpart = (bd.subtract(bdintpart)).toString().substring(2);
+		if (decpart.equals("-15"))
+			decpart = "000000000000000";
+		return bdintpart.toString() + "." + decpart;
 	}
 
 	// Tiers...

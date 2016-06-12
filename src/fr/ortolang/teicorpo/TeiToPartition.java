@@ -335,12 +335,14 @@ public class TeiToPartition {
 				if (Utils.isElement(cn.item(j))) {
 					Element child = (Element) cn.item(j);
 					if (child.getNodeName().equals("altGrp")) {
-						for (int z = 0; z < child.getElementsByTagName("alt").getLength(); z++) {
-							Element alt = (Element) child.getElementsByTagName("alt").item(z);
+						NodeList nnl = child.getElementsByTagName("alt");
+						for (int z = 0; z < nnl.getLength(); z++) {
+							Element alt = (Element)nnl.item(z);
 							if (alt.hasAttribute("type")) {
 								for (TierInfo ti : tierInfos) {
 									// NodeList pn =
 									// person.getElementsByTagName("persName");
+									// System.err.println(ti.toString());
 									if (ti.tier_id.equals(alt.getAttribute("type"))) {
 										if (person.getElementsByTagName("persName").getLength() > 0) {
 											ti.participant = person.getElementsByTagName("persName").item(0)

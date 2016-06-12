@@ -213,7 +213,7 @@ public class TeiToTxm extends TeiConverter {
 			u.setAttribute("who", loc);
 			u.setAttribute("start", Double.toString(Double.parseDouble(startTime)));
 			u.setAttribute("end", Double.toString(Double.parseDouble(endTime)));
-			generateU(u, speechContent, loc);
+			generateU(u, tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent, loc);
 			// u.setTextContent(speechContent);
 			head.appendChild(u);
 		} else {
@@ -221,7 +221,7 @@ public class TeiToTxm extends TeiConverter {
 			u.setAttribute("who", loc);
 			u.setAttribute("start", "");
 			u.setAttribute("end", "");
-			generateU(u, speechContent, loc);
+			generateU(u, tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent, loc);
 			// u.setTextContent(speechContent);
 			head.appendChild(u);
 		}
@@ -246,31 +246,11 @@ public class TeiToTxm extends TeiConverter {
 	}
 
 	/**
-	 * Ajout des info additionnelles (hors-tiers)
-	 * 
-	 * @param u
-	 */
-	public void writeAddInfo(AnnotatedUtterance u) {
-		if (optionsOutput != null) {
-			if (optionsOutput.isDontDisplay("com"))
-				return;
-			if (!optionsOutput.isDoDisplay("com"))
-				return;
-		}
-		// Ajout des informations additionnelles présents dans les fichiers srt
-		for (String s : u.coms) {
-			String infoType = Utils.getInfoType(s);
-			String infoContent = Utils.getInfo(s);
-//			out.println(infoType + ' ' + infoContent);
-		}
-	}
-
-	/**
 	 * Ecriture des tiers: lignes qui commencent par le signe pourcent %
 	 * 
 	 * @param tier
 	 *            Le tier à écrire, au format : Nom du tier \t Contenu du tier
-	 */
+	 * Pas pour l'instant dans txm
 	public void writeTier(Annot tier) {
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay(tier.name))
@@ -283,7 +263,8 @@ public class TeiToTxm extends TeiConverter {
 		String tierLine = "%" + type + ": " + tierContent.trim();
 //		out.println(tierLine);
 	}
-
+	*/
+	
 	public static void main(String args[]) throws IOException {
 		String usage = "Description: TeiToTxm convertit un fichier au format TEI en un fichier au format Txm%nUsage: TeiToTxm [-options] <file."
 				+ Utils.EXT + ">%n";
