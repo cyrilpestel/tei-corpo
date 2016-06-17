@@ -57,7 +57,7 @@ public class TeiToTranscriber extends TeiConverter {
 		speakers = null; // name of current speaker for turns
 		section = null; // is a section opened ?
 		oldEndTime = ""; // last end time of a turn
-		if (optionsTei.level == 1)
+		if (tf.optionsOutput.level == 1)
 			noComments = true;
 		sectionStartSet = false;
 		sectionEndSet = false;

@@ -72,6 +72,8 @@ public class ClanToTei {
 	 */
 	// Constructeur: initialise le ChatFile et le docTEI
 	public ClanToTei(String chatFileName, TierParams tp) throws Exception {
+//		System.err.printf("ClanToTei %s -- %s %n", chatFileName, tp);
+		if (tp == null) tp = new TierParams();
 		descID = 0;
 		utteranceId = 0;
 		whenId = 0;

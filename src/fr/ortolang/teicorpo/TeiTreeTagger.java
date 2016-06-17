@@ -1,7 +1,7 @@
 /**
  * @author Christophe Parisse
- * TeiEdit : change some elements in the TEI file
-**/
+ * TeiSyntacticAnalysis: faire l'analyse syntaxique sur la ligne principale
+ */
 
 package fr.ortolang.teicorpo;
 
@@ -33,8 +33,9 @@ import org.w3c.dom.NodeList;
 
 import fr.ortolang.teicorpo.TeiFile.Div;
 
-public class TeiEdit {
+public class TeiTreeTagger {
 
+	final static String TT_EXT = "_ttg";
 	// Document TEI à lire
 	public Document teiDoc;
 	// acces Xpath
@@ -54,7 +55,7 @@ public class TeiEdit {
 	// resultat
 	boolean ok;
 
-	public TeiEdit(String pInputName, String pOutputName, TierParams optionsTei) {
+	public TeiTreeTagger(String pInputName, String pOutputName, TierParams optionsTei) {
 		optionsOutput = optionsTei;
 		inputName = pInputName;
 		outputName = pOutputName;
@@ -110,129 +111,30 @@ public class TeiEdit {
 
 	// Conversion du fichier teiml
 	public void process() {
+		int numAU = 0;
 		for (String cmd: optionsOutput.commands) {
 			if (cmd.equals("replace"))
 				continue;
-			if (cmd.startsWith("media=")) {
-				String media = cmd.substring(6);
-				int nth = 0;
-				if (media.startsWith(":")) {
-					int p = media.substring(1).indexOf(":");
-					if (p>0) {
-						String num = media.substring(1, p+1);
-						int numint = Integer.parseInt(num);
-						if (numint >= 0 && numint <= 10) {
-							System.out.printf("Changement du media n°:  %d%n", numint);
-							nth = numint;
-							media = media.substring(p+2);
-						}
-					}
-				}
-				System.out.printf("Changement du media : %s%n", media);
-				NodeList recStmt = teiDoc.getElementsByTagName("recordingStmt");
-				if (recStmt != null && recStmt.getLength() > 0) {
-					NodeList medias = ((Element)recStmt.item(0)).getElementsByTagName("media");
-					if (medias != null && medias.getLength() > 0) {
-						if (medias.getLength()-1 < nth)
-							System.out.printf("Pas de changement - le media n°:  %d n'existe pas%n", nth);
-						else {
-							Element m = (Element) medias.item(nth);
-							m.setAttribute("url", media);
-						}
-					}
-				}
-			}
-			if (cmd.startsWith("mediamime=")) {
-				String media = cmd.substring(10);
-				int nth = 0;
-				if (media.startsWith(":")) {
-					int p = media.substring(1).indexOf(":");
-					if (p>0) {
-						String num = media.substring(1, p+1);
-						int numint = Integer.parseInt(num);
-						if (numint >= 0 && numint <= 10) {
-							System.out.printf("Changement du media mime type n°:  %d%n", numint);
-							nth = numint;
-							media = media.substring(p+2);
-						}
-					}
-				}
-				System.out.printf("Changement du media mime type : %s%n", media);
-				NodeList recStmt = teiDoc.getElementsByTagName("recordingStmt");
-				if (recStmt != null && recStmt.getLength() > 0) {
-					NodeList medias = ((Element)recStmt.item(0)).getElementsByTagName("media");
-					if (medias != null && medias.getLength() > 0) {
-						if (medias.getLength()-1 < nth)
-							System.out.printf("Pas de changement - le media n°:  %d n'existe pas%n", nth);
-						else {
-							Element m = (Element) medias.item(nth);
-							m.setAttribute("mimeType", media);
-						}
-					}
-				}
-			}
-			if (cmd.startsWith("chgtime=")) {
-				String param = cmd.substring(8);
-				double difftime;
-				try {
-					difftime = Double.parseDouble(param);
-				} catch(Exception e) {
-					System.err.printf("chgtime: mauvais valeur de secondes : %s>%n", param);
-					continue;
-				}
-				if (difftime < -100.0 && difftime > 100.0) {
-					System.out.printf("Trop grande modification de temps %f%n", difftime);
-					continue;
-				}
-				System.out.printf("Modification du temps de %f%n", difftime);
-				NodeList timeline = teiDoc.getElementsByTagName("timeline");
-				if (timeline != null && timeline.getLength() > 0) {
-					String unit = ((Element)timeline.item(0)).getAttribute("unit");
-					double ratio = 1.0;
-					if (unit != null && !unit.equals("s")) {
-						if (unit.equals("ms"))
-							ratio = 1000.0;
-						else {
-							System.out.println("ATTENTION: Unité inconnue dans le fichier TEI: attention à ajuster la valeur utilisée dans l'appel de la commande");
-						}
-					}
-					difftime = difftime * ratio;
-					NodeList whens = ((Element)timeline.item(0)).getElementsByTagName("when");
-					if (whens != null && whens.getLength() > 0) {
-						/*
-						Element m = (Element) whens.item(0);
-						m.setAttribute("absolute", Double.toString(difftime));
-						*/
-						for (int i=0; i < whens.getLength(); i++) {
-							Element m = (Element) whens.item(i);
-							String attr = m.getAttribute("interval");
-							if (attr != null) {
-								double drel;
-								try {
-									drel = Double.parseDouble(attr);
-								} catch(Exception e) {
-									continue;
-								}
-								m.setAttribute("interval", Double.toString(drel + difftime));
-							} else {
-								attr = m.getAttribute("absolute");
-								if (attr != null) {
-									double dabs;
-									try {
-										dabs = Double.parseDouble(attr);
-									} catch(Exception e) {
-										continue;
-									}
-									if (dabs != 0.0)
-										m.setAttribute("absolute", Double.toString(dabs + difftime));
-								}
-							}
-						}
-					}
-				}
+			if (cmd.startsWith("model=")) {
+				String modelfile = cmd.substring(6);
+				System.out.printf("Utilisation du modèle : %s%n", modelfile);
 			}
 		}
-		ok = true;
+		NodeList aBlocks = teiDoc.getElementsByTagName(Utils.ANNOTATIONBLOC);
+		if (aBlocks != null && aBlocks.getLength() > 0) {
+			for (int i=0; i < aBlocks.getLength(); i++) {
+				Element eAU = (Element) aBlocks.item(i);
+				AnnotatedUtterance au = new AnnotatedUtterance();
+				au.process(eAU, null, null, null, false);
+				// mettre en place l'élément qui recevra l'analyse syntaxique.
+				Element syntaxGrp = teiDoc.createElement("spanGrp");
+				syntaxGrp.setAttribute("type", "pos");
+				numAU++;
+				syntaxGrp.setAttribute("id", "pos" + numAU);
+				eAU.appendChild(syntaxGrp);
+				// préparer le fichier d'analyse syntaxique
+			}
+		}
 	}
 
 	// Création du fichier de sortie
@@ -271,14 +173,14 @@ public class TeiEdit {
 
 	/*
 	 * remplacement d'un fichier par lui-même
-	 * option -c replace --> ne pas utiliser _chg et mettre sameFile à vrai.
+	 * option -c replace --> ne pas utiliser TT_EXT et mettre sameFile à vrai.
 	 */
 
 	// Programme principal
 	public static void main(String args[]) throws IOException {
 		Utils.printVersionMessage();
 
-		String usageString = "Description: TeiEdit permet de modifier des éléments d'un fichier Tei.%nUsage: TeiEdit -c command [-options] <"
+		String usageString = "Description: TeiTreeTagger permet d'appliquer le programme TreeTagger sur un fichier Tei.%nUsage: TeiTreeTagger -c command [-options] <"
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
@@ -336,8 +238,8 @@ public class TeiEdit {
 					if (options.commands.contains("replace"))
 						outputFileName = name;
 					else
-						outputFileName = Utils.basename(input) + "_chg" + Utils.EXT;
-					TeiEdit ttt = new TeiEdit(file.getAbsolutePath(), outputDir + outputFileName, options);
+						outputFileName = Utils.basename(input) + TT_EXT + Utils.EXT;
+					TeiTreeTagger ttt = new TeiTreeTagger(file.getAbsolutePath(), outputDir + outputFileName, options);
 					if (ttt.ok) {
 						System.out.println(outputDir + outputFileName);
 						ttt.createOutput();
@@ -360,23 +262,23 @@ public class TeiEdit {
 				if (options.commands.contains("replace"))
 					output = input;
 				else
-					output = Utils.basename(input) + "_chg" + Utils.EXT;
+					output = Utils.basename(input) + TT_EXT + Utils.EXT;
 			} else if (new File(output).isDirectory()) {
 				if (output.endsWith("/")) {
 					if (options.commands.contains("replace"))
 						output = output + input;
 					else
-						output = output + Utils.basename(input) + "_chg" + Utils.EXT;
+						output = output + Utils.basename(input) + TT_EXT + Utils.EXT;
 				} else {
 					if (options.commands.contains("replace"))
 						output = output + "/" + input;
 					else
-						output = output + "/" + Utils.basename(input) + "_chg" + Utils.EXT;
+						output = output + "/" + Utils.basename(input) + TT_EXT + Utils.EXT;
 				}
 			}
 
 			System.out.println("Reading " + input);
-			TeiEdit ttt = new TeiEdit(new File(input).getAbsolutePath(), output, options);
+			TeiTreeTagger ttt = new TeiTreeTagger(new File(input).getAbsolutePath(), output, options);
 			if (ttt.ok) {
 				ttt.createOutput();
 				System.out.println("File modified " + output);

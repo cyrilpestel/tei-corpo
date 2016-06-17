@@ -68,6 +68,7 @@ public class TeiToElan {
 	// Constructeur à partir du nom du fichier TEI et du nom du fichier de
 	// sortie au format Elan
 	public TeiToElan(String inputName, String outputName, TierParams optionsTei) {
+		if (optionsTei == null) optionsTei = new TierParams();
 		DocumentBuilderFactory factory = null;
 		try {
 			File teiFile = new File(inputName);

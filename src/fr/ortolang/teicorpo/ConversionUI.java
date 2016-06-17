@@ -37,14 +37,15 @@ public class ConversionUI extends JFrame {
 	ButtonField bf1;
 	ButtonField bf2;
 	boolean nullOutput = false;
-	String arguments = null;
-	String argumentsOutput = null;
+	String arguments = "";  // mettre à null pour utiliser cette fonction
+	String argumentsOutput = "";  // mettre à null pour utiliser cette fonction
 	TierParams options;
 
 	static int nbConv = 0;
 	static final long serialVersionUID = 1L;
 
 	public ConversionUI() throws URISyntaxException {
+		options = new TierParams();
 
 		this.getContentPane().setLayout(null);
 
@@ -72,7 +73,15 @@ public class ConversionUI extends JFrame {
 		outputFcb.elan.setBounds(220, 110, 200, 50);
 		outputFcb.praat.setBounds(220, 110, 200, 50);
 		outputFcb.setBounds(50, 140, 500, 20);
+/*
+		JLabel j0 = new JLabel("Pour un interface utilisateur plus détaillée, utiliser le web service:http:");
+		j0.setBounds(32, 60, 1000, 300);
+		this.add(j0);
 
+		JLabel j01 = new JLabel("http://ct3.ortolang.fr/teiconvert/");
+		j01.setBounds(32, 50, 1000, 300);
+		this.add(j01);
+*/
 		JLabel jl = new JLabel("Convertir de");
 		jl.setBounds(32, 40, 300, 50);
 
@@ -240,8 +249,8 @@ public class ConversionUI extends JFrame {
 		File outputTeiFile = new File(outputTeiFileName);
 
 		try {
-			// Création du dossier tei où seront stockée tous les fichiers tei
-			// crées
+			// Création du fichier tei
+			// System.err.printf("C-UI: %s %s%n", inputName, outputTeiFileName);
 			if (!inputName.endsWith(Utils.EXT)) {
 				// Création des fichiers TEI
 				if (inputName.toLowerCase().endsWith(".cha")) {
@@ -548,7 +557,7 @@ public class ConversionUI extends JFrame {
 
 			Preferences userPrefs = Preferences.userRoot().node("/fr/ortolang/tools/imports");
 			File suggestedFile = new File(userPrefs.get("SAVEDIR", "/") + "/.", "");
-			System.out.println("GET *SAVEDIR " + suggestedFile);
+			// System.out.println("GET *SAVEDIR " + suggestedFile);
 
 			JFileChooser dialog = new JFileChooser();
 			dialog.setSelectedFile(suggestedFile);
@@ -557,8 +566,7 @@ public class ConversionUI extends JFrame {
 				dialog.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				if (dialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 					fileNames = dialog.getSelectedFiles();
-					System.out.println("PUT SAVEDIR " + dialog.getCurrentDirectory() + " -- "
-							+ dialog.getCurrentDirectory().getAbsolutePath());
+					// System.out.println("PUT SAVEDIR " + dialog.getCurrentDirectory() + " -- " + dialog.getCurrentDirectory().getAbsolutePath());
 					userPrefs.put("SAVEDIR", dialog.getCurrentDirectory().getAbsolutePath() + '/');
 				} else {
 					this.annulation();

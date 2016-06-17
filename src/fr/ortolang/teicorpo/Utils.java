@@ -13,6 +13,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -43,7 +44,7 @@ public class Utils {
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
 	public static String versionSoft = "1.052"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "13/06/2016 10:00";
+	public static String versionDate = "17/06/2016 15:00";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
@@ -867,31 +868,4 @@ public class Utils {
 		sg.appendChild(s);
 		annotatedU.appendChild(sg);
 	}
-	
-	public static ArrayList<String> splitText(String s) {
-		// caractères blancs : [\p{Z}\p{C}]+
-		// ponctuations séparateurs: [\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}]
-		// apostrophes : ['‘’]
-		// fin de phrase : [.!?]+|\.\.|\.\.\.|…|\|
-		System.err.println(s);
-		String[] b = s.split("[\\p{Z}\\p{C}]+");
-		ArrayList<String> p = new ArrayList<String>();
-		for (String be: b) {
-			System.err.println("be: " + be);
-			String[] bes = be.split("([\\p{Ps}\\p{Pe}\\p{Pi}\\p{Pf}\\p{Po}\\p{S}]+)");
-			for (String bese: bes) {
-				System.err.println("bese: " + bese);
-				p.add(bese);
-			}
-		}
-		return p;
-	}
-
-	public static void main(String[] args) {
-		String ns = join(args);
-		ArrayList<String> p = splitText(ns);
-		for (int i=0; i<p.size(); i++)
-			System.out.print(" {" + p.get(i) + "}");
-		System.out.println("");
-    }
 }

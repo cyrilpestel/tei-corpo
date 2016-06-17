@@ -69,7 +69,7 @@ public class AnnotatedUtterance {
 		return s;
 	}
 
-	public void process(Element annotatedU, TeiTimeline teiTimeline, TransInfo transInfo, TierParams options, boolean doSpan) {
+	public boolean process(Element annotatedU, TeiTimeline teiTimeline, TransInfo transInfo, TierParams options, boolean doSpan) {
 		this.teiTimeline = teiTimeline;
 		// Initialisation des variables d'instances
 		shortPause = Utils.shortPause;
@@ -78,8 +78,13 @@ public class AnnotatedUtterance {
 		annotU = annotatedU;
 		id = Utils.getAttrAnnotationBloc(annotatedU, "xml:id");
 		nthid = 0;
-		start = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "start"));
-		end = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "end"));
+		if (teiTimeline != null) {
+			start = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "start"));
+			end = teiTimeline.getTimeValue(Utils.getAttrAnnotationBloc(annotatedU, "end"));
+		} else {
+			start = Utils.getAttrAnnotationBloc(annotatedU, "start");
+			end = Utils.getAttrAnnotationBloc(annotatedU, "end");
+		}
 		speakerCode = Utils.getAttrAnnotationBloc(annotatedU, "who");
 		coms = new ArrayList<String>();
 		speeches = new ArrayList<Annot>();
@@ -87,9 +92,9 @@ public class AnnotatedUtterance {
 		tierTypes = new HashSet<String>();
 		if (options != null) {
 			if (options.isDontDisplay(speakerCode))
-				return;
+				return false;
 			if (!options.isDoDisplay(speakerCode))
-				return;
+				return false;
 		}
 		if (transInfo != null)
 			speakerName = transInfo.getParticipantName(speakerCode);
@@ -133,11 +138,11 @@ public class AnnotatedUtterance {
 					String type = annotUEl.getAttribute("type");
 					if (options != null) {
 						if (options.level == 1)
-							return;
+							continue;
 						if (options.isDontDisplay(type))
-							return;
+							continue;
 						if (!options.isDoDisplay(type))
-							return;
+							continue;
 					}
 					NodeList spans = annotUEl.getElementsByTagName("span");
 					for (int y = 0; y < spans.getLength(); y++) {
@@ -154,6 +159,7 @@ public class AnnotatedUtterance {
 				}
 			}
 		}
+		return true;
 	}
 
 	public void processSeg(NodeList us) {
@@ -223,7 +229,7 @@ public class AnnotatedUtterance {
 					} else if (segChildEl.getAttribute("type").equals("background")) {
 						String ann = Utils.leftEvent + val;
 						String tm = getIncidentDescAttr(segChildEl, "time");
-						if (tm != null)
+						if (tm != null && teiTimeline != null)
 							tm = teiTimeline.getTimeValue(tm);
 						String lv = getIncidentDescAttr(segChildEl, "level");
 						ann += " /";
@@ -264,7 +270,11 @@ public class AnnotatedUtterance {
 				} else if (segChildName.equals("seg")) {
 					processSeg(segChildEl.getChildNodes());
 				} else if (segChildName.equals("anchor") && !segChildEl.getAttribute("synch").startsWith("#au")) {
-					String sync = teiTimeline.getTimeValue(segChildEl.getAttribute("synch"));
+					String sync = "";
+					if (teiTimeline != null)
+						sync = teiTimeline.getTimeValue(segChildEl.getAttribute("synch"));
+					else
+						sync = segChildEl.getAttribute("synch");
 					// creer une ligne avec speech, cleanedSpeech, addspeech
 					Annot a = new Annot(speakerName, start, sync, speech, cleanedSpeech);
 					if (nthid == 0) {

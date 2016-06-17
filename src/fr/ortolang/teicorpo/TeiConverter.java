@@ -31,6 +31,7 @@ public abstract class TeiConverter {
 	 *            Nom du fichier de sortie
 	 */
 	public TeiConverter(String inputName, String outputName, TierParams options) {
+		if (options == null) options = new TierParams();
 		File inputFile = new File(inputName);
 		if (!inputFile.exists()) {
 			System.out.printf("%s n'existe pas: pas de conversion%n", inputName);

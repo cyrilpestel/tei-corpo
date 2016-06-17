@@ -34,6 +34,7 @@ public class TeiToPartition {
 	public TierParams optionsOutput;
 
 	TeiToPartition(XPath xpath, Document tei, TierParams optionsTei) {
+		if (optionsTei == null) optionsTei = new TierParams();
 		optionsOutput = optionsTei;
 		teiDoc = tei;
 		teiXPath = xpath;
