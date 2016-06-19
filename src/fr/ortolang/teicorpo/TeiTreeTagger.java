@@ -5,8 +5,15 @@
 
 package fr.ortolang.teicorpo;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -107,10 +114,40 @@ public class TeiTreeTagger {
 			e.printStackTrace();
 		}
 		process();
+		createOutput();
+	}
+	
+	public String getTreeTaggerLocation() {
+		String os = System.getProperty("os.name");
+		if (os.equals("linux") || os.equals("Mac OS X")) {
+			String p = ExternalCommand.getLocation("tree-tagger","TREE_TAGGER");
+			if (p != null) return p;
+			p = ExternalCommand.getLocation("bin/tree-tagger","TREE_TAGGER");
+			if (p != null) return p;
+			System.err.println("Cannot find tree-tagger program");
+			return null;
+		} else {
+			String p = ExternalCommand.getLocation("tree-tagger.exe","TREE_TAGGER");
+			if (p != null) return p;
+			p = ExternalCommand.getLocation("bin/tree-tagger.exe","TREE_TAGGER");
+			if (p != null) return p;
+			System.err.println("Cannot find tree-tagger.exe program");
+			return null;
+		}
+	}
+
+	private String getTreeTaggerModel() {
+		String p = ExternalCommand.getLocation("spoken-french.par","TREE_TAGGER");
+		if (p != null) return p;
+		p = ExternalCommand.getLocation("model/spoken-french.par","TREE_TAGGER");
+		if (p != null) return p;
+		System.err.println("Cannot find spoken-french.par model");
+		return null;
 	}
 
 	// Conversion du fichier teiml
-	public void process() {
+	public boolean process() {
+		Tokenizer.init("fr", null);
 		int numAU = 0;
 		for (String cmd: optionsOutput.commands) {
 			if (cmd.equals("replace"))
@@ -119,6 +156,15 @@ public class TeiTreeTagger {
 				String modelfile = cmd.substring(6);
 				System.out.printf("Utilisation du modèle : %s%n", modelfile);
 			}
+		}
+		PrintWriter out = null;
+		String outputNameTemp = outputName + "_tmp.vrt";
+		try {
+			FileOutputStream of = new FileOutputStream(outputNameTemp);
+			OutputStreamWriter outWriter = new OutputStreamWriter(of, "UTF-8");
+			out = new PrintWriter(outWriter, true);
+		} catch (Exception e) {
+			return false;
 		}
 		NodeList aBlocks = teiDoc.getElementsByTagName(Utils.ANNOTATIONBLOC);
 		if (aBlocks != null && aBlocks.getLength() > 0) {
@@ -131,10 +177,74 @@ public class TeiTreeTagger {
 				syntaxGrp.setAttribute("type", "pos");
 				numAU++;
 				syntaxGrp.setAttribute("id", "pos" + numAU);
+				syntaxGrp.setIdAttribute("id", true);
 				eAU.appendChild(syntaxGrp);
 				// préparer le fichier d'analyse syntaxique
+				out.printf("<%s>%n", "pos" + numAU);
+				// decouper au.cleanedSpeech
+				ArrayList<String> p = Tokenizer.splitTextTT(
+						optionsOutput.clearChatFormat
+						? ConventionsToChat.clearChatFormat(au.cleanedSpeech)
+						: au.cleanedSpeech);
+				for (int ti = 0; ti < p.size(); ti++)
+					out.printf("%s%n", p.get(ti));
 			}
 		}
+		out.close();
+		// démarrer l'analyse
+		String outputNameResults = outputName + "_tmp.conll";
+        String[] commande = { getTreeTaggerLocation(), "-token",
+        		"-lemma", "-sgml", getTreeTaggerModel(),
+        		outputNameTemp };
+        ExternalCommand.command(commande, outputNameResults);
+		// récupérer les résultats
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream(outputNameResults), "UTF-8"));
+			String line = reader.readLine();
+			String lastID = "";
+			TaggedUtterance tu = new TaggedUtterance();
+			while (line != null) {
+				line = line.trim();
+				if (line.startsWith("<") && line.endsWith(">")) {
+					if (!lastID.isEmpty() && !flush(lastID, tu)) return true;
+					lastID = line.substring(1, line.length()-1);
+					tu.reset();
+				} else {
+					String[] wcl = line.split("\t");
+					if (wcl.length != 3) {
+						System.err.println("not enough elements: " + line);
+						return false;
+					}
+					tu.add(wcl);
+				}
+				line = reader.readLine();
+			}
+			if (!lastID.isEmpty())
+				flush(lastID, tu);
+			if (reader != null)
+				reader.close();
+		} catch (FileNotFoundException fnfe) {
+			System.err.println("Erreur fichier : " + outputNameResults + " indisponible");
+			return false;
+		} catch (IOException ioe) {
+			System.err.println("Erreur sur fichier : " + outputNameResults);
+			ioe.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	private boolean flush(String lastID, TaggedUtterance tu) {
+		Element spG = teiDoc.getElementById(lastID);
+		if (spG == null) {
+			System.err.println("cannot find element: " + lastID);
+			return false;
+		}
+		Element elt = tu.createSpan(teiDoc);
+		spG.appendChild(elt);
+		spG.removeAttribute("id");
+		return true;
 	}
 
 	// Création du fichier de sortie

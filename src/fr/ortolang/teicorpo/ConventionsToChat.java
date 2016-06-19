@@ -4,6 +4,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConventionsToChat {
+
+	public static String clearChatFormat(String s){
+		return s.replaceAll("' ", "'").replaceAll("\\+", " ");
+	}
 	
 	public static String noise(String s){
 		Pattern p1 = Pattern.compile("(\\s|^\\s*)(\\*) ([^/\\*]*) (B/\\*)");

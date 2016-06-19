@@ -31,9 +31,9 @@ public class AnnotatedUtterance {
 	// Nom du locuteur
 	public String speakerName;
 	// énoncé (avec bruits, pauses...)
-	static public String speech;
+	public String speech;
 	// Enoncé pur
-	static public String cleanedSpeech;
+	public String cleanedSpeech;
 	// Marque de div: si l'utterance marque le début d'un div, le type de
 	// div est spécifié dans ce champ
 	// Servira à repérer les divisions dans la transcription

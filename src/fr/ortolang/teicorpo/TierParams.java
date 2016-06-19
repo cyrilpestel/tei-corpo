@@ -14,6 +14,7 @@ class TierParams {
 	String options;
 	boolean nospreadtime;
 	boolean detectEncoding;
+	boolean clearChatFormat;
 	HashSet<String> commands;  // for -c parameter
 	HashSet<String> doDisplay;
 	HashSet<String> dontDisplay;
@@ -34,6 +35,7 @@ class TierParams {
 		forceEmpty = true;
 		cleanLine = false;
 		noHeader = false;
+		clearChatFormat = false;
 		raw = false;
 		sectionDisplay = false;
 		options = "";
