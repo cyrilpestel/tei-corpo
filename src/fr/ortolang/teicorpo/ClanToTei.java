@@ -746,7 +746,7 @@ public class ClanToTei {
 																	// caractère
 																	// &#21 si
 																	// restant;
-
+			cl.tail = cl.tail.replaceAll("\\p{C}", "?");
 			if (cl.head.equals(extension))
 				return cl.tail.split("\\s+");
 			else
