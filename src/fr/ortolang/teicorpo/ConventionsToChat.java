@@ -81,6 +81,8 @@ public class ConventionsToChat {
 		l = l.replaceAll( "\\x04", "" );
 		l = l.replaceAll( "\\x07", "" );
 		l = l.replaceAll( "\\x08", "" );
+		l = l.replaceAll( "\\x08", "" );
+		l = l.replaceAll("\\p{C}", "");
 		l = l.replaceAll( "\\+\\<", "" );
 		l = l.replaceAll( "<", "" );
 		l = l.replaceAll( ">", "" );
@@ -94,8 +96,8 @@ public class ConventionsToChat {
 	}
 	
 	public static void main(String [] args){
-		
-		System.out.println(setConv(" tr * Event|noise|desc:pi extent:previous B/* quand on #2. s'en re-souvient c'est c'est amélioré #.!"));
-		System.out.println(chatToText("des+faux +..."));
+		String a = "OBS:	Anaé 0 [=! rit] . ";
+		System.out.println(a);
+		System.out.println(a.replaceAll("\\p{C}", "XXXX"));
 	}
 }

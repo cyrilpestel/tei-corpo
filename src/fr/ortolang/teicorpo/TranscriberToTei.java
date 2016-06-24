@@ -1143,6 +1143,7 @@ public class TranscriberToTei {
 					TranscriberToTei tr = new TranscriberToTei(file, dtdValidation);
 					String outputFileName = Utils.basename(file) + Utils.EXT;
 					System.out.println(outputDir + outputFileName);
+					Utils.setDocumentName(tr.docTEI, outputFileName);
 					Utils.createFile(outputDir + outputFileName, tr.docTEI);
 				} else if (file.isDirectory()) {
 					args[0] = "-i";
@@ -1170,6 +1171,7 @@ public class TranscriberToTei {
 
 			TranscriberToTei tr = new TranscriberToTei(new File(input), dtdValidation);
 			System.out.println("Lecture de " + input);
+			Utils.setDocumentName(tr.docTEI, Utils.lastname(output));
 			Utils.createFile(output, tr.docTEI);
 			System.out.println("New file created " + output);
 		}

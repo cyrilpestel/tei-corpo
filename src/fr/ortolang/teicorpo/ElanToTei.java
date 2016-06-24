@@ -17,6 +17,7 @@ public class ElanToTei {
 		ElanToHT = new ElanToHT(inputFile);
 		ht = new HT_ToTei(ElanToHT.ht);
 
+		Utils.setDocumentName(ht.docTEI, Utils.lastname(outputName));
 		Utils.createFile(outputName, ht.docTEI);
 	}
 

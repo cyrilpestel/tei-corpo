@@ -959,6 +959,7 @@ public class PraatToTei {
 			}
 			ht.partionRepresentationToHierachic(ptg.annotationMap);
 			HT_ToTei hiertransToTei = new HT_ToTei(ht);
+			Utils.setDocumentName(hiertransToTei.docTEI, Utils.lastname(outputfile));
 			Utils.createFile(outputfile, hiertransToTei.docTEI);
 
 		} catch (IOException ioe) {

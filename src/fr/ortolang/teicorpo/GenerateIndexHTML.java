@@ -171,7 +171,7 @@ public class GenerateIndexHTML {
 				String htmlFileName = htmlFile.getName();
 				if (htmlFileName.endsWith(".tei_corpo.xml")) {
 					String htmlDir = inputDir.getCanonicalPath().substring("/applis".length());
-					String textVisuAdress = "/tools/display/trjs-display.html?t=" + htmlDir + "/" + htmlFileName;
+					String textVisuAdress = "/tools/trjsread/trjsread.html?t=" + htmlDir + "/" + htmlFileName;
 					//out.printf("<li>Visualisation classique : <a href=\"%s\">%s</a></li>%n", htmlFileName, htmlFileNameBase);
 					out.printf("<li>Visualisation texte : <a href=\"%s\">%s</a></li>%n", textVisuAdress, htmlFileName);
 				} else {

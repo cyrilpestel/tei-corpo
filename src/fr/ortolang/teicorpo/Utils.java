@@ -265,6 +265,7 @@ public class Utils {
 
 	public static String lastname(String fn) {
 		int p = fn.lastIndexOf(File.separatorChar);
+		if (p<0) return fn;
 		return fn.substring(p+1);
 	}
 
@@ -872,4 +873,13 @@ public class Utils {
 		sg.appendChild(s);
 		annotatedU.appendChild(sg);
 	}
+	
+	public static void setDocumentName(Document docTEI, String name) {
+		NodeList revDesc = docTEI.getElementsByTagName("revisionDesc");
+		NodeList list = ((Element)revDesc.item(0)).getElementsByTagName("list");
+		Element head = docTEI.createElement("head");
+		((Element)list.item(0)).appendChild(head);
+		head.setTextContent(name);
+	}
+
 }

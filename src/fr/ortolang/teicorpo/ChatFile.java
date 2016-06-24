@@ -388,6 +388,7 @@ public class ChatFile {
 				startTime = Integer.parseInt(matcher.group(1));
 				endTime = Integer.parseInt(matcher.group(2));
 				mainLine = ml.replaceAll("\\x15\\d+_\\d+\\x15",""); // replaceFirst
+				mainLine = mainLine.replaceAll("\\p{C}", "");
 			} else {
 				startTime = -1;
 				endTime = -1;

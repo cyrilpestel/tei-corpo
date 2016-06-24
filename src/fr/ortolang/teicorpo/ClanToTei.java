@@ -1654,6 +1654,7 @@ public class ClanToTei {
 					ClanToTei tr = new ClanToTei(file.getAbsolutePath(), tp);
 					String outputFileName = Utils.basename(file) + Utils.EXT;
 					System.out.println(tp.output + outputFileName);
+					Utils.setDocumentName(tr.docTEI, Utils.lastname(outputFileName));
 					Utils.createFile(tp.output + outputFileName, tr.docTEI);
 				} else if (file.isDirectory()) {
 					args[0] = "-i";
@@ -1679,6 +1680,7 @@ public class ClanToTei {
 
 			System.out.println("Lecture de " + tp.input);
 			ClanToTei tr = new ClanToTei(tp.input, tp);
+			Utils.setDocumentName(tr.docTEI, Utils.lastname(tp.output));
 			Utils.createFile(tp.output, tr.docTEI);
 			System.out.println("New file TEI created: " + tp.output);
 		}

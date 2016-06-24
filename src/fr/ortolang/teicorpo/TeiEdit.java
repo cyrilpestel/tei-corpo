@@ -171,6 +171,10 @@ public class TeiEdit {
 					}
 				}
 			}
+			if (cmd.startsWith("docname=")) {
+				String name = cmd.substring(8);
+				Utils.setDocumentName(teiDoc, name);
+			}
 			if (cmd.startsWith("chgtime=")) {
 				String param = cmd.substring(8);
 				double difftime;
@@ -282,8 +286,10 @@ public class TeiEdit {
 				+ Utils.EXT + ">%n";
 		TierParams options = new TierParams();
 		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usageString, Utils.EXT, Utils.EXT, 0))
+		if (!Utils.processArgs(args, options, usageString, Utils.EXT, Utils.EXT, 0)) {
+			System.out.printf("%n\tcommands available with option -c command :%n\t-c media=value%n\t-c mediamime=value%n\t-c docname=value%n\t-c chgtime=value%n\t-c replace%n");
 			return;
+		}
 		String input = options.input;
 		String output = options.output;
 

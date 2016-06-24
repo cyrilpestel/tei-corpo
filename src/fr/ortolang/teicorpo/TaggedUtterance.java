@@ -23,15 +23,17 @@ public class TaggedUtterance {
 
 	public Element createSpan(Document teiDoc) {
 		Element span = teiDoc.createElement("span");
+		Element ref = teiDoc.createElement("ref");
 		if (twL == null) return span;
 		for (int i=0; i < twL.size(); i++) {
 			TaggedWord c = twL.get(i);
 			Element w = teiDoc.createElement("w");
 			w.setTextContent(c.word);
-			w.setAttribute("type", c.pos);
+			w.setAttribute("ana", c.pos);
 			w.setAttribute("lemma", c.lemma);
-			span.appendChild(w);
+			ref.appendChild(w);
 		}
+		span.appendChild(ref);
 		return span;
 	}
 

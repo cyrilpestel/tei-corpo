@@ -196,6 +196,11 @@ public class TeiTreeTagger {
         String[] commande = { getTreeTaggerLocation(), "-token",
         		"-lemma", "-sgml", getTreeTaggerModel(),
         		outputNameTemp };
+        if (commande[0] == null || commande[4] == null) {
+        	// cannot parse
+        	System.out.println("tree-tagger files not found: stop.");
+        	return false;
+        }
         ExternalCommand.command(commande, outputNameResults);
 		// récupérer les résultats
 		BufferedReader reader = null;
