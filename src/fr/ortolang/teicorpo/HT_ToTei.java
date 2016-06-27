@@ -140,21 +140,10 @@ public class HT_ToTei {
 		teiHeader.appendChild(profileDesc);
 		Element encodingDesc = docTEI.createElement("encodingDesc");
 		teiHeader.appendChild(encodingDesc);
-		Element revisionDesc = docTEI.createElement("revisionDesc");
-		// revisionDesc.setAttribute("url", ht.filePath.split("\\.")[0] +
-		// Utils.EXT);
-
-		Element list = docTEI.createElement("list");
-		revisionDesc.appendChild(list);
-		/////
-		Element noteFrom = docTEI.createElement("item");
-		noteFrom.setTextContent("from: " + ht.filePath);
-		Element noteTo = docTEI.createElement("item");
-		noteTo.setTextContent("to: " + ht.filePath.split("\\.")[0] + Utils.EXT);
-		list.appendChild(noteFrom);
-		list.appendChild(noteTo);
-
+		Element revisionDesc = this.docTEI.createElement("revisionDesc");
 		teiHeader.appendChild(revisionDesc);
+		Utils.setRevisionInfo(this.docTEI, revisionDesc, ht.filePath, null);
+
 		Element text = docTEI.createElement("text");
 		rootTEI.appendChild(text);
 		timeline = docTEI.createElement("timeline");

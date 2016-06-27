@@ -180,23 +180,7 @@ public class ClanToTei {
 		teiHeader.appendChild(encodingDesc);
 		Element revisionDesc = this.docTEI.createElement("revisionDesc");
 		teiHeader.appendChild(revisionDesc);
-		Element list = docTEI.createElement("list");
-		revisionDesc.appendChild(list);
-		/////
-		Element noteFrom = docTEI.createElement("item");
-		noteFrom.setTextContent("from: " + chatFile.getAbsolutePath());
-
-		Element noteTo = docTEI.createElement("item");
-		noteTo.setTextContent("to: " + chatFile.getAbsolutePath().split("\\.")[0] + Utils.EXT);
-
-		Element noteDate = docTEI.createElement("item");
-		noteDate.setTextContent(
-				"date: " + new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss").format(Calendar.getInstance().getTime()));
-
-		list.appendChild(noteFrom);
-		list.appendChild(noteTo);
-		list.appendChild(noteDate);
-		/////
+		Utils.setRevisionInfo(this.docTEI, revisionDesc, chatFile.getAbsolutePath(), null);
 
 		Element text = this.docTEI.createElement("text");
 		this.rootTEI.appendChild(text);

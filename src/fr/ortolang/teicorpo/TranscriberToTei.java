@@ -160,19 +160,11 @@ public class TranscriberToTei {
 		teiHeader.appendChild(profileDesc);
 		Element encodingDesc = this.docTEI.createElement("encodingDesc");
 		teiHeader.appendChild(encodingDesc);
+
 		Element revisionDesc = this.docTEI.createElement("revisionDesc");
-		// revisionDesc.setAttribute("url",
-		// this.inputTRS.getAbsolutePath().split("\\.")[0] + Utils.EXT);
-		///
-		Element list = docTEI.createElement("list");
-		revisionDesc.appendChild(list);
-		/////
-		Element noteFrom = docTEI.createElement("item");
-		noteFrom.setTextContent("from: " + this.inputTRS.getAbsolutePath());
-		Element noteTo = docTEI.createElement("item");
-		noteTo.setTextContent("to: " + this.inputTRS.getAbsolutePath().split("\\.")[0] + Utils.EXT);
-		list.appendChild(noteFrom);
-		list.appendChild(noteTo);
+		teiHeader.appendChild(revisionDesc);
+		Utils.setRevisionInfo(this.docTEI, revisionDesc, this.inputTRS.getAbsolutePath(), null);
+
 		///
 		teiHeader.appendChild(revisionDesc);
 		Element text = this.docTEI.createElement("text");

@@ -10,7 +10,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -43,7 +45,7 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.053"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionSoft = "1.054"; // full version with Elan, Clan, Transcriber and Praat
 	public static String versionDate = "20/06/2016 09:00";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
@@ -877,9 +879,68 @@ public class Utils {
 	public static void setDocumentName(Document docTEI, String name) {
 		NodeList revDesc = docTEI.getElementsByTagName("revisionDesc");
 		NodeList list = ((Element)revDesc.item(0)).getElementsByTagName("list");
-		Element head = docTEI.createElement("head");
-		((Element)list.item(0)).appendChild(head);
-		head.setTextContent(name);
+		Element item = docTEI.createElement("item");
+		Element desc = docTEI.createElement("desc");
+		item.setTextContent(name);
+		desc.setTextContent("docname");
+		item.appendChild(desc);
+		for (int i=0; i < list.getLength(); i++) {
+			NodeList d = ((Element)list.item(i)).getElementsByTagName("desc");
+			if (d != null && d.getLength() > 0) {
+				if (((Element)d.item(0)).getTextContent().equals("docname")) {
+					((Element)d.item(0)).setTextContent(name);
+					return;
+				}
+			}
+		}
+		// if not done
+		((Element)list.item(0)).appendChild(item);
 	}
 
+	public static void setRevisionInfo(Document docTEI, Element revisionDesc, String input, String output) {
+		if (revisionDesc ==  null) {
+			NodeList revDesc = docTEI.getElementsByTagName("revisionDesc");
+			if (revDesc == null || revDesc.getLength() < 1) {
+				System.err.println("cannot set revisionDesc");
+				return;
+			}
+			revisionDesc = ((Element)revDesc.item(0));
+		}
+		NodeList nlist = revisionDesc.getElementsByTagName("list");
+		Element list;
+		if (nlist == null || nlist.getLength() < 1) {
+			list = docTEI.createElement("list");
+			revisionDesc.appendChild(list);
+		} else
+			list = ((Element)nlist.item(0));
+
+		Element item = docTEI.createElement("item");
+		Element desc = docTEI.createElement("desc");
+		item.setTextContent(
+				new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss").format(Calendar.getInstance().getTime()));
+		desc.setTextContent("date");
+		list.appendChild(item);
+		item.appendChild(desc);
+
+		if (input != null) {
+			item = docTEI.createElement("item");
+			desc = docTEI.createElement("desc");
+			item.setTextContent(input);
+			desc.setTextContent("from");
+			list.appendChild(item);
+			item.appendChild(desc);
+		}
+
+		if (output != null || input != null) {
+			item = docTEI.createElement("item");
+			desc = docTEI.createElement("desc");
+			if (output != null)
+				item.setTextContent(output);
+			else
+				item.setTextContent(Utils.fullbasename(input) + Utils.EXT);
+			desc.setTextContent("to");
+			list.appendChild(item);
+			item.appendChild(desc);
+		}
+	}
 }
