@@ -205,12 +205,11 @@ public class TeiToClan extends TeiConverter {
 				writeProperty("Exceptions", Utils.getInfo2(note));
 			} else if (note.toLowerCase().substring(1).startsWith("options")) {
 				writeProperty("Options", Utils.getInfo2(note));
-			} else if (note.toLowerCase().substring(1).startsWith("birth of")
-					|| note.toLowerCase().substring(1).startsWith("[birthplace of")) {
+			} else if (note.toLowerCase().substring(1).startsWith("@birth")
+					|| note.toLowerCase().substring(1).startsWith("@birthplace")) {
 				String noteType = Utils.getInfoType(note);
 				writeProperty(noteType.substring(1, noteType.length() - 2), Utils.getInfo2(note));
-			} else if (!(note.toLowerCase().substring(1).startsWith("birth of")
-					|| note.toLowerCase().substring(1).startsWith("[birthplace of"))) {
+			} else {
 				writeProperty("Comment", note);
 			}
 		}
@@ -247,11 +246,8 @@ public class TeiToClan extends TeiConverter {
 					String[] splitType = u.type.split("\t");
 					// System.out.printf("DIV: %s %s %n", splitType[0],
 					// splitType[1]);
-					try {
+					if (splitType.length > 1)
 						eg = writeDiv(splitType[0], splitType[1]);
-					} catch (ArrayIndexOutOfBoundsException e) {
-						out.println("@G:");
-					}
 				}
 				writeUtterance(u);
 				if (eg) {
@@ -292,7 +288,7 @@ public class TeiToClan extends TeiConverter {
 		} else if (type.toLowerCase().startsWith("eg")) {
 			eg = true;
 		} else {
-			if (tf.teiDoc.getElementsByTagName("div").getLength() > 1) {
+			if (tf.teiDoc.getElementsByTagName("div").getLength() > 1 && Utils.isNotEmptyOrNull(type)) {
 				out.println(type + " " + theme);
 			}
 		}
