@@ -25,8 +25,8 @@ L'outil est utilisable en ligne de commande. Les commandes à exécuter sont :
       * java -cp conversions.jar fr.ortolang.teicorpo.ElanToTei [paramètres]
 
 Toutes les commandes utilisent les mêmes paramètres d'entrée sortie:
-  -i nom du fichier ou répertoire où se trouvent les fichiers à convertir
-  -o nom du fichier de sortie des fichiers ou répertoire des fichiers résultats
+  * -i nom du fichier ou répertoire où se trouvent les fichiers à convertir
+  * -o nom du fichier de sortie des fichiers ou répertoire des fichiers résultats
 
 Si l'option -o n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée, avec une autre extension, et sera stocké au même endroit
 
@@ -63,5 +63,14 @@ Paramètres supplémentaires pour les exports vers Txm et vers Lexico
   * -cleanline : produit des fichiers sans codes spécifiques de transcription orale
   * -section : ajoute un indicateur de section en fin de chaque énoncé (pour lexico/le trameur)
 
+Commandes supplémentaires pour éditer automatiquement les fichiers TEI
+  * java -cp conversions.jar fr.ortolang.teicorpo.TeiEdit [paramètres]
+  Cette commande permet de modifier les valeurs des champs media, mediamime, docname et les valeurs temporelles dans la timeline
+  Pour cela utiliser l'option -c commande=valeur
+    * -c media=nom_de_fichier
+    * -c mediamime=valeur
+    * -c docname=nom-de_fichier (nom interne du document utilisé pour l'interrogation en xml)
+    * -c chgtime=valeur (décale tous les repères temporels de 'valeur')
+    * -c replace (ne crée pas un nouveau fichier mais remplace l'ancien)
 
 Il est possible de télécharger la DTD: [DTD TEI Oral](http://ct3.ortolang.fr/tei-corpo/tei_all.dtd)
