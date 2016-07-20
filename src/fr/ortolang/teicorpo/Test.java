@@ -1,5 +1,11 @@
 package fr.ortolang.teicorpo;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,32 +17,23 @@ class Internal {
 }
 
 public class Test {
-	static String mod(String s) {
-		s += "-modif";
-		return s;
-	}
-	static void modlist(List<String> l) {
-		l.add("modif");
-	}
-	static void modint(Internal i) {
-		i.s += "-modif";
-	}
-	
 	public static void main(String args[]) {
-		String a = "abcdef";
-		System.out.println(a);
-		String b = mod(a);
-		System.out.println(a);
-		System.out.println(b);
-		List<String> la = new ArrayList<String>();
-		la.add("abcdef");
-		System.out.println(la);
-		modlist(la);
-		System.out.println(la);
-		Internal ia = new Internal();
-		ia.s = "abcdef";
-		System.out.println(ia);
-		modint(ia);
-		System.out.println(ia);
+		URL url = null;
+		try {
+			url = new URL(args[0]);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    try {
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"))) {
+					for (String line; (line = reader.readLine()) != null;) {
+					    System.out.println(line);
+					}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

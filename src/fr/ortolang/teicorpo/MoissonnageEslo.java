@@ -2,6 +2,7 @@ package fr.ortolang.teicorpo;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -19,25 +20,27 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class MoissonnageEslo {
-	
-	
-	
-	/** Fichier d'entrée, au format .xml. */
-	private File inputEsloMetadatasFile;
+
 	/** Document issu du fichier Moissonnage Eslo. */
 	private Document docMetadatas;
 	/** Racine du document issu du moissonnage d'Eslo. */
 	private Element rootMoissonnage;
 
+	public MoissonnageEslo() {
+		/** Document issu du fichier Moissonnage Eslo. */
+		docMetadatas = null;
+		/** Racine du document issu du moissonnage d'Eslo. */
+		rootMoissonnage = null;
+	}
+
 	/**
 	 * décrit par la DTD "tei_corpo.dtd" Utils.TEI_CORPO_DTD .
 	 * 
-	 * @param inputFile
+	 * @param File
 	 *            : fichier à convertir, au format Transcriber
-	 * @throws ParserConfigurationException 
+	 * @throws ParserConfigurationException
 	 */
-	public MoissonnageEslo(File inputFile) throws ParserConfigurationException {
-		this.inputEsloMetadatasFile = inputFile;
+	public void getDocument(File inputFile) throws ParserConfigurationException {
 		// Création du document moissonnage
 		this.docMetadatas = null;
 		this.rootMoissonnage = null;
@@ -45,50 +48,110 @@ public class MoissonnageEslo {
 		try {
 			factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			this.docMetadatas = builder.parse(this.inputEsloMetadatasFile);
+			this.docMetadatas = builder.parse(inputFile);
 			this.rootMoissonnage = this.docMetadatas.getDocumentElement();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		createMetaFiles();
+		// createMetaFiles();
 	}
 
-	
-	public void createMetaFiles() throws ParserConfigurationException{
-		
+	/**
+	 * décrit par la DTD "tei_corpo.dtd" Utils.TEI_CORPO_DTD .
+	 * 
+	 * @param InputStream
+	 *            : fichier à convertir, au format Transcriber
+	 * @throws ParserConfigurationException
+	 */
+	public void getDocument(InputStream is) throws ParserConfigurationException {
+		// Création du document moissonnage
+		this.docMetadatas = null;
+		this.rootMoissonnage = null;
+		DocumentBuilderFactory factory = null;
+		try {
+			factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			this.docMetadatas = builder.parse(is);
+			this.rootMoissonnage = this.docMetadatas.getDocumentElement();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// createMetaFiles();
+	}
+
+	/**
+	 * décrit par la DTD "tei_corpo.dtd" Utils.TEI_CORPO_DTD .
+	 * 
+	 * @param String
+	 *            : fichier à convertir, au format Transcriber
+	 * @throws ParserConfigurationException
+	 */
+	public void getDocument(String uri) throws ParserConfigurationException {
+		// Création du document moissonnage
+		this.docMetadatas = null;
+		this.rootMoissonnage = null;
+		DocumentBuilderFactory factory = null;
+		try {
+			factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			this.docMetadatas = builder.parse(uri);
+			this.rootMoissonnage = this.docMetadatas.getDocumentElement();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// createMetaFiles();
+	}
+
+	public void getDataFiles() throws ParserConfigurationException {
 		NodeList records = this.docMetadatas.getElementsByTagName("record");
-		for(int i = 0; i<records.getLength(); i++){
-			Element record = (Element)records.item(i);
+		for (int i = 0; i < records.getLength(); i++) {
+			Element record = (Element) records.item(i);
+			String recordName = record.getElementsByTagName("identifier").item(0).getTextContent();
+			//		.split("oai:crdo.vjf.cnrs.fr:crdo-")[1];
 			NodeList identifiers = record.getElementsByTagName("dc:identifier");
-			/*for(int j = 0; j<identifiers.getLength(); j++){
-				Element identifier = (Element)identifiers.item(j);
+			for (int j = 0; j < identifiers.getLength(); j++) {
+				Element identifier = (Element) identifiers.item(j);
 				String identifierURL = identifier.getTextContent();
-				if(identifierURL.endsWith(".wav") || identifierURL.endsWith(".xml")){
-					//System.out.println("curl " +  identifierURL + "> \"$(basename " + identifierURL + ")\"\n");
+				if (identifierURL.endsWith(".wav")
+						|| identifierURL.endsWith(".xml")
+						|| identifierURL.endsWith(".mp3")
+						|| identifierURL.endsWith(".trs")
+						|| identifierURL.endsWith(".mp4")
+					){
+					//System.out.println("curl " + identifierURL + "> \"$(basename " + identifierURL + ")\"");
+					System.out.println("curl " + identifierURL + " > " + Utils.lastname(identifierURL) + " # " + recordName);
 				}
-			}*/
+			}
+
 			
-			
-			/*NodeList dcTerms = record.getElementsByTagName("dcterms:isFormatOf");
-			for(int z = 0; z<dcTerms.getLength(); z++){
+			NodeList dcTerms = record.getElementsByTagName("dcterms:isFormatOf");
+			for(int z = 0; z<dcTerms.getLength(); z++){ 
 				Element dcTerm = (Element)dcTerms.item(z);
 				String dcTermURL = dcTerm.getTextContent();
-				if(dcTermURL.endsWith(".wav") || dcTermURL.endsWith(".mp3")){
-					System.out.println("curl " +  dcTermURL + "> \"$(basename " + dcTermURL + ")\"\n");
+				if(dcTermURL.endsWith(".wav") 
+					|| dcTermURL.endsWith(".mp3")
+					) { 
+					System.out.println("curl " + dcTermURL + " > " + Utils.lastname(dcTermURL) + " # " + recordName);
 				}
-			}*/
-			
-			
+			} 
+		}
+	}
+
+	public void createMetaFiles(String output) {
+		NodeList records = this.docMetadatas.getElementsByTagName("record");
+		for (int i = 0; i < records.getLength(); i++) {
+			Element record = (Element) records.item(i);
 			//// Ecriture des fichiers metadonnées
 			record.setAttribute("xmlns", "http://www.openarchives.org/OAI/2.0/");
 			record.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-			record.setAttribute("xsi:schemaLocation", "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");			
-			
-			String recordName = record.getElementsByTagName("identifier").item(0).getTextContent().split("oai:crdo.vjf.cnrs.fr:crdo-")[1];
-			String outputFileName = "esloMetadatas/" + recordName + ".meta.xml";
-			System.out.println(outputFileName);			
-			
+			record.setAttribute("xsi:schemaLocation",
+					"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
+
+			String recordName = record.getElementsByTagName("identifier").item(0).getTextContent()
+					.split("oai:crdo.vjf.cnrs.fr:crdo-")[1];
+			String outputFileName = output + "/" + recordName + ".meta.xml";
+			System.out.println("# metadata: " + outputFileName);
+
 			Source source = new DOMSource(record);
 			Result resultat = new StreamResult(outputFileName);
 
@@ -105,35 +168,69 @@ public class MoissonnageEslo {
 				e.printStackTrace();
 			}
 		}
-		
 	}
-	
-	
+
+	public String getResumptionToken() {
+		NodeList records = this.docMetadatas.getElementsByTagName("resumptionToken");
+		if (records != null && records.getLength() > 0) {
+			Element rt = (Element) records.item(0);
+			return rt.getTextContent();
+		}
+		return null;
+	}
+
 	public static void main(String args[]) throws IOException, ParserConfigurationException {
+		String inputName = null;
+		String outputName = ".";
 
-		File input = null;
-		File output = null;
 		// parcours des arguments
-
 		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument.\n");
+			System.err.println("Vous n'avez spécifié aucun argument -: java -cp conversions.jar fr.ortolang.teicorpo.MoissonnageEslo -u URL -o output-dir.\n");
 		} else {
 			for (int i = 0; i < args.length; i++) {
 				try {
-					if (args[i].equals("-i")) {
+					if (args[i].equals("-u")) {
 						i++;
-						input = new File(args[i]);
+						inputName = args[i];
 					} else if (args[i].equals("-o")) {
 						i++;
-						output = new File(args[i]);
+						outputName = args[i];
 					}
 				} catch (Exception e) {
 					System.err.println("Problème arguments.\n");
 				}
 			}
 		}
-		
-		new MoissonnageEslo(input);
-	}
 
+		File outFile = new File(outputName);
+		if (outFile.exists()) {
+			if (!outFile.isDirectory()) {
+				System.out.println("\n Erreur :" + outputName
+						+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
+				System.exit(1);
+			}
+		} else {
+			new File(outputName).mkdir();
+		}
+
+		int p = inputName.indexOf("ListRecords");
+		String urlBase = inputName.substring(0, p + 11);
+		String urlName = inputName;
+		while (true) {
+			MoissonnageEslo me = new MoissonnageEslo();
+			System.out.println("# URL: " + urlName);
+			me.getDocument(urlName);
+			me.createMetaFiles(outputName);
+			me.getDataFiles();
+			
+			String rt = me.getResumptionToken();
+			if (rt != null) {
+				System.out.println("# resumptionToken: " + rt);
+				urlName = urlBase + "&resumptionToken=" + rt;
+			} else {
+				System.out.println("# non resumptionToken: end");
+				break;
+			}
+		}
+	}
 }
