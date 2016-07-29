@@ -22,6 +22,8 @@ class TierParams {
 	int level;
 	public boolean raw;
 	public boolean noHeader;
+	public boolean iramuteq;
+	public boolean concat;
 	TierParams() {
 		input = null;
 		output = null;
@@ -40,6 +42,8 @@ class TierParams {
 		sectionDisplay = false;
 		options = "";
 		nospreadtime = false;
+		iramuteq = false;
+		concat = false;
 		tv = new TreeMap<String, String>();
 	}
 	void addCommand(String s) {

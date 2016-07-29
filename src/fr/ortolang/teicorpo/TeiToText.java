@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,7 +50,7 @@ public class TeiToText extends TeiConverter {
 	public void outputWriter() {
 		out = null;
 		try {
-			FileOutputStream of = new FileOutputStream(outputName);
+			FileOutputStream of = new FileOutputStream(outputName, tf.optionsOutput.concat);
 			OutputStreamWriter outWriter = new OutputStreamWriter(of, outputEncoding);
 			out = new PrintWriter(outWriter, true);
 		} catch (Exception e) {
@@ -78,6 +79,14 @@ public class TeiToText extends TeiConverter {
 			out.println("@Fichier_input:\t" + inputName);
 			out.println("@Fichier_output:\t" + outputName);
 			out.print(tf.transInfo.toString().replaceAll("\t", " "));
+		}
+		if (tf.optionsOutput.iramuteq == true) {
+			out.printf("**** ");
+			for (Map.Entry<String, String> entry : optionsOutput.tv.entrySet()) {
+			    String key = entry.getKey();
+				out.printf("*%s ", key.replaceAll("[^0-9A-Za-z_]+", "_"));
+			}
+			out.printf("%n");
 		}
 	}
 
@@ -238,9 +247,50 @@ public class TeiToText extends TeiConverter {
 		// Permet d'avoir le nom complet du fichier (chemin absolu, sans
 		// raccourcis spéciaux)
 		input = f.getCanonicalPath();
-
 		if (f.isDirectory()) {
 			File[] teiFiles = f.listFiles();
+
+			if (options.concat == true) {
+				// pour l'option concat il faut avoir un vrai nom de fichier output
+				if (output == null) {
+					for (File file : teiFiles) {
+						String name = file.getName();
+						if (file.isFile() && (name.endsWith(Utils.EXT))) {
+							output = Utils.fullbasename(file) + ".concat.txt";
+							break;
+						}
+					}
+					if (output == null) {
+						System.err.println("pas de fichiers à traiter: arrêt");
+						return;
+					}
+				}
+				
+				System.out.println("Résultat de la concaténation dans " + output);
+
+				File outFile = new File(output);
+				if (outFile.exists()) {
+					if (outFile.isDirectory()) {
+						System.out.println("\n Erreur :" + output
+								+ " est un répertoire. Avec l'option concat ce doit être un fichier. \n");
+						System.exit(1);
+					}
+					outFile.delete();
+				}
+
+				for (File file : teiFiles) {
+					String name = file.getName();
+					if (file.isFile() && (name.endsWith(Utils.EXT))) {
+						TeiToText ttc = new TeiToText(file.getAbsolutePath(), output, options);
+						System.out.println("Traitement de " + name);
+						ttc.createOutput();
+					} else if (file.isDirectory()) {
+						// impossible to recurse with concat
+						System.err.println("Répertoire " + name + " ignoré en cas d'option -concat");
+					}
+				}
+				return;
+			}
 
 			String outputDir = "";
 			if (output == null) {

@@ -45,8 +45,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.055"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "28/06/2016 09:00";
+	public static String versionSoft = "1.057"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "29/07/2016 15:30";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
@@ -655,6 +655,7 @@ public class Utils {
 		System.err.println("	     :-cleanline : exporte des énoncés sans marqueurs spéficiques de l'oral");
 		System.err.println("	     :-clearchat : remplace les marqueurs + et apostrophes de chat par des marques standard");
 		System.err.println("	     :-raw : exporte le texte sans aucune marqueurs de locuteur ni marqueurs spéficiques de l'oral");
+		System.err.println("	     :-iramuteq : headers for iramuteq");
 		if (style == 2)
 			System.err.println("	     :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm ou lexico ou le trameur");
 		if (style == 2)
@@ -816,6 +817,13 @@ public class Utils {
 						options.noHeader = true;
 						continue;
 					} else if (args[i].equals("-raw")) {
+						options.raw = true;
+						continue;
+					} else if (args[i].equals("-concat")) {
+						options.concat = true;
+						continue;
+					} else if (args[i].equals("-iramuteq")) {
+						options.iramuteq = true;
 						options.raw = true;
 						continue;
 					} else if (args[i].equals("-section")) {

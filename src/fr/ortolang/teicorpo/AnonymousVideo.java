@@ -4,12 +4,16 @@
  */
 package fr.ortolang.teicorpo;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -19,6 +23,35 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+class StreamGobbler extends Thread
+{
+    InputStream is;
+    String type;
+    boolean debug;
+    
+    StreamGobbler(InputStream is, String type, boolean debug)
+    {
+        this.is = is;
+        this.type = type;
+        this.debug = debug;
+    }
+    
+    public void run()
+    {
+        try
+        {
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+            String line=null;
+            while ( (line = br.readLine()) != null)
+                if (debug == true) System.out.println(type + ">" + line);
+            } catch (IOException ioe)
+              {
+                ioe.printStackTrace();  
+              }
+    }
+}
+
 public class AnonymousVideo extends TeiConverter {
 
 	// Permet d'écrire le fichier de sortie des commandes FFMPEG
@@ -27,10 +60,13 @@ public class AnonymousVideo extends TeiConverter {
 	final static String outputEncoding = "UTF-8";
 	// Extension du fichier de sortie
 	final static String EXT = ".sh";
-	final static String FILESTEMPORARY = "files.concat";
+	String FILESTEMPORARY = "files.concat_";
 	String transcriptFileName;
 	int npart;
 	String mediaName;
+	String threads;
+	boolean override;
+	boolean debug;
 
 	/**
 	 * Convertit le fichier TEI donné en argument en un fichier sh.
@@ -39,10 +75,14 @@ public class AnonymousVideo extends TeiConverter {
 	 *            Nom du fichier d'entrée (fichier TEI, a donc l'extenstion
 	 *            .tei_corpo.xml)
 	 */
-	public AnonymousVideo(String inputName, String mediaName) {
+	public AnonymousVideo(String inputName, String mediaName, String threads, boolean override, boolean debug) {
 		super(inputName, null, null);
 		transcriptFileName = inputName;
 		this.mediaName = mediaName;
+		this.threads = threads;
+		this.override = override;
+		this.debug = debug;
+		FILESTEMPORARY += UUID.randomUUID();
 		outputWriter();
 		conversion();
 		createOutput();
@@ -59,6 +99,7 @@ public class AnonymousVideo extends TeiConverter {
 			outTemporary = new PrintWriter(outWriter, true);
 		} catch (Exception e) {
 			System.err.println("cannot create temporary file");
+			System.exit(1);
 		}
 	}
 
@@ -70,6 +111,7 @@ public class AnonymousVideo extends TeiConverter {
 		Node principalMedia;
 		ArrayList<String> listFiles = new ArrayList<String>();
 		String baseurl;
+		String resultFile;
 		XPathExpression expr;
 		NodeList nl;
 		npart = 0;
@@ -92,6 +134,12 @@ public class AnonymousVideo extends TeiConverter {
 		        baseurl = Utils.fullbasename(mediaName);
 			} else
 		        baseurl = Utils.fullbasename(mediaName);
+			resultFile = baseurl + "-anonym.mp4";
+			File test = new File(resultFile);
+			if (test.exists() && override != true) {
+				System.out.println("Le fichier résultat ne peut pas être effacé");
+				return;
+			}
 			String prevTime = "0.0";
 			nl = Utils.getAllDivs(tf.xpath, tf.teiDoc);
 			boolean found = false;
@@ -158,7 +206,7 @@ public class AnonymousVideo extends TeiConverter {
 	        	outTemporary.printf("file '%s'%n", s);
 	        }
     		outTemporary.close();
-        	execConcat(baseurl + "-anonym.mp4", FILESTEMPORARY);
+        	execConcat(resultFile, FILESTEMPORARY);
         	File f = new File(FILESTEMPORARY);
         	f.delete();
         	f = new File(baseurl + "-black.mp4");
@@ -173,40 +221,41 @@ public class AnonymousVideo extends TeiConverter {
 		}
 	}
 
-	private void execConcat(String fn, String filestemporary2) {
+	private void execCMD(String[] commande) {
         try {
-            String[] commande = {"ffmpeg", "-f", "concat", "-i", filestemporary2, "-c", "copy", "-strict", "-2", "-y", fn};
-//            System.out.println("Execute: " + Utils.join(commande));
+            System.out.println("Execute: " + Utils.join(commande));
             Process p = Runtime.getRuntime().exec(commande);
-            p.waitFor();
+            StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR", debug);
+            // any output?
+            StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream(), "OUTPUT", debug);
+            // kick them off
+            errorGobbler.start();
+            outputGobbler.start();
+            // any error???
+            int exitVal = p.waitFor();
+            if (exitVal != 0) {
+                System.out.println("ExitValue: " + exitVal);
+            	System.exit(exitVal);
+            }
         } catch (IOException | InterruptedException e) {
 			//e.printStackTrace();
-			System.err.println("Erreur de traitement de execConcat: " + e.getMessage());
+			System.err.println("Erreur de traitement de execCMD: " + e.getMessage());
         }
+	}
+
+	private void execConcat(String fn, String filestemporary2) {
+        String[] commande = {"ffmpeg", "-f", "concat", "-i", filestemporary2, "-c", "copy", "-strict", "-2", "-y", fn};
+        execCMD(commande);
 	}
 
 	private void execAnon(String media, String fn) {
-        try {
-            String[] cmd2 = {"ffmpeg", "-i", media, "-vf", "eq=brightness=-1.0", "-strict", "-2", "-y", fn};
-//            System.out.println("Execute: " + Utils.join(cmd2));
-            Process p = Runtime.getRuntime().exec(cmd2);
-            p.waitFor();
-        } catch (IOException | InterruptedException e) {
-			//e.printStackTrace();
-			System.err.println("Erreur de traitement de execAnon: " + e.getMessage());
-        }
+		String[] cmd2 = {"ffmpeg", "-i", media, "-threads", threads==null?"1" : threads, "-vf", "eq=brightness=-1.0", "-strict", "-2", "-y", fn};
+        execCMD(cmd2);
 	}
 
 	private void execPart(String media, String fn, String start, String end) {
-        try {
-            String[] commande = {"ffmpeg", "-i", media, "-vcodec", "copy", "-acodec", "copy", "-ss", start, "-t", end, "-strict", "-2", "-y", fn};
-//            System.out.println("Execute: " + Utils.join(commande));
-            Process p = Runtime.getRuntime().exec(commande);
-            p.waitFor();
-        } catch (IOException | InterruptedException e) {
-			//e.printStackTrace();
-			System.err.println("Erreur de traitement de execPart: " + e.getMessage());
-        }
+        String[] commande = {"ffmpeg", "-i", media, "-threads", threads==null?"1" : threads, "-vcodec", "copy", "-acodec", "copy", "-ss", start, "-t", end, "-strict", "-2", "-y", fn};
+        execCMD(commande);
 	}
 
 	public void createOutput() {
@@ -214,11 +263,15 @@ public class AnonymousVideo extends TeiConverter {
 	}
 
 	public static void main(String[] args) {
+		String USAGE = "Usage: java -cp fr.ortolang.teicorpo.AnonymousVideo -i fichier -m media -t threads -y --debug";
 		String mediaName = null;
 		String input = null;
+		String threads = null;
+		boolean debug = false;
+		boolean override = false;
 		if (args.length < 2) {
 			System.err.println("Vous n'avez spécifié aucun argument\n");
-			System.err.println("Usage: java -cp fr.ortolang.teicorpo.AnonymousVideo -i fichier -m media\n");
+			System.err.println(USAGE);
 			return;
 		}
 		for (int i = 0; i < args.length; i++) {
@@ -229,21 +282,28 @@ public class AnonymousVideo extends TeiConverter {
 				} else if (args[i].equals("-m")) {
 					i++;
 					mediaName = args[i];
+				} else if (args[i].equals("-t")) {
+					i++;
+					threads = args[i];
+				} else if (args[i].equals("-y")) {
+					override = true;
+				} else if (args[i].equals("--debug")) {
+					debug = true;
 				} else {
-					System.err.println("Usage: java -cp fr.ortolang.teicorpo.AnonymousVideo -i fichier -m media\n");
+					System.err.println(USAGE);
 					return;
 				}
 			} catch (Exception e) {
-				System.err.println("Usage: java -cp fr.ortolang.teicorpo.AnonymousVideo -i fichier -m media\n");
+				System.err.println(USAGE);
 				return;
 			}
 		}
 		
 		if (input == null) {
-			System.err.println("Usage: java -cp fr.ortolang.teicorpo.AnonymousVideo -i fichier -m media\n");
+			System.err.println(USAGE);
 			return;
 		}
-		AnonymousVideo av = new AnonymousVideo(input, mediaName);
+		AnonymousVideo av = new AnonymousVideo(input, mediaName, threads, override, debug);
 	}
 
 	@Override

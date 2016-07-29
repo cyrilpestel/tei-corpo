@@ -52,7 +52,7 @@ public class TeiToLexico extends TeiConverter {
 	public void outputWriter() {
 		out = null;
 		try {
-			FileOutputStream of = new FileOutputStream(outputName);
+			FileOutputStream of = new FileOutputStream(outputName, tf.optionsOutput.concat);
 			OutputStreamWriter outWriter = new OutputStreamWriter(of, outputEncoding);
 			out = new PrintWriter(outWriter, true);
 		} catch (Exception e) {
@@ -241,6 +241,48 @@ public class TeiToLexico extends TeiConverter {
 
 		if (f.isDirectory()) {
 			File[] teiFiles = f.listFiles();
+
+			if (options.concat == true) {
+				// pour l'option concat il faut avoir un vrai nom de fichier output
+				if (output == null) {
+					for (File file : teiFiles) {
+						String name = file.getName();
+						if (file.isFile() && (name.endsWith(Utils.EXT))) {
+							output = Utils.fullbasename(file) + ".concat.txt";
+							break;
+						}
+					}
+					if (output == null) {
+						System.err.println("pas de fichiers à traiter: arrêt");
+						return;
+					}
+				}
+				
+				System.out.println("Résultat de la concaténation dans " + output);
+
+				File outFile = new File(output);
+				if (outFile.exists()) {
+					if (outFile.isDirectory()) {
+						System.out.println("\n Erreur :" + output
+								+ " est un répertoire. Avec l'option concat ce doit être un fichier. \n");
+						System.exit(1);
+					}
+					outFile.delete();
+				}
+
+				for (File file : teiFiles) {
+					String name = file.getName();
+					if (file.isFile() && (name.endsWith(Utils.EXT))) {
+						TeiToLexico ttc = new TeiToLexico(file.getAbsolutePath(), output, options);
+						System.out.println("Traitement de " + name);
+						ttc.createOutput();
+					} else if (file.isDirectory()) {
+						// impossible to recurse with concat
+						System.err.println("Répertoire " + name + " ignoré en cas d'option -concat");
+					}
+				}
+				return;
+			}
 
 			String outputDir = "";
 			if (output == null) {

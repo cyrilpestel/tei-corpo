@@ -3,6 +3,11 @@ package fr.ortolang.teicorpo;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,12 +30,17 @@ public class MoissonnageEslo {
 	private Document docMetadatas;
 	/** Racine du document issu du moissonnage d'Eslo. */
 	private Element rootMoissonnage;
+	
+	/** store groups of data related together  (isKindOf & isPartOf) **/
+	private Map<String, Set<String>> groups;
 
 	public MoissonnageEslo() {
 		/** Document issu du fichier Moissonnage Eslo. */
 		docMetadatas = null;
 		/** Racine du document issu du moissonnage d'Eslo. */
 		rootMoissonnage = null;
+		/** initialize groups **/
+		groups = new TreeMap<String, Set<String>>();
 	}
 
 	/**
