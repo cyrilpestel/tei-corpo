@@ -1062,6 +1062,10 @@ public class PraatToTei {
 					} else if (args[i].equals("-d")) {
 						prs.detectEncoding = false;
 						prs.encoding = "UTF-8";
+					} else if (args[i].equals("--verbose")) {
+						prs.verbose = true;
+					} else if (args[i].equals("--strict")) {
+						prs.strict = true;
 					} else if (args[i].equals("-x")) {
 						stop = false;
 					} else if (args[i].equals("-h") || args[i].equals("-help") || args[i].equals("-usage")) {
@@ -1140,7 +1144,7 @@ public class PraatToTei {
 				}
 			}
 
-			if (!(Utils.validFileFormat(input, EXT))) {
+			if (prs.strict && !(Utils.validFileFormat(input, EXT))) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + EXT);
 				usage(stop);
 			}

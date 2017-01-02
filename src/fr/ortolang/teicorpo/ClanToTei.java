@@ -8,9 +8,7 @@ package fr.ortolang.teicorpo;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -598,7 +596,7 @@ public class ClanToTei {
 					} else {
 						// this should not happen
 						// this is not within the chat format
-						System.err.println("unknown format at " + cl.head + " " + cl.tail);
+						if (this.tparams.verbose) System.err.println("unknown format at " + cl.head + " " + cl.tail);
 						Element annotatedU = build_comment(start, end, cl);
 						div.appendChild(annotatedU);
 						i++;
@@ -635,13 +633,13 @@ public class ClanToTei {
 	public Element build_comment(String startTime, String endTime, ChatLine cl) {
 		Element incident = this.docTEI.createElement("incident");
 		Element desc = this.docTEI.createElement("desc");
-		desc.appendChild(incident);
+		incident.appendChild(desc);
 		desc.setAttribute("xml:id", "au" + utteranceId);
 		utteranceId++;
 		desc.setTextContent(cl.tail);
-		if (!startTime.isEmpty())
+		if (!startTime.isEmpty() && !startTime.equals("-1"))
 			desc.setAttribute("start", startTime);
-		if (!endTime.isEmpty())
+		if (!endTime.isEmpty() && !endTime.equals("-1"))
 			desc.setAttribute("end", endTime);
 		if (!cl.head.isEmpty())
 			desc.setAttribute("type", cl.head);
@@ -1550,7 +1548,8 @@ public class ClanToTei {
 		tp.output = null;
 		tp.mediaName = null;
 		tp.options = "";
-		boolean nospreadtime = false;
+		tp.nospreadtime = false;
+		tp.verbose = false;
 		// parcours des arguments
 		if (args.length == 0) {
 			System.err.println("Vous n'avez spécifié aucun argument.\n");
@@ -1574,7 +1573,11 @@ public class ClanToTei {
 							usage();
 						tp.mediaName = args[i];
 					} else if (args[i].equals("--nospreadtime")) {
-						nospreadtime = true;
+						tp.nospreadtime = true;
+					} else if (args[i].equals("--verbose")) {
+						tp.verbose = true;
+					} else if (args[i].equals("--strict")) {
+						tp.strict = true;
 					} else if (args[i].equals("--pure")) {
 						Utils.teiStylePure = true;
 					} else if (args[i].equals("-f")) {
@@ -1637,7 +1640,7 @@ public class ClanToTei {
 				} else if (file.getName().endsWith(EXT)) {
 					ClanToTei tr = new ClanToTei(file.getAbsolutePath(), tp);
 					String outputFileName = Utils.basename(file) + Utils.EXT;
-					System.out.println(tp.output + outputFileName);
+					if (tp.verbose) System.out.println("Fichier TEI: " + tp.output + outputFileName);
 					Utils.setDocumentName(tr.docTEI, Utils.lastname(outputFileName));
 					Utils.createFile(tp.output + outputFileName, tr.docTEI);
 				} else if (file.isDirectory()) {
@@ -1657,16 +1660,31 @@ public class ClanToTei {
 				}
 			}
 
-			if (!(Utils.validFileFormat(tp.input, EXT))) {
+			if (tp.strict && !(Utils.validFileFormat(tp.input, EXT))) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + EXT);
 				usage();
 			}
 
-			System.out.println("Lecture de " + tp.input);
+			if (tp.verbose) System.out.println("Lecture de " + tp.input);
 			ClanToTei tr = new ClanToTei(tp.input, tp);
 			Utils.setDocumentName(tr.docTEI, Utils.lastname(tp.output));
 			Utils.createFile(tp.output, tr.docTEI);
-			System.out.println("New file TEI created: " + tp.output);
+			if (tp.verbose) System.out.println("New file TEI created: " + tp.output);
 		}
 	}
+
+	public static void process(TierParams tp) {
+		ClanToTei tr;
+		try {
+			tr = new ClanToTei(tp.input, tp);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			// e.printStackTrace();
+			System.err.printf("Erreur sur %s: %s%n", tp.input, e.toString());
+			return;
+		}
+		Utils.setDocumentName(tr.docTEI, Utils.lastname(tp.output));
+		Utils.createFile(tp.output, tr.docTEI);
+	}
+
 }

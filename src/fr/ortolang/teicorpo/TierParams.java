@@ -24,6 +24,10 @@ class TierParams {
 	public boolean noHeader;
 	public boolean iramuteq;
 	public boolean concat;
+	public String outputFormat;
+	public String inputFormat;
+	public boolean verbose;
+	public boolean strict;
 	TierParams() {
 		input = null;
 		output = null;
@@ -45,6 +49,8 @@ class TierParams {
 		iramuteq = false;
 		concat = false;
 		tv = new TreeMap<String, String>();
+		verbose = false;
+		strict = false;
 	}
 	void addCommand(String s) {
 		commands.add(s);

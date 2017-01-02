@@ -127,9 +127,10 @@ public class MoissonnageEslo {
 						|| identifierURL.endsWith(".mp3")
 						|| identifierURL.endsWith(".trs")
 						|| identifierURL.endsWith(".mp4")
-					){
-					//System.out.println("curl " + identifierURL + "> \"$(basename " + identifierURL + ")\"");
-					System.out.println("curl " + identifierURL + " > " + Utils.lastname(identifierURL) + " # " + recordName);
+					) {
+					if (identifierURL.contains("/exist/crdo/eslo/private_eslo/"))
+						identifierURL = identifierURL.replaceFirst("/exist/crdo/eslo/private_eslo/", "/exist/rest/db/corpus/eslo/private_eslo/");
+					System.out.println("curl --user parisse:pc01 " + identifierURL + " > " + Utils.lastname(identifierURL) + " # " + recordName);
 				}
 			}
 
@@ -138,12 +139,14 @@ public class MoissonnageEslo {
 			for(int z = 0; z<dcTerms.getLength(); z++){ 
 				Element dcTerm = (Element)dcTerms.item(z);
 				String dcTermURL = dcTerm.getTextContent();
+				if (dcTermURL.contains("/exist/crdo/eslo/private_eslo/"))
+					dcTermURL = dcTermURL.replaceFirst("/exist/crdo/eslo/private_eslo/", "/exist/rest/db/corpus/eslo/private_eslo/");
 				if(dcTermURL.endsWith(".wav") 
 					|| dcTermURL.endsWith(".mp3")
 					) { 
-					System.out.println("curl " + dcTermURL + " > " + Utils.lastname(dcTermURL) + " # " + recordName);
+					System.out.println("curl --user parisse:pc01 " + dcTermURL + " > " + Utils.lastname(dcTermURL) + " # " + recordName);
 				}
-			} 
+			}
 		}
 	}
 
@@ -210,6 +213,11 @@ public class MoissonnageEslo {
 					System.err.println("Problème arguments.\n");
 				}
 			}
+		}
+		
+		if (inputName == null || inputName.isEmpty()) {
+			System.out.printf("# Utilisation de l'adresse par défaut%n# http://cocoon.huma-num.fr/crdo_servlet/oai-pmh?verb=ListRecords&metadataPrefix=olac&set=Eslo%n");
+			inputName = "http://cocoon.huma-num.fr/crdo_servlet/oai-pmh?verb=ListRecords&metadataPrefix=olac&set=Eslo";
 		}
 
 		File outFile = new File(outputName);

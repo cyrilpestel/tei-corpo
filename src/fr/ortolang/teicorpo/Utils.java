@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -45,8 +43,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.057"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "29/07/2016 15:30";
+	public static String versionSoft = "1.2"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "02/01/2017 15:00";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
@@ -190,7 +188,7 @@ public class Utils {
 
 			// Transformation
 			transformer.transform(source, resultat);
-			System.out.println("Fichier TEI créé : " + outputFileName);
+			// System.out.println("Fichier TEI créé : " + outputFileName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -717,6 +715,12 @@ public class Utils {
 					} else if (args[i].equals("-o")) {
 						i++;
 						continue;
+					} else if (args[i].equals("-to")) {
+						i++;
+						continue;
+					} else if (args[i].equals("-from")) {
+						i++;
+						continue;
 					} else if (args[i].equals("-n")) {
 						i++;
 						continue;
@@ -727,6 +731,9 @@ public class Utils {
 						i++;
 						continue;
 					} else if (args[i].equals("-c")) {
+						i++;
+						continue;
+					} else if (args[i].equals("-f")) {
 						i++;
 						continue;
 					} else if (args[i].equals("-tv")) {
@@ -763,52 +770,106 @@ public class Utils {
 						}
 						i++;
 						options.output = args[i];
-					} else if (args[i].equals("-n")) {
+					} else if (args[i].equals("-to")) {
 						if (i+1 >= args.length) {
 							Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.outputFormat = args[i];
+					} else if (args[i].equals("-from")) {
+						if (i+1 >= args.length) {
+							Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.inputFormat = args[i];
+					} else if (args[i].equals("-n")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -n n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						try {
 							options.setLevel(Integer.parseInt(args[i]));
 						} catch(Exception e) {
-							System.err.println("Le paramètre -n n'est pas suivi d'un entier.");
-							Utils.printUsageMessage(usage, ext1, ext2, style);
+							System.err.println("Le paramètre -c n'est pas suivi d'un entier.");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 					} else if (args[i].equals("-c")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
+							System.err.println("le parametre -a n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.addCommand(args[i]);
 					} else if (args[i].equals("-a")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
+							System.err.println("le parametre -a n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.addDoDisplay(args[i]);
 					} else if (args[i].equals("-s")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
+							System.err.println("le parametre -s n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.addDontDisplay(args[i]);
 					} else if (args[i].equals("-tv")) {
 						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
+							System.err.println("le parametre -tv n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.addTv(args[i]);
+					} else if (args[i].equals("-f")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -f n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						if (args[i].equals("mor")) {
+							options.options = "mor";
+						} else if (args[i].equals("xmor")) {
+							options.options = "xmor";
+						} else if (args[i].equals("morext")) {
+							options.options = "morext";
+						} else if (args[i].equals("xmorext")) {
+							options.options = "xmorext";
+						} else {
+							Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
 					} else if (args[i].equals("-p")) {
 						i++;
 						continue;
+					} else if (args[i].equals("-stdevent")) {
+						leftBracket = "<"; // 27EA - "❮"; // "⟨" 27E8 - "❬" 
+						rightBracket = ">"; // 27EB - "❯"; // "⟩" 27E9 - "❭" - 276C à 2771 ❬ ❭ ❮ ❯ ❰ ❱ 
+						leftEvent = "[=! "; // 27E6 - "『"; // 300E - "⌈"; // u2308 
+						rightEvent = "]"; // 27E7 - "』"; // 300F - "⌋"; // u230b
+						leftParent = "[% "; // 2045 // "⁘"; // 2058 // "⁑" // 2051
+						rightParent = "]"; // 2046 // "⁘"; // 2058
+						leftCode = "[% "; // 231C - "⁌"; // 204C
+						rightCode = "]"; // 231F - "⁍"; // 204D
+						continue;
 					} else if (args[i].equals("-cleanline")) {
 						options.cleanLine = true;
+						continue;
+					} else if (args[i].equals("-nospreadtime")) {
+						options.nospreadtime = true;
+						continue;
+					} else if (args[i].equals("-pure")) {
+						Utils.teiStylePure = true;
 						continue;
 					} else if (args[i].equals("-clearchat")) {
 						options.clearChatFormat = true;

@@ -390,9 +390,24 @@ public class ChatFile {
 				mainLine = ml.replaceAll("\\x15\\d+_\\d+\\x15",""); // replaceFirst
 				mainLine = mainLine.replaceAll("\\p{C}", "");
 			} else {
-				startTime = -1;
-				endTime = -1;
-				mainLine = ml;
+				patternStr = ".*\\x15(.*?)_(\\d+)_(\\d+)\\x15";
+				pattern = Pattern.compile(patternStr);
+				matcher = pattern.matcher(ml);
+				if (matcher.find()) {
+					/*
+					if (!matcher.group(1).isEmpty()) {
+						System.err.println("pat found: " + matcher.group(1));
+					}
+					*/
+					startTime = Integer.parseInt(matcher.group(2));
+					endTime = Integer.parseInt(matcher.group(3));
+					mainLine = ml.replaceAll("\\x15.*?\\x15",""); // replaceFirst
+					mainLine = mainLine.replaceAll("\\p{C}", "");
+				} else {
+					startTime = -1;
+					endTime = -1;
+					mainLine = ml;
+				}
 			}
 			mainCleaned = ConventionsToChat.clean(mainLine);
 			nl = -1;

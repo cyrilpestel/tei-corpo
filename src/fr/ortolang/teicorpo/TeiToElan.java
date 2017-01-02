@@ -424,9 +424,20 @@ public class TeiToElan {
 					tier.setAttribute("ANNOTATOR", ti.annotator);
 				if (Utils.isNotEmptyOrNull(ti.lang_ref))
 					tier.setAttribute("LANG_REF", ti.lang_ref);
-				// if(Utils.isNotEmptyOrNull(ti.parent) &&
-				// !ti.parent.equals("-")) tier.setAttribute("PARENT_REF",
-				// ti.parent);
+				if(Utils.isNotEmptyOrNull(ti.parent) &&
+						!ti.parent.equals("-")) {
+					tier.setAttribute("PARENT_REF", ti.parent);
+					System.out.printf("HH: %s %s %s %n", tier.getTagName(), type, ti.parent);
+					/*
+					// chercher dans newTiers le nouveau nom du parent
+					for (Map.Entry<String, NewTier> entry : ttp.newTiers.entrySet()) {
+						if (entry.getValue().oldID.equals(ti.parent)) {
+							tier.setAttribute("PARENT_REF", entry.getValue().newID);
+							// on change l'ancien
+						}
+					}
+					*/
+				}
 				if (Utils.isNotEmptyOrNull(ti.type.lgq_type_id))
 					tier.setAttribute("LINGUISTIC_TYPE_REF", ti.type.lgq_type_id);
 				return ti.type.cv_ref;
@@ -435,7 +446,7 @@ public class TeiToElan {
 		return "";
 	}
 
-	private String setTierAtt(Element tier, NewTier newTier) {
+	private String setTierAtt(Element tier, NewTier newTier, String type) {
 		for (TierInfo ti : ttp.tierInfos) {
 			if (ti.tier_id.equals(newTier.oldID)) {
 				if (Utils.isNotEmptyOrNull(ti.participant))
@@ -449,13 +460,22 @@ public class TeiToElan {
 				if (Utils.isNotEmptyOrNull(newTier.lingType))
 					tier.setAttribute("LINGUISTIC_TYPE_REF", newTier.lingType);
 				if (Utils.isNotEmptyOrNull(ti.parent)) {
-					// s'il n'y en a pas (même nom)
-					tier.setAttribute("PARENT_REF", ti.parent);
-					// chercher dans newTiers le nouveau nom du parent
-					for (Map.Entry<String, NewTier> entry : ttp.newTiers.entrySet()) {
-						if (entry.getValue().oldID.equals(ti.parent)) {
-							tier.setAttribute("PARENT_REF", entry.getValue().newID);
-							// on change l'ancien
+					//System.out.printf("WW: %s %s %s%n", newTier.oldID, ti.parent, type);
+					int p = type.indexOf("-");
+					if (p >= 1) {
+						tier.setAttribute("PARENT_REF", type.substring(0, p));
+					} else {
+						// valeur par defaut ?
+						tier.setAttribute("PARENT_REF", ti.parent);
+						// s'il n'y en a pas (même nom)
+						// chercher dans newTiers le nouveau nom du parent
+						for (Map.Entry<String, NewTier> entry : ttp.newTiers.entrySet()) {
+							//System.out.printf("++: %s %s %n", newTier.oldID, entry.getValue().newID);
+							if (entry.getValue().oldID.equals(ti.parent)) {
+								tier.setAttribute("PARENT_REF", entry.getValue().newID);
+								// on change l'ancien
+								//System.out.printf("KK: %s %s %n", newTier.oldID, entry.getValue().newID);
+							}
 						}
 					}
 				}
@@ -476,7 +496,7 @@ public class TeiToElan {
 			if (ttp.newTiers.containsKey(type)) {
 				// System.out.printf("HH: %s %s %n", type,
 				// ttp.newTiers.get(type));
-				cvref = setTierAtt(tier, ttp.newTiers.get(type));
+				cvref = setTierAtt(tier, ttp.newTiers.get(type), type);
 			} else
 				cvref = setTierAtt(tier, type);
 			this.annot_doc.appendChild(tier);

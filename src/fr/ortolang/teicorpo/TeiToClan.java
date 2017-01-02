@@ -555,6 +555,15 @@ public class TeiToClan extends TeiConverter {
 			}
 		}
 	}
+
+	public static void process(TierParams tp) {
+		TeiToClan ttc = new TeiToClan(new File(tp.input).getAbsolutePath(), tp.output, tp);
+		if (ttc.tf != null) {
+			ttc.createOutput();
+		} else {
+			System.err.printf("Erreur sur %s%n", tp.input);
+		}
+	}
 }
 
 /**

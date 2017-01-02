@@ -1069,6 +1069,8 @@ public class TranscriberToTei {
 		String output = null;
 		// parcours des arguments
 
+		boolean strict = false;
+		boolean verbose = false;
 		if (args.length == 0) {
 			System.err.println("Vous n'avez spécifié aucun argument.\n");
 			usage();
@@ -1085,6 +1087,10 @@ public class TranscriberToTei {
 						Utils.teiStylePure = true;
 					} else if (args[i].equals("--dtd")) {
 						dtdValidation = true;
+					} else if (args[i].equals("--verbose")) {
+						verbose = true;
+					} else if (args[i].equals("--strict")) {
+						strict = true;
 					} else {
 						usage();
 					}
@@ -1134,7 +1140,7 @@ public class TranscriberToTei {
 				if (file.isFile() && (name.endsWith(".trs") || name.endsWith(".trs.xml"))) {
 					TranscriberToTei tr = new TranscriberToTei(file, dtdValidation);
 					String outputFileName = Utils.basename(file) + Utils.EXT;
-					System.out.println(outputDir + outputFileName);
+					if (verbose) System.out.println(outputDir + outputFileName);
 					Utils.setDocumentName(tr.docTEI, outputFileName);
 					Utils.createFile(outputDir + outputFileName, tr.docTEI);
 				} else if (file.isDirectory()) {
@@ -1156,16 +1162,16 @@ public class TranscriberToTei {
 				}
 			}
 
-			if (!(Utils.validFileFormat(input, ".trs") || Utils.validFileFormat(input, ".trs.xml"))) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension .trs ou .trs.xml");
+			if (strict && !(Utils.validFileFormat(input, ".trs") || Utils.validFileFormat(input, ".trs.xml") || Utils.validFileFormat(input, ".xml"))) {
+				System.err.println("Le fichier d'entrée du programme doit avoir l'extension .trs ou .trs.xml ou .xml");
 				usage();
 			}
 
 			TranscriberToTei tr = new TranscriberToTei(new File(input), dtdValidation);
-			System.out.println("Lecture de " + input);
+			if (verbose) System.out.println("Lecture de " + input);
 			Utils.setDocumentName(tr.docTEI, Utils.lastname(output));
 			Utils.createFile(output, tr.docTEI);
-			System.out.println("New file created " + output);
+			if (verbose) System.out.println("New file created " + output);
 		}
 	}
 }

@@ -54,6 +54,8 @@ public class ElanToTei {
 		String output = null;
 		// parcours des arguments
 
+		boolean strict = false;
+		boolean verbose = false;
 		if (args.length == 0) {
 			System.err.println("Vous n'avez spécifié aucun argument.\n");
 			usage();
@@ -68,6 +70,10 @@ public class ElanToTei {
 						output = args[i];
 					} else if (args[i].equals("--pure")) {
 						Utils.teiStylePure = true;
+					} else if (args[i].equals("--verbose")) {
+						verbose = true;
+					} else if (args[i].equals("--strict")) {
+						strict = true;
 					} else {
 						usage();
 					}
@@ -142,7 +148,7 @@ public class ElanToTei {
 					output = output + "/" + Utils.basename(input) + Utils.EXT;
 				}
 			}
-			if (!(Utils.validFileFormat(input, EXT))) {
+			if (strict && !(Utils.validFileFormat(input, EXT))) {
 				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + EXT);
 			}
 			new ElanToTei(new File(input), output);
