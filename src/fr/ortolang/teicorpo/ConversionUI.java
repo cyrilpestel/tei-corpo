@@ -254,21 +254,22 @@ public class ConversionUI extends JFrame {
 			if (!inputName.endsWith(Utils.EXT)) {
 				// Création des fichiers TEI
 				if (inputName.toLowerCase().endsWith(".cha")) {
-					ClanToTei cf = new ClanToTei(inputAbsPath, null);
-					Utils.createFile(outputTeiFileName, cf.docTEI);
+					ClanToTei cf = new ClanToTei();
+					cf.mainProcess(inputAbsPath, outputTeiFileName, null);
 					if (formats.contains("tei")) {
 						nbConv++;
 						printResults("New TEI file created from " + inputAbsPath + " to " + outputTeiFileName);
 					}
 				} else if (inputName.toLowerCase().endsWith(".trs") || inputName.toLowerCase().endsWith(".trs.xml")) {
-					TranscriberToTei trTT = new TranscriberToTei(inputFile, false);
-					Utils.createFile(outputTeiFileName, trTT.docTEI);
+					TranscriberToTei cf = new TranscriberToTei();
+					cf.mainProcess(inputAbsPath, outputTeiFileName, null);
 					if (formats.contains("tei")) {
 						nbConv++;
 						printResults("New TEI file created from " + inputAbsPath + " to " + outputTeiFileName);
 					}
 				} else if (inputName.toLowerCase().endsWith(".eaf")) {
-					new ElanToTei(inputFile, outputTeiFileName);
+					ElanToTei cf = new ElanToTei();
+					cf.mainProcess(inputAbsPath, outputTeiFileName,null);
 					if (formats.contains("tei")) {
 						nbConv++;
 						printResults("New TEI file created from " + inputAbsPath + " to " + outputTeiFileName);
@@ -342,7 +343,7 @@ public class ConversionUI extends JFrame {
 					if (Utils.isNotEmptyOrNull(argumentsOutput)) {
 						String usage = "Description: Conversions convertit un fichier au format TEI en un fichier au format Chat, Praat, Elan, Transcriber\n";
 						String[] addArgs = argumentsOutput.split("\\s+");
-						if (Utils.processArgs(addArgs, options, usage, Utils.EXT, f, 2) == false) {
+						if (TierParams.processArgs(addArgs, options, usage, Utils.EXT, f, 2) == false) {
 							JOptionPane.showMessageDialog(null, "Erreur sur les paramètres.", "Erreur",
 									JOptionPane.WARNING_MESSAGE);
 						}
@@ -357,33 +358,33 @@ public class ConversionUI extends JFrame {
 						if (f.equals("chat") && !inputName.endsWith(".cha")) {
 							String chatDirName = outputDir + "/";
 							String outputName = chatDirName + inputName.split("\\.")[0] + ".cha";
-							TeiToClan ttc = new TeiToClan(teiFile.getAbsolutePath(), outputName, null);
-							ttc.createOutput();
+							TeiToClan ttc = new TeiToClan();
+							ttc.mainProcess(teiFile.getAbsolutePath(), outputName, null);
 							nbConv++;
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
 									+ outputName);
 						} else if (f.equals("trs") && !(inputName.endsWith(".trs") || inputName.endsWith(".trs.xml"))) {
 							String trsDirName = outputDir + "/";
 							String outputName = trsDirName + inputName.split("\\.")[0] + ".trs";
-							TeiToTranscriber ttt = new TeiToTranscriber(teiFile.getAbsolutePath(), outputName, null);
+							TeiToTranscriber ttt = new TeiToTranscriber();
+							ttt.mainProcess(teiFile.getAbsolutePath(), outputName, null);
 							nbConv++;
-							ttt.createOutput();
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
 									+ outputName);
 						} else if (f.equals("eaf") && !(inputName.endsWith(".eaf"))) {
 							String eafDirName = outputDir + "/";
 							String outputName = eafDirName + inputName.split("\\.")[0] + ".eaf";
-							TeiToElan tte = new TeiToElan(teiFile.getAbsolutePath(), outputName, null);
+							TeiToElan tte = new TeiToElan();
+							tte.mainProcess(teiFile.getAbsolutePath(), outputName, null);
 							nbConv++;
-							tte.createOutput();
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
 									+ outputName);
 						} else if (f.equals("textgrid") && !(inputName.toLowerCase().endsWith(".textgrid"))) {
 							String praatDirName = outputDir + "/";
 							String outputName = praatDirName + inputName.split("\\.")[0] + ".textgrid";
-							TeiToPraat ttp = new TeiToPraat(teiFile.getAbsolutePath(), outputName, null);
+							TeiToPraat ttp = new TeiToPraat();
+							ttp.mainProcess(teiFile.getAbsolutePath(), outputName, null);
 							nbConv++;
-							ttp.createOutput();
 							printResults("New " + f.toUpperCase() + " file created from " + inputAbsPath + " to "
 									+ outputName);
 						}

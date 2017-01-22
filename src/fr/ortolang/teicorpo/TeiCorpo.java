@@ -32,7 +32,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class TeiCorpo {
+public class TeiCorpo extends GenericMain {
 	public static boolean containsExtension(String fn, String ext) {
 		if (fn.endsWith(ext)) {
 			return true;
@@ -41,155 +41,202 @@ public class TeiCorpo {
 	}
 	
 	public static void process(String extIn, String extOut, String fileIn, String fileOut, TierParams tp) {
-		tp.input = fileIn;
-		tp.output = fileOut;
-		if (extIn.equals("cha") && extOut.equals(Utils.EXT)) {
-			ClanToTei.process(tp);
-		} else if (extIn.equals(Utils.EXT) && extOut.equals("cha")) {
-			TeiToClan.process(tp);
+		// System.err.printf("Process: extIn: <%s> extOut: <%s> fileIn: <%s> fileOut: <%s>%n", extIn, extOut, fileIn, fileOut);
+		
+		// on regarde le type de la sortie
+		if (fileOut != null && !fileOut.isEmpty()) {
+			// éviter les conversions sur le même fichier
+			if (fileIn.equals(fileOut)) {
+				System.err.printf("fichiers identiques - ignoré : %s%n", fileIn);
+				return;
+			}
+			extOut = extensions(extOut);
+			if (extOut.equals(".none")) {
+				// format output est déterminé par l'extension du fichier
+				String ext = Utils.extname(fileOut);
+				if (!ext.isEmpty()) {
+					extOut = extensions(ext.substring(1));
+				}
+				if (extOut.equals(".none")) {
+					System.err.printf("Impossible de déterminer le format de sortie pour %s %s%n", extOut, fileOut);
+					return;
+				}
+			}
+		} else if (extOut != null && !extOut.isEmpty()) {
+			extOut = extensions(extOut);
+		} else
+			extOut = Utils.EXT;
+		
+		// on regarde le type de l'entrée
+		if (fileIn != null && !fileIn.isEmpty()) {
+			extIn = extensions(extIn);
+			if (extIn.equals(".none")) {
+				// format input est déterminé par l'extension du fichier
+				String ext = Utils.extname(fileIn);
+				if (!ext.isEmpty()) {
+					extIn = extensions(ext.substring(1));
+				}
+				if (extIn.equals(".none")) {
+					System.err.printf("Impossible de déterminer le format d'entrée pour %s %s%n", extIn, fileIn);
+					return;
+				}
+			}
+		} else if (extIn != null && !extIn.isEmpty()) {
+			extIn = extensions(extIn);
+		} else
+			extIn = Utils.EXT;
+		
+		if (fileOut == null || fileOut.isEmpty()) {
+			if (extIn.equals(extOut)) {
+				System.err.printf("ignored %s%n", fileIn);
+				return;
+			}
+		}
+		
+		String tempTEI = Utils.fullbasename(fileIn) + Utils.EXT;
+
+		// first from input to TEI
+		if (extIn.equals(Utils.EXT)) {
+			// nothing but rename file to tempTEI if different names
+			// only necessary to change value of tempTEI variable
+			tempTEI = fileIn;
+		} else {
+			switch(extIn) {
+			case ".cha":
+				ClanToTei tc = new ClanToTei();
+				tc.mainProcess(fileIn, tempTEI, tp);
+				break;
+			case ".eaf":
+				ElanToTei te = new ElanToTei();
+				te.mainProcess(fileIn, tempTEI, tp);
+				break;
+			case ".trs":
+				TranscriberToTei tt = new TranscriberToTei();
+				tt.mainProcess(fileIn, tempTEI, tp);
+				break;
+			case ".textgrid":
+				PraatToTei tpr = new PraatToTei();
+				tpr.mainProcess(fileIn, tempTEI, tp);
+				break;
+			default:
+				// file ignored
+				System.err.printf("Format entrée inconnu: erreur interne%n");
+				return;
+			}
+		}
+		
+		// then from TEI to output
+		if (extOut.equals(Utils.EXT)) {
+			// nothing but rename temp file
+			if (fileOut == null || !fileOut.isEmpty() || fileOut == tempTEI) {
+				// nothing. The temp file is the correct one !
+				return;
+			}
+			File of = new File(fileOut);
+			of.delete(); // if exist before.
+			File tmp = new File(tempTEI);
+			tmp.renameTo(of);
+		} else {
+			switch(extOut) {
+			case ".cha":
+				TeiToClan tc = new TeiToClan();
+				tc.mainProcess(tempTEI, fileOut, tp);
+				break;
+			case ".eaf":
+				TeiToElan te = new TeiToElan();
+				te.mainProcess(tempTEI, fileOut, tp);
+				break;
+			case ".trs":
+				TeiToTranscriber tt = new TeiToTranscriber();
+				tt.mainProcess(tempTEI, fileOut, tp);
+				break;
+			case ".textgrid":
+				TeiToPraat tpr = new TeiToPraat();
+				tpr.mainProcess(tempTEI, fileOut, tp);
+				break;
+			case ".txm.xml":
+				TeiToTxm txm = new TeiToTxm();
+				txm.mainProcess(tempTEI, fileOut, tp);
+				break;
+			case ".lex.txt":
+				TeiToLexico tlx = new TeiToLexico();
+				tlx.mainProcess(tempTEI, fileOut, tp);
+				break;
+			case ".srt":
+				TeiToSrt tsr = new TeiToSrt();
+				tsr.mainProcess(tempTEI, fileOut, tp);
+				break;
+			case ".txt":
+				TeiToText txt = new TeiToText();
+				txt.mainProcess(tempTEI, fileOut, tp);
+				break;
+			default:
+				System.err.printf("Format non implémenté dans TeiCorpo: %s%n", extOut);
+				break;
+			}
 		}
 	}
 
-	public static String inputExtensions(String inputFormat) {
-		String lcInputFormat = inputFormat.toLowerCase();
-		switch(lcInputFormat) {
+	public static String extensions(String format) {
+		String lcFormat = format.toLowerCase();
+		if (lcFormat.startsWith(".")) lcFormat = lcFormat.substring(1);
+		switch(lcFormat) {
 			case "cha":
 			case "chat":
 			case "clan":
+			case "cex":
 				return ".cha";
 			case "trs":
+			case "trs.xml":
 			case "transcriber":
 				return ".trs";
+			case "irq.txt":
+			case "iramuteq":
+				return ".irq.txt";
+			case "txm.xml":
+			case "txm":
+				return ".txm.xml";
+			case "txt":
+			case "text":
+				return ".txt";
+			case "srt":
+			case "soustitres":
+				return ".srt";
+			case "tmr.txt":
+			case "letrameur":
+			case "lexico":
+				return ".lex.txt";
 			case "eaf":
 			case "elan":
 				return ".eaf";
 			case "textgrid":
 			case "praat":
-				return ".texgrid";
+				return ".textgrid";
 			case "teicorpo.xml":
 			case "teicorpo":
+			case "tei_corpo.xml":
+			case "tei_corpo":
 			case "tei":
-				return Utils.EXT;
-			case "trjs":
-				return ".trjs";
 			case "xml":
-				return ".xml";
-		}
-		return "*";
-	}
-
-	public static String outputExtensions(String outputFormat) {
-		String lcOutputFormat = outputFormat.toLowerCase();
-		switch(lcOutputFormat) {
-			case "cha":
-			case "chat":
-			case "clan":
-				return "cha";
-			case "trs":
-			case "transcriber":
-				return "trs";
-			case "eaf":
-			case "elan":
-				return "eaf";
-			case "textgrid":
-			case "praat":
-				return "texgrid";
-			case "teicorpo.xml":
-			case "teicorpo":
-			case "tei":
 			case "trjs":
-				return "teicorpo.xml";
+				return Utils.EXT;
 		}
-		return "*";
-	}
-
-	public static void usage() {
-		System.err.println("Description: TeiCorpo convertit un fichier d'un format à un autre");
-		System.err.println("Formats source: TEI_CORPO (.tei_corpo.xml, .trjs, .xml), Clan (.cha), Elan (.eaf), Praat (.textgrid), Transcriber (.trs)");
-		System.err.println("Usage: TeiCorpo [-options] [-from FMT1] [-to FMT2] -i filein [-o fileout]");
-		System.err.println("     :-i nom du fichier ou repertoire où se trouvent les fichiers input");
-		System.err.println("     :-o nom du fichier de sortie ou du repertoire de résultats");
-		System.err.println("     :-to format des fichiers input");
-		System.err.println("     :-from format des fichiers output");
-		System.err.println("si les options -from et -to ne sont pas précisés, les formats sont devinés à partir des extensions de fichier");
-		System.err.println("toutes les options non spécifiées ci-dessous sont transmises au sous-programme de conversion");
-		System.err.println("     :-usage ou -help = affichage de ce message");
+		return ".none";
 	}
 
 	public static void main(String[] args) throws Exception {
-		Utils.printVersionMessage();
+		TierParams.printVersionMessage();
+		String usageString = "Description: TeiCorpo convertit un fichier d'un format à l'autre%n"
+				+ "Usage: TeiCorpo [-options] <file>%n"
+				+ "Formats possibles: TEI_CORPO, Clan, Elan, Praat, Transcriber%n"
+				+ "Sortie TEI_CORPO par défaut";
+		TeiCorpo tc = new TeiCorpo();
+		tc.mainCommand(args, "", "", usageString, 4);
+	}
 
-		String usageString = "Description: TeiCorpo convertit un fichier d'un format à l'autre%nUsage: TeiCorpo [-options] <file>%n"
-				+ "Formats possibles: TEI_CORPO, Clan, Elan, Praat, Transcriber";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usageString, Utils.EXT, ".cha;.trs;.eaf;.textgrid", 0))
-			return;
-		String input = options.input;
-		String output = options.output;
-		
-		String ExtIn = inputExtensions(options.inputFormat);
-		String ExtOut = outputExtensions(options.outputFormat);
-
-		File f = new File(input);
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans
-		// raccourcis spéciaux)
-		input = f.getCanonicalPath();
-
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-			}
-
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			} else {
-				new File(outputDir).mkdir();
-			}
-
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && containsExtension(name, ExtIn)) {
-					String outputFileName = Utils.basename(file.getName()) + ExtOut;
-					process(ExtIn, ExtOut, file.getAbsolutePath(), outputDir + outputFileName, options);
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		} else {
-			if (output == null) {
-				output = Utils.basename(input) + ExtOut;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + Utils.basename(input) + ExtOut;
-				} else {
-					output = output + "/" + Utils.basename(input) + ExtOut;
-				}
-			}
-
-			if (!Utils.validFileFormat(output, ExtOut)) {
-				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension " + ExtOut);
-			}
-			process(ExtIn, ExtOut, new File(input).getAbsolutePath(), output, options);
-		}
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+//		System.err.println("mainProcess: " + input + " | " + output);
+		process(options.inputFormat, options.outputFormat, input, output, options);
 	}
 }

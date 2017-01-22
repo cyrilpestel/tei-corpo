@@ -1,6 +1,7 @@
 /**
  * @author Myriam Majdoub & Christophe Parisse
  * Représentations des informations d'un énoncé en format texte à partir d'un format TEI.
+ * 
  */
 
 package fr.ortolang.teicorpo;
@@ -60,11 +61,11 @@ public class AnnotatedUtterance {
 		String s = "Id[" + id + "] Type[" + type + "] Start[" + start + "] End[" + end + "] SpkName[" + speakerName + "]\n";
 		s += "Speeches[" + speeches.size() + "]\n";
 		for (Annot utt : speeches) {
-			s += "{" + utt.content + "} {" + utt.cleanedContent + "}\n";
+			s += "{" + utt.getContent(false) + "} {" + utt.getContent(true) + "}\n";
 		}
 		s += "Tiers[" + tiers.size() + "]\n";
 		for (Annot tier : tiers) {
-			s += "/" + tier.name + "/ /" + tier.content + "/\n";
+			s += "/" + tier.name + "/ /" + tier.getContent(false) + "/\n";
 		}
 		return s;
 	}
@@ -91,11 +92,13 @@ public class AnnotatedUtterance {
 		tiers = new ArrayList<Annot>();
 		tierTypes = new HashSet<String>();
 		if (options != null) {
-			if (options.isDontDisplay(speakerCode))
+			//System.out.printf("Code: %s%n",speakerCode);
+			if (options.isDontDisplay(speakerCode, 1))
 				return false;
-			if (!options.isDoDisplay(speakerCode))
+			if (!options.isDoDisplay(speakerCode, 1))
 				return false;
 		}
+		//System.out.printf("Yes.%n");
 		if (transInfo != null)
 			speakerName = transInfo.getParticipantName(speakerCode);
 		else
@@ -122,6 +125,10 @@ public class AnnotatedUtterance {
 					//System.out.printf("TTTTT : %s%n", speech);
 					speech = Utils.cleanStringPlusEntities(speech);
 					cleanedSpeech = ConventionsToChat.clean(Utils.cleanStringPlusEntities(cleanedSpeech));
+					if (options.clearChatFormat) {
+						speech = ConventionsToChat.chatToText(speech);
+						cleanedSpeech = ConventionsToChat.chatToText(cleanedSpeech);
+					}
 					Annot a = new Annot(speakerName, start, end, speech, cleanedSpeech);
 					if (nthid == 0) {
 						a.id = id;
@@ -131,25 +138,22 @@ public class AnnotatedUtterance {
 						nthid++;
 					}
 					speeches.add(a);
-					// System.out.printf("TTTTT endofseg: %s %s %s%n", start,
-					// end, speech);
+					// System.out.printf("TTTTT endofseg: %s %s %s%n", start, end, speech);
 				} else if (nodeName.equals("spanGrp") && doSpan == true) {
 					// Ajout des tiers
 					String type = annotUEl.getAttribute("type");
 					if (options != null) {
 						if (options.level == 1)
 							continue;
-						if (options.isDontDisplay(type))
+						if (options.isDontDisplay(type, 2))
 							continue;
-						if (!options.isDoDisplay(type))
+						if (!options.isDoDisplay(type, 2))
 							continue;
 					}
 					NodeList spans = annotUEl.getElementsByTagName("span");
 					for (int y = 0; y < spans.getLength(); y++) {
 						Element span = (Element) spans.item(y);
-
-						tiers.add(new Annot(type, Utils.cleanEntities(span.getTextContent())));
-
+						tiers.add(new Annot(type, processSpan(span)));
 						tierTypes.add(type);//
 						if (!type.equals("pho") && !type.equals("act") && !type.equals("sit") && !type.equals("com")
 								&& !type.equals("morpho")) {
@@ -160,6 +164,38 @@ public class AnnotatedUtterance {
 			}
 		}
 		return true;
+	}
+
+	static public String processSpan(Element span) {
+		String spanContent = "";
+		// the span might be decomposed into elements.
+		NodeList spanElements = span.getChildNodes();
+		for (int k = 0; k < spanElements.getLength(); k++) {
+			Node elt = spanElements.item(k);
+			if (elt.getNodeType() == Node.TEXT_NODE) {
+				if (!spanContent.isEmpty()) spanContent += " ";
+				spanContent += elt.getTextContent();
+				// text.
+			} else if (elt.getNodeType() == Node.ELEMENT_NODE && elt.getNodeName() == "ref") {
+				NodeList refs = elt.getChildNodes();
+				for (int x = 0; x < refs.getLength(); x++) {
+					Node w = refs.item(x);
+					if (w.getNodeType() == Node.ELEMENT_NODE) {
+						Element we = (Element)w;
+//						System.err.println(w.toString() + "++" + w.getTextContent());
+						if (!spanContent.isEmpty()) spanContent += " ";
+						spanContent += we.getAttribute("ana") + "_";
+						spanContent += we.getAttribute("lemma") + "_";
+						spanContent += w.getTextContent();
+					}
+				}
+				// ref.
+			} else {
+				// not text.
+				spanContent += " " + elt.getTextContent(); // TODO faire mieux						
+			}
+		}
+		return spanContent;
 	}
 
 	public void processSeg(NodeList us) {

@@ -40,7 +40,7 @@ import org.w3c.dom.NodeList;
 
 import fr.ortolang.teicorpo.TeiFile.Div;
 
-public class TeiTreeTagger {
+public class TeiTreeTagger extends GenericMain {
 
 	final static String TT_EXT = "_ttg";
 	// Document TEI à lire
@@ -62,7 +62,7 @@ public class TeiTreeTagger {
 	// resultat
 	boolean ok;
 
-	public TeiTreeTagger(String pInputName, String pOutputName, TierParams optionsTei) {
+	public void init(String pInputName, String pOutputName, TierParams optionsTei) {
 		optionsOutput = optionsTei;
 		inputName = pInputName;
 		outputName = pOutputName;
@@ -158,6 +158,9 @@ public class TeiTreeTagger {
 			}
 		}
 		PrintWriter out = null;
+		/*
+		 * CREATION OF A VRT FILE (one line per word)
+		 */
 		String outputNameTemp = outputName + "_tmp.vrt";
 		try {
 			FileOutputStream of = new FileOutputStream(outputNameTemp);
@@ -191,7 +194,9 @@ public class TeiTreeTagger {
 			}
 		}
 		out.close();
-		// démarrer l'analyse
+		/*
+		 * TRAITEMENT AVEC TREETAGGER : démarrer l'analyse
+		 */
 		String outputNameResults = outputName + "_tmp.conll";
         String[] commande = { getTreeTaggerLocation(), "-token",
         		"-lemma", "-sgml", getTreeTaggerModel(),
@@ -202,7 +207,10 @@ public class TeiTreeTagger {
         	return false;
         }
         ExternalCommand.command(commande, outputNameResults);
-		// récupérer les résultats
+		/*
+		 * Le fichier résultat de TREETAGGER existe
+		 * récupérer les résultats
+		 */
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(outputNameResults), "UTF-8"));
@@ -226,7 +234,8 @@ public class TeiTreeTagger {
 				line = reader.readLine();
 			}
 			if (!lastID.isEmpty())
-				flush(lastID, tu);
+				flush(lastID, tu); // insère la derniere phrase (depuis le dernier id) dans la structure XML teiDoc
+				// voir TaggedUtterance pour le détail de ce format qui sera inséré sous la forme d'un span
 			if (reader != null)
 				reader.close();
 		} catch (FileNotFoundException fnfe) {
@@ -252,7 +261,7 @@ public class TeiTreeTagger {
 		return true;
 	}
 
-	// Création du fichier de sortie
+	// Création du fichier de sortie à partir de teiDoc
 	public void createOutput() {
 		File itest = new File(inputName);
 		File otest = new File(outputName);
@@ -284,6 +293,18 @@ public class TeiTreeTagger {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		System.out.println("Result in " + outputName);
+	}
+
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		System.out.println("Reading " + input);
+		init(input, output, options);
+/*		if (ok) {
+			createOutput();
+			System.out.println("File modified " + output);
+		}
+*/
 	}
 
 	/*
@@ -293,111 +314,10 @@ public class TeiTreeTagger {
 
 	// Programme principal
 	public static void main(String args[]) throws IOException {
-		Utils.printVersionMessage();
-
+		TierParams.printVersionMessage();
 		String usageString = "Description: TeiTreeTagger permet d'appliquer le programme TreeTagger sur un fichier Tei.%nUsage: TeiTreeTagger -c command [-options] <"
 				+ Utils.EXT + ">%n";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usageString, Utils.EXT, Utils.EXT, 0))
-			return;
-		String input = options.input;
-		String output = options.output;
-
-		File f = new File(input);
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans signes
-		// spéciaux(. et .. par ex))
-		input = f.getCanonicalPath();
-
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-				System.err.println("Attention répertoires entrée et sortie identiques");
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-				File fdirout = new File(outputDir);
-				// Permet d'avoir le nom complet du fichier (chemin absolu, sans
-				// signes
-				// spéciaux(. et .. par ex))
-				output = fdirout.getCanonicalPath();
-				if (input.equals(output)) {
-					System.err.println("Attention répertoires entrée et sortie identiques");
-				}
-			}
-			
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			} else {
-				new File(outputDir).mkdir();
-			}
-
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(Utils.EXT))) {
-					String outputFileName;
-					if (options.commands.contains("replace"))
-						outputFileName = name;
-					else
-						outputFileName = Utils.basename(input) + TT_EXT + Utils.EXT;
-					TeiTreeTagger ttt = new TeiTreeTagger(file.getAbsolutePath(), outputDir + outputFileName, options);
-					if (ttt.ok) {
-						System.out.println(outputDir + outputFileName);
-						ttt.createOutput();
-					}
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		}
-
-		else {
-			if (!(Utils.validFileFormat(input, Utils.EXT))) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + Utils.EXT);
-				return;
-			}
-
-			if (output == null) {
-				if (options.commands.contains("replace"))
-					output = input;
-				else
-					output = Utils.basename(input) + TT_EXT + Utils.EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					if (options.commands.contains("replace"))
-						output = output + input;
-					else
-						output = output + Utils.basename(input) + TT_EXT + Utils.EXT;
-				} else {
-					if (options.commands.contains("replace"))
-						output = output + "/" + input;
-					else
-						output = output + "/" + Utils.basename(input) + TT_EXT + Utils.EXT;
-				}
-			}
-
-			System.out.println("Reading " + input);
-			TeiTreeTagger ttt = new TeiTreeTagger(new File(input).getAbsolutePath(), output, options);
-			if (ttt.ok) {
-				ttt.createOutput();
-				System.out.println("File modified " + output);
-			}
-		}
+		TeiTreeTagger ttt = new TeiTreeTagger();
+		ttt.mainCommand(args, Utils.EXT, TT_EXT + Utils.EXT, usageString, 0);
 	}
 }

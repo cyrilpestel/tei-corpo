@@ -1,2 +1,2 @@
-rsync -auv /media/workspace/ortolang/src .
-rsync -auv /media/workspace/ortolang/test .
+rsync -auv /projets/workspace/ortolang/src .
+rsync -auv /projets/workspace/ortolang/test .

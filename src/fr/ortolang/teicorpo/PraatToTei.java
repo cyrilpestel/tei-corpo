@@ -19,42 +19,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * local temporary structures description of relation between tiers
- */
-class DescTier {
-	String tier;
-	String type;
-	String parent;
-
-	public String toString() {
-		String s = "Tier: " + tier + " type(" + type + ") parent(" + parent + ")";
-		return s;
-	}
-	// DescTier() { tier=null; type=null; parent=null; };
-
-	/**
-	 * check and return type value
-	 */
-	static String whichType(String t) {
-		if (t.equals("-"))
-			return LgqType.ROOT;
-		if (t.equals("assoc"))
-			return LgqType.SYMB_ASSOC;
-		if (t.equals("incl"))
-			return LgqType.INCLUDED;
-		if (t.equals("symbdiv"))
-			return LgqType.SYMB_DIV;
-		if (t.equals("timediv"))
-			return LgqType.TIME_DIV;
-		if (t.equals("point"))
-			return LgqType.POINT;
-		if (t.equals("timeint"))
-			return LgqType.TIME_INT;
-		return null;
-	}
-}
-
-/**
  * A class to extract annotations from a Praat .TextGrid file. Only
  * "IntervalTier"s and "TextTier"s are supported. The expected format is roughly
  * like below, but the format is only loosely checked.
@@ -68,7 +32,7 @@ class DescTier {
  * @version Feb 2013 the short notation format (roughly the same lines without
  *          the keys and the indentation) is now also supported
  */
-public class PraatToTei {
+public class PraatToTei extends GenericMain {
 	static String EXT = ".textgrid";
 
 	private final char brack = '[';
@@ -91,6 +55,7 @@ public class PraatToTei {
 
 	private boolean includeTextTiers = false;
 	private String encoding;
+	private boolean verbose = false;
 
 	private File gridFile;
 	private Map<String, String> tierNames;
@@ -119,8 +84,8 @@ public class PraatToTei {
 	 * @throws IOException
 	 *             if the file can not be read, for whatever reason
 	 */
-	public PraatToTei(String fileName) throws IOException {
-		this(fileName, false, 1);
+	public void init(String fileName) throws IOException {
+		init(fileName, false, 1);
 	}
 
 	/**
@@ -136,7 +101,7 @@ public class PraatToTei {
 	 * @throws IOException
 	 *             if the file can not be read, for whatever reason
 	 */
-	public PraatToTei(String fileName, boolean includeTextTiers, int pointDuration) throws IOException {
+	public void init(String fileName, boolean includeTextTiers, int pointDuration) throws IOException {
 		if (fileName != null) {
 			gridFile = new File(fileName);
 		}
@@ -159,7 +124,7 @@ public class PraatToTei {
 	 * @throws IOException
 	 *             if the file can not be read, for whatever reason
 	 */
-	public PraatToTei(String fileName, boolean includeTextTiers, int pointDuration, String encoding)
+	public void init(String fileName, boolean includeTextTiers, int pointDuration, String encoding)
 			throws IOException {
 		if (fileName != null) {
 			gridFile = new File(fileName);
@@ -179,8 +144,8 @@ public class PraatToTei {
 	 * @throws IOException
 	 *             if the file can not be read, for whatever reason
 	 */
-	public PraatToTei(File gridFile) throws IOException {
-		this(gridFile, false, 1);
+	public void init(File gridFile) throws IOException {
+		init(gridFile, false, 1);
 	}
 
 	/**
@@ -196,8 +161,8 @@ public class PraatToTei {
 	 * @throws IOException
 	 *             if the file can not be read, for whatever reason
 	 */
-	public PraatToTei(File gridFile, boolean includeTextTiers, int pointDuration) throws IOException {
-		this(gridFile, includeTextTiers, pointDuration, null);
+	public void init(File gridFile, boolean includeTextTiers, int pointDuration) throws IOException {
+		init(gridFile, includeTextTiers, pointDuration, null);
 	}
 
 	/**
@@ -215,7 +180,7 @@ public class PraatToTei {
 	 * @throws IOException
 	 *             if the file can not be read, for whatever reason
 	 */
-	public PraatToTei(File gridFile, boolean includeTextTiers, int pointDuration, String encoding) throws IOException {
+	public void init(File gridFile, boolean includeTextTiers, int pointDuration, String encoding) throws IOException {
 		this.gridFile = gridFile;
 
 		this.includeTextTiers = includeTextTiers;
@@ -309,6 +274,9 @@ public class PraatToTei {
 		BufferedReader reader = null;
 
 		try {
+			if (encoding == null)
+				encoding = EncodingDetector.detect(gridFile.getAbsolutePath());
+			if (verbose) System.out.println("Read encoding: " + encoding);
 			if (encoding == null) {
 				reader = new BufferedReader(new InputStreamReader(new FileInputStream(gridFile)));
 			} else {
@@ -319,18 +287,9 @@ public class PraatToTei {
 					reader = new BufferedReader(new InputStreamReader(new FileInputStream(gridFile)));
 				}
 			}
-			// Praat files on Windows and Linux are created with encoding
-			// "Cp1252"
-			// on Mac with encoding "MacRoman". The ui could/should be extended
-			// with an option to specify the encoding
-			// InputStreamReader isr = new InputStreamReader(
-			// new FileInputStream(gridFile));
-			// System.out.println("Encoding: " + isr.getEncoding());
-			// System.out.println("Read encoding: " + encoding);
-			System.out.println("Read encoding: " + encoding);
 
 			boolean isShortNotation = isShortNotation(reader);
-			System.out.println("Praat TextGrid is in short notation: " + isShortNotation);
+			if (verbose) System.out.println("Praat TextGrid is in short notation: " + isShortNotation);
 
 			if (isShortNotation) {
 				parseShortNotation(reader);
@@ -393,7 +352,7 @@ public class PraatToTei {
 							if (!annotationMap.containsKey(tierName)) {
 								annotationMap.put(tierName, records);
 								tierNames.put(tierName, "TextTier");
-								System.out.println("Point Tier detected: " + tierName);
+								if (verbose) System.out.println("Point Tier detected: " + tierName);
 							} else {
 								// the same (sometimes empty) tiername can occur
 								// more than once, rename
@@ -404,7 +363,7 @@ public class PraatToTei {
 									if (!annotationMap.containsKey(nextName)) {
 										annotationMap.put(nextName, records);
 										tierNames.put(nextName, "TextTier");
-										System.out.println(
+										if (verbose) System.out.println(
 												"Point Tier detected: " + tierName + " and renamed to: " + nextName);
 										break;
 									}
@@ -454,7 +413,7 @@ public class PraatToTei {
 							if (!annotationMap.containsKey(tierName)) {
 								annotationMap.put(tierName, records);
 								tierNames.put(tierName, "IntervalTier");
-								System.out.println("Tier detected: " + tierName);
+								if (verbose) System.out.println("Tier detected: " + tierName);
 							} else {
 								// the same (sometimes empty) tiername can occur
 								// more than once, rename
@@ -465,7 +424,7 @@ public class PraatToTei {
 									if (!annotationMap.containsKey(nextName)) {
 										annotationMap.put(nextName, records);
 										tierNames.put(nextName, "IntervalTier");
-										System.out
+										if (verbose) System.out
 												.println("Tier detected: " + tierName + " and renamed to: " + nextName);
 										break;
 									}
@@ -596,10 +555,10 @@ public class PraatToTei {
 						annotationMap.put(tierName, records);
 						if (inTextTier) {
 							tierNames.put(tierName, "TextTier");
-							System.out.println("Point Tier detected: " + tierName);
+							if (verbose) System.out.println("Point Tier detected: " + tierName);
 						} else {
 							tierNames.put(tierName, "IntervalTier");
-							System.out.println("Interval Tier detected: " + tierName);
+							if (verbose) System.out.println("Interval Tier detected: " + tierName);
 						}
 					} else {
 						// the same (sometimes empty) tiername can occur more
@@ -612,11 +571,11 @@ public class PraatToTei {
 								annotationMap.put(nextName, records);
 								if (inTextTier) {
 									tierNames.put(nextName, "TextTier");
-									System.out.println(
+									if (verbose) System.out.println(
 											"Point Tier detected: " + tierName + " and renamed to: " + nextName);
 								} else {
 									tierNames.put(nextName, "IntervalTier");
-									System.out.println(
+									if (verbose) System.out.println(
 											"Interval Tier detected: " + tierName + " and renamed to: " + nextName);
 								}
 								break;
@@ -832,7 +791,7 @@ public class PraatToTei {
 		}
 	}
 
-	public static void displayAnnnotations(PraatToTei ptg) {
+	public void displayAnnnotations(PraatToTei ptg) {
 		/*
 		 * display annotations (for debugging purposes)
 		 */
@@ -847,8 +806,7 @@ public class PraatToTei {
 		}
 	}
 
-	public static boolean convertFromPraatToTei(String inputfile, String outputfile, String encoding,
-			ArrayList<DescTier> ldt, String mediaName) {
+	public boolean convertFromPraatToTei(String inputfile, String outputfile, String encoding, ArrayList<DescTier> ldt, String mediaName) {
 		try {
 			/*
 			 * try to find a param file
@@ -857,17 +815,17 @@ public class PraatToTei {
 			File fnb = new File(bn + ".paramtei");
 			if (fnb.exists()) {
 				if (ldt.size() > 0) {
-					System.out.println("Attention paramètres commande peut-être ignorés pour " + inputfile);
+					System.err.println("Attention paramètres commande peut-être ignorés pour " + inputfile);
 				}
-				System.out.println("Utilisation du fichier paramètres " + fnb.toString());
+				if (verbose) System.out.println("Utilisation du fichier paramètres " + fnb.toString());
 				TierParams prs = new TierParams();
 				prs.encoding = encoding;
 				prs.mediaName = mediaName;
-				if (addParams(fnb.toString(), ldt, prs) == false)
+				if (TierParams.getTierParams(fnb.toString(), ldt, prs) == false)
 					System.err.println("Erreur de traitement du fichier paramètres: " + fnb.toString());
 			}
-			PraatToTei ptg = new PraatToTei(inputfile, true, 100, encoding);
-			System.out.println("Fichier " + inputfile + " Encoding: " + (encoding != null ? encoding : "par défaut"));
+			init(inputfile, true, 100, encoding);
+			if (verbose) System.out.println("Fichier " + inputfile + " Encoding: " + (encoding != null ? encoding : "par défaut"));
 			/*
 			 * construire un hierarchic trans
 			 */
@@ -887,8 +845,8 @@ public class PraatToTei {
 				Media m = new Media("", (new File(url)).getAbsolutePath());
 				ht.metaInf.medias.add(m);
 			}
-			System.out.println("TIERS Information");
-			for (Map.Entry<String, String> element : ptg.tierNames.entrySet()) {
+			if (verbose) System.out.println("TIERS Information");
+			for (Map.Entry<String, String> element : tierNames.entrySet()) {
 				TierInfo value = new TierInfo();
 				value.participant = element.getKey();
 				// find if the tier is in the list of constraints
@@ -907,7 +865,7 @@ public class PraatToTei {
 						}
 						value.parent = a.parent;
 						found = true;
-						System.out.println("TIER: " + a.toString());
+						if (verbose) System.out.println("TIER: " + a.toString());
 						break;
 					}
 				}
@@ -916,7 +874,7 @@ public class PraatToTei {
 					value.type.time_align = true;
 					// si element.getValue() == TextTier alors des points sinon
 					// des intervalles
-					System.out.println("TIER: " + element.getKey() + " : ROOT");
+					if (verbose) System.out.println("TIER: " + element.getKey() + " : ROOT");
 				}
 				ht.tiersInfo.put(element.getKey(), value);
 			}
@@ -957,8 +915,9 @@ public class PraatToTei {
 				p.id = tierInfo.getKey();
 				ht.metaInf.participants.add(p);
 			}
-			ht.partionRepresentationToHierachic(ptg.annotationMap);
+			ht.partionRepresentationToHierachic(annotationMap);
 			HT_ToTei hiertransToTei = new HT_ToTei(ht);
+			// System.out.println(outputfile);
 			Utils.setDocumentName(hiertransToTei.docTEI, Utils.lastname(outputfile));
 			Utils.createFile(outputfile, hiertransToTei.docTEI);
 
@@ -970,242 +929,17 @@ public class PraatToTei {
 		return true;
 	}
 
-	public static void usage(boolean stop) {
-		System.err.println("Description: PraatToTei convertit un fichier au format Praaat en un fichier au format TEI");
-		System.err.println("Usage: PraatToTei [-options] <file>" + EXT);
-		System.err.println("         :-i nom du fichier ou repertoire où se trouvent les fichiers Praat à convertir");
-		System.err.println("            (les fichiers ont pour extension " + EXT + ")");
-		System.err.println("         :-o nom du fichier de sortie au format TEI (.xml) ou du repertoire de résultats");
-		System.err.println("            si cette option n'est pas spécifié, le fichier de sortie aura le mÃªme nom");
-		System.err.println("               que le fichier d'entrée, avec l'extension .xml;");
-		System.err.println(
-				"            si on donne un repertoire comme input et que cette option n'est pas spécifiée,");
-		System.err.println("               les résultats seront stockées dans le même dossier que l'entrée.");
-		System.err.println(
-				"         :-p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.");
-		System.err.println("         :-m nom/adresse du fichier média");
-		System.err.println("         :-e encoding (par défaut detect encoding)");
-		System.err.println("         :-d default UTF8 encoding ");
-		System.err.println("         :-t tiername type parent (describe relations between tiers)");
-		System.err.println("             types autorisés: - assoc incl symbdiv timediv");
-		System.err.println("         :-usage ou -help ou -h = affichage de ce message");
-		if (stop) System.exit(1);
-	}
-
 	public static void main(String[] args) throws Exception {
-		Utils.printVersionMessage();
-		submain(args);
+		TierParams.printVersionMessage();
+		String usageString = "Description: PraatToTei convertit un fichier Praat vers un fichier TEI%n";
+		PraatToTei ptt = new PraatToTei();
+		ptt.mainCommand(args, EXT, Utils.EXT, usageString, 5);
 	}
 
-	public static void submain(String[] args) throws Exception {
-		String input = null;
-		String output = null;
-		TierParams prs = new TierParams();
-		boolean stop = true;
-
-		ArrayList<DescTier> ldt = new ArrayList<DescTier>();
-		// parcours des arguments
-		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument.\n");
-			usage(stop);
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						input = args[i];
-					} else if (args[i].equals("-o")) {
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						output = args[i];
-					} else if (args[i].equals("-p")) {
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						if (addParams(args[i], ldt, prs) == false)
-							usage(stop);
-					} else if (args[i].equals("--pure")) {
-						Utils.teiStylePure = true;
-					} else if (args[i].equals("-m")) {
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						prs.mediaName = args[i];
-					} else if (args[i].equals("-e")) {
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						prs.encoding = args[i];
-						prs.detectEncoding = false;
-					} else if (args[i].equals("-t")) {
-						DescTier d = new DescTier();
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						d.tier = args[i];
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						d.type = args[i];
-						if (DescTier.whichType(args[i]) == null) {
-							usage(stop);
-							System.exit(1);
-						}
-						i++;
-						if (i >= args.length)
-							usage(stop);
-						d.parent = args[i];
-						ldt.add(d);
-					} else if (args[i].equals("-d")) {
-						prs.detectEncoding = false;
-						prs.encoding = "UTF-8";
-					} else if (args[i].equals("--verbose")) {
-						prs.verbose = true;
-					} else if (args[i].equals("--strict")) {
-						prs.strict = true;
-					} else if (args[i].equals("-x")) {
-						stop = false;
-					} else if (args[i].equals("-h") || args[i].equals("-help") || args[i].equals("-usage")) {
-						usage(stop);
-						System.exit(1);
-					} else {
-						System.out.println("Option inconnue: " + args[i]);
-						System.exit(1);
-					}
-				} catch (Exception e) {
-					usage(stop);
-				}
-			}
-		}
-
-		File f = new File(input);
-
-		input = f.getCanonicalPath();
-
-		if (f.isDirectory()) {
-			File[] files = f.listFiles();
-
-			if (output == null) {
-				if (input.endsWith("/")) {
-					output = input.substring(0, input.length() - 1);
-				} else {
-					output = input;
-				}
-			}
-
-			File outFile = new File(output);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					usage(stop);
-					System.exit(1);
-				}
-			}
-
-			if (!output.endsWith("/")) {
-				output += "/";
-			}
-			new File(output).mkdir();
-
-			for (File file : files) {
-				if (file.getName().toLowerCase().endsWith(Utils.EXT_PUBLISH + EXT)) {
-					System.out.printf("-- ignoré: %s%n", file.getName());
-				} else if (file.getName().toLowerCase().endsWith(EXT)) {
-					// System.out.printf("XX: %s%n", file.getName());
-					String outputFileName = Utils.basename(file) + Utils.EXT;
-					System.out.println(output + outputFileName);
-					if (prs.detectEncoding) {
-						prs.encoding = EncodingDetector.detect(file.getAbsolutePath());
-						if (prs.encoding == null) {
-							System.out.println("Could not detect encoding: use UTF-8");
-							prs.encoding = "UTF-8";
-						}
-					}
-					convertFromPraatToTei(file.getAbsolutePath(), output + outputFileName, prs.encoding, ldt,
-							prs.mediaName);
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					submain(args);
-				}
-			}
-		} else {
-			if (output == null) {
-				output = Utils.fullbasename(input) + Utils.EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + Utils.basename(input) + Utils.EXT;
-				} else {
-					output = output + "/" + Utils.basename(input) + Utils.EXT;
-				}
-			}
-
-			if (prs.strict && !(Utils.validFileFormat(input, EXT))) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + EXT);
-				usage(stop);
-			}
-
-			System.out.println("Lecture de " + input);
-			try {
-				if (prs.detectEncoding) {
-					prs.encoding = EncodingDetector.detect(input);
-					if (prs.encoding == null) {
-						System.out.println("Could not detect encoding: use UTF-8");
-						prs.encoding = "UTF-8";
-					}
-				}
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-				// e.printStackTrace();
-				System.exit(1);
-			}
-			convertFromPraatToTei(input, output, prs.encoding, ldt, prs.mediaName);
-			System.out.println("New file TEI created: " + output);
-		}
-	}
-
-	private static boolean addParams(String fn, ArrayList<DescTier> ldt, TierParams pr) {
-		List<String> ls = null;
-		try {
-			ls = Utils.loadTextFile(fn);
-		} catch (IOException e) {
-			System.err.println("Impossible de traiter le fichier: " + fn);
-			return false;
-		}
-		for (int k = 0; k < ls.size(); k++) {
-			String l = ls.get(k);
-			String[] p = l.split("\\s+");
-			if (p.length > 0) {
-				if (p[0].equals("-e") || p[0].equals("e")) {
-					if (p.length > 1) {
-						pr.encoding = p[1];
-						pr.detectEncoding = false;
-					}
-				} else if (p[0].equals("-d") || p[0].equals("d")) {
-					pr.detectEncoding = false;
-					pr.encoding = "UTF-8";
-				} else if (p[0].equals("-m") || p[0].equals("m")) {
-					if (p.length > 1) {
-						pr.mediaName = p[1];
-					}
-				} else if (p[0].equals("-t") || p[0].equals("t")) {
-					DescTier d = new DescTier();
-					if (p.length < 4)
-						usage(false);
-					d.tier = p[1];
-					d.type = p[2];
-					d.parent = p[3];
-					ldt.add(d);
-				} else {
-					System.out.println("Format inconnu dans le fichier paramètre: " + fn);
-					return false;
-				}
-			}
-		}
-		return true;
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		verbose = options.verbose;
+		convertFromPraatToTei(input, output, options.encoding, options.ldt, options.mediaName);
+//		System.out.println("New file TEI created: " + output);
 	}
 }

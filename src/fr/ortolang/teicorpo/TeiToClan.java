@@ -38,8 +38,8 @@ public class TeiToClan extends TeiConverter {
 	 *            Nom du fichier de sortie (fichier Chat, a donc l'extenson
 	 *            .cha)
 	 */
-	public TeiToClan(String inputName, String outputName, TierParams optionsTei) {
-		super(inputName, outputName, optionsTei);
+	public void transform(String inputName, String outputName, TierParams optionsTei) {
+		init(inputName, outputName, optionsTei);
 		if (this.tf == null) return;
 		outputWriter();
 		conversion();
@@ -381,7 +381,7 @@ public class TeiToClan extends TeiConverter {
 	 */
 	public void writeTier(Annot tier) {
 		String type = tier.name;
-		String tierContent = tier.content;
+		String tierContent = tier.getContent();
 		String tierLine = "%" + type + ":\t" + tierContent.replaceAll("\\s+", " ").trim();
 		out.println(tierLine);
 	}
@@ -476,152 +476,20 @@ public class TeiToClan extends TeiConverter {
 	}
 
 	public static void main(String args[]) throws IOException {
-		Utils.printVersionMessage();
-
+		TierParams.printVersionMessage();
 		String usageString = "Description: TeiToClan convertit un fichier au format TEI en un fichier au format Clan/Chat%nUsage: TeiToClan [-options] <file."
 				+ Utils.EXT + ">%n";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usageString, Utils.EXT, EXT, 0))
-			return;
-		String input = options.input;
-		String output = options.output;
-
-		File f = new File(input);
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans
-		// raccourcis spéciaux)
-		input = f.getCanonicalPath();
-
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-			}
-
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			} else {
-				new File(outputDir).mkdir();
-			}
-
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(Utils.EXT))) {
-					String outputFileName = Utils.basename(file.getName()) + EXT;
-					TeiToClan ttc = new TeiToClan(file.getAbsolutePath(), outputDir + outputFileName, options);
-					System.out.println(outputDir + outputFileName);
-					ttc.createOutput();
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		} else {
-			if (output == null) {
-				output = Utils.basename(input) + EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + Utils.basename(input) + EXT;
-				} else {
-					output = output + "/" + Utils.basename(input) + EXT;
-				}
-			}
-
-			if (!Utils.validFileFormat(output, EXT)) {
-				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .cha ");
-			}
-			TeiToClan ttc = new TeiToClan(new File(input).getAbsolutePath(), output, options);
-			if (ttc.tf != null) {
-				System.out.println("Reading " + input);
-				ttc.createOutput();
-				System.out.println("New file created " + output);
-			}
-		}
+		TeiToClan ttc = new TeiToClan();
+		ttc.mainCommand(args, Utils.EXT, EXT, usageString, 0);
 	}
 
-	public static void process(TierParams tp) {
-		TeiToClan ttc = new TeiToClan(new File(tp.input).getAbsolutePath(), tp.output, tp);
-		if (ttc.tf != null) {
-			ttc.createOutput();
-		} else {
-			System.err.printf("Erreur sur %s%n", tp.input);
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		transform(new File(input).getAbsolutePath(), output, options);
+		if (tf != null) {
+//			System.out.println("Reading " + input);
+			createOutput();
+//			System.out.println("New file created " + output);
 		}
 	}
 }
-
-/**
- * Ecriture des utterances
- * 
- * @param u
- *            L'utterance à écrire
-public void writeUtterance(AnnotatedUtterance u) {
-	String speech;
-	 // Chaque utterance a une liste d'énoncé, dans un format spécifique:
-	 // start;end__speech
-	for (int s=0; s<u.speeches.size(); s++) {
-//		System.out.printf("u.speeches: [%s]%n", u.speeches.get(s).toString());
-		String start = null;
-		String end = null;
-		speech = toChatLine(u.speeches.get(s).content).trim();
-		speech = speech.replaceAll("\n", "");
-		start = u.speeches.get(s).start;
-		end = u.speeches.get(s).end;
-
-		// Si le temps de début n'est pas renseigné, on prend le temps de
-		// fin de l'énoncé précédent(si présent)
-		if (!Utils.isNotEmptyOrNull(start)) {
-			if (s<1)
-				start = "";
-			else
-				start = u.speeches.get(s-1).end;
-		}
-
-		// Si le temps de fin n'est pas renseigné, on prend le temps de
-		// début de l'énoncé suivant(si présent)
-		if (!Utils.isNotEmptyOrNull(end)) {
-			if (s < u.speeches.size()-1)
-				end = u.speeches.get(s+1).start;
-			else
-				end = "";
-		}
-
-		// Si l'énoncé est le premier de la liste de l'utterance, son temps
-		// de début est égal au temps de début de l'utterance
-		if (s == 0 && !Utils.isNotEmptyOrNull(start)) {
-			start = u.start;
-		}
-
-		// Si l'énoncé est le dernier de la liste de l'utterance, son temps
-		// de fin est égal au temps de fin de l'utterance
-		if (s == u.speeches.size()-1 && !Utils.isNotEmptyOrNull(end)) {
-			end = u.end;
-		}
-
-		// Ecriture de l'énoncé
-//		writeSpeech(u.speakerCode, convertSpecialCodes(speech), start, end, optionsOutput.forceEmpty);
-		writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
-	}
-	// écriture des tiers
-	for (Annot tier : u.tiers) {
-		writeTier(tier);
-	}
-	writeAddInfo(u);
-}
-*/

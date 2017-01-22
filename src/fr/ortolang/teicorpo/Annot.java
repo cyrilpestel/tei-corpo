@@ -8,11 +8,23 @@ public class Annot {
 	String start;
 	String end;
 	ArrayList<Annot> dependantAnnotations;
-	String content;
+	private String content;
 	String link;
 	String previous;
 	String timereftype; // time ou ref
-	String cleanedContent; // the content without oral markers
+	private String cleanedContent = null; // the content without oral markers
+	
+	public String getContent(boolean style) {
+		return (style == true && cleanedContent != null) ? cleanedContent : content;
+	}
+
+	public String getContent() {
+		return getContent(false);
+	}
+
+	public void setContent(String str) {
+		content = str;
+	}
 
 	public Annot() {
 		id = "";

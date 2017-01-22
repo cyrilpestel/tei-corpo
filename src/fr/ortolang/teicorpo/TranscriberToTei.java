@@ -22,7 +22,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class TranscriberToTei {
+public class TranscriberToTei extends GenericMain {
 
 	// ***Variables statiques
 
@@ -51,8 +51,8 @@ public class TranscriberToTei {
 	// Element timeline;
 	/** Liste des types de tiers présents dans le corpus */
 	HashSet<String> tiersNames;
-	ArrayList<String> times = new ArrayList<String>();
-	ArrayList<Element> timeElements = new ArrayList<Element>();
+	ArrayList<String> times;
+	ArrayList<Element> timeElements;
 	Double maxTime = 0.0;
 
 	/**
@@ -61,10 +61,12 @@ public class TranscriberToTei {
 	 * @param inputFile
 	 *            : fichier à convertir, au format Transcriber
 	 */
-	public TranscriberToTei(File inputFile, boolean valid) {
+	public void transform(File inputFile, boolean valid) {
 
 		utteranceId = 0;
 		whenId = 0;
+		times = new ArrayList<String>();
+		timeElements = new ArrayList<Element>();
 		tiersNames = new HashSet<String>();
 		this.inputTRS = inputFile;
 
@@ -267,7 +269,7 @@ public class TranscriberToTei {
 			String sameMedia = this.inputTRS.getName();
 			sameMedia = sameMedia.substring(0, sameMedia.length() - 3) + "wav";
 			media.setAttribute("url", /* this.inputTRS.getParent() + "/" + */ sameMedia);
-			media.setAttribute("mimeType", Utils.findMediaType(sameMedia));
+			media.setAttribute("mimeType", Utils.findMimeType(sameMedia));
 			// utiliser ? attValue
 		} else if (attName == "elapsed_time") {
 			recording.setAttribute("dur", attValue);
@@ -1028,29 +1030,6 @@ public class TranscriberToTei {
 	}
 
 	/**
-	 * Affiche la description et l'usage du programme principal.
-	 */
-	public static void usage() {
-		System.err.println(
-				"Description: TranscriberToTei convertit un fichier au format Transcriber en un fichier au format TEI");
-		System.err.println("Usage: TranscriberToTei [-options] <file.trs>");
-		System.err.println("	:-i nom du fichier ou repertoire où se trouvent les fichiers Transcriber à convertir.");
-		System.err.println("		Les fichiers Transcriber ont pour extension .trs ou .trs.xml");
-		System.err.println("	:-o nom du fichier ou repertoire des résultats au format TEI (" + Utils.EXT + ")");
-		System.err.println(
-				"		si cette option n'est pas spécifiée, le fichier de sortie aura le même nom que le fichier d'entrée, avec l'extension"
-						+ Utils.EXT);
-		System.err.println("		ou les résultats seont stockés dans le même dossier que le dossier d'entrée.\"");
-		System.err.println(
-				"	 :--dtd cette option permet de vérifier que les fichiers Transcriber sont conformes à leur dtd");
-		System.err.println(
-				"		si cette option est spécifiée, la dtd (Trans-14.dtd) doit se trouver dans le même repertoire que le fichier Transcriber\n"
-						+ "\t\tTéléchargement de la DTD de Transcriber : http://sourceforge.net/p/trans/git/ci/master/tree/etc/trans-14.dtd");
-		System.err.println("	:-usage ou -help = affichage de ce message");
-		System.exit(1);
-	}
-
-	/**
 	 * Programme principal: convertit un fichier au format Transcriber en un
 	 * fichier au format TEI.
 	 * 
@@ -1059,119 +1038,18 @@ public class TranscriberToTei {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws Exception {
-		Utils.printVersionMessage();
-		submain(args);
+		TierParams.printVersionMessage();
+		TranscriberToTei tr = new TranscriberToTei();
+		tr.mainCommand(args, ".trs", Utils.EXT, "Description: TranscriberToTei convertit un fichier au format Transcriber en un fichier au format TEI", 2);
+		// if (!(Utils.validFileFormat(input, ".trs") || Utils.validFileFormat(input, ".trs.xml") || Utils.validFileFormat(input, ".xml"))) {
 	}
 
-	public static void submain(String[] args) throws Exception {
-		boolean dtdValidation = false;
-		String input = null;
-		String output = null;
-		// parcours des arguments
-
-		boolean strict = false;
-		boolean verbose = false;
-		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument.\n");
-			usage();
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						i++;
-						input = args[i];
-					} else if (args[i].equals("-o")) {
-						i++;
-						output = args[i];
-					} else if (args[i].equals("--pure")) {
-						Utils.teiStylePure = true;
-					} else if (args[i].equals("--dtd")) {
-						dtdValidation = true;
-					} else if (args[i].equals("--verbose")) {
-						verbose = true;
-					} else if (args[i].equals("--strict")) {
-						strict = true;
-					} else {
-						usage();
-					}
-				} catch (Exception e) {
-					usage();
-				}
-			}
-		}
-
-		File f = new File(input);
-
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans signes
-		// spéciaux (. et .. particulièrement))
-		input = f.getCanonicalPath();
-
-		if (f.isDirectory()) {
-			File[] trsFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-			}
-
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					usage();
-					System.exit(1);
-				}
-			}
-
-			new File(outputDir).mkdir();
-
-			for (File file : trsFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(".trs") || name.endsWith(".trs.xml"))) {
-					TranscriberToTei tr = new TranscriberToTei(file, dtdValidation);
-					String outputFileName = Utils.basename(file) + Utils.EXT;
-					if (verbose) System.out.println(outputDir + outputFileName);
-					Utils.setDocumentName(tr.docTEI, outputFileName);
-					Utils.createFile(outputDir + outputFileName, tr.docTEI);
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					submain(args);
-				}
-			}
-		}
-
-		else {
-			if (output == null) {
-				output = Utils.fullbasename(input) + Utils.EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + Utils.basename(input) + Utils.EXT;
-				} else {
-					output = output + "/" + Utils.basename(input) + Utils.EXT;
-				}
-			}
-
-			if (strict && !(Utils.validFileFormat(input, ".trs") || Utils.validFileFormat(input, ".trs.xml") || Utils.validFileFormat(input, ".xml"))) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension .trs ou .trs.xml ou .xml");
-				usage();
-			}
-
-			TranscriberToTei tr = new TranscriberToTei(new File(input), dtdValidation);
-			if (verbose) System.out.println("Lecture de " + input);
-			Utils.setDocumentName(tr.docTEI, Utils.lastname(output));
-			Utils.createFile(output, tr.docTEI);
-			if (verbose) System.out.println("New file created " + output);
-		}
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		// System.out.println("Lecture de " + input);
+		transform(new File(input), options.dtdValidation);
+		Utils.setDocumentName(docTEI, Utils.lastname(output));
+		Utils.createFile(output, docTEI);
+		// System.out.println("New file created " + output);
 	}
 }

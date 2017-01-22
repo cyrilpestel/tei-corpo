@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -43,13 +45,13 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.2"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "02/01/2017 15:00";
+	public static String versionSoft = "1.2"; // full version with Elan, Clan, Transcriber and Praat + other tools and TeiCorpo
+	public static String versionDate = "23/01/2017 8:30";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
 	public static boolean teiStylePure = false;
-	
+
 	public static String shortPause = " # ";
 	public static String longPause = " ## ";
 	public static String veryLongPause = " ### ";
@@ -269,6 +271,12 @@ public class Utils {
 		return fn.substring(p+1);
 	}
 
+	public static String pathname(String fn) {
+		int p = fn.lastIndexOf(File.separatorChar);
+		if (p<0) return "";
+		return fn.substring(0, p);
+	}
+
 	public static String basename(String filename) {
 		String bn = lastname(filename);
 		int p = bn.lastIndexOf('.');
@@ -281,6 +289,14 @@ public class Utils {
 	public static String basename(File file) {
 		String filename = file.toString();
 		return basename(filename);
+	}
+
+	public static String extname(String fn) {
+		int p = fn.lastIndexOf('.');
+		if (p >= 0)
+			return fn.substring(p);
+		else
+			return "";
 	}
 
 	public static boolean validFileFormat(String fileName, String extension) {
@@ -403,7 +419,7 @@ public class Utils {
 			return Utils.basename(fn);
 	}
 	
-	public static String findMediaType(String fn) {
+	public static String findMimeType(String fn) {
 		String ext = "";
 		int p = fn.lastIndexOf(".");
 		if (p >= 0) {
@@ -634,277 +650,6 @@ public class Utils {
 			if (reader != null) reader.close();
 		}
 		return ls;
-	}
-
-	public static void printVersionMessage() {
-    	System.out.println("Conversions (version "+ Utils.versionSoft +") " + Utils.versionDate + " Version TEI_CORPO: " + Utils.versionTEI);
-	}
-	
-	public static void printUsageMessage(String mess, String ext1, String ext2, int style) {
-		System.err.printf(mess);
-		System.err.println("	     :-i nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir (les fichiers ont pour extension " + ext1);
-		System.err.println("	     :-o nom du fichier de sortie au format Elan (.eaf) ou du repertoire de résultats");
-		System.err.println("	     	si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension " + ext2);
-		System.err.println("	     	si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockés dans le même dossier que l'entrée.\"");
-		System.err.println("         :-p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.");
-		System.err.println("	     :-n niveau: niveau d'imbrication (1 pour lignes principales)");
-		System.err.println("	     :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
-		System.err.println("	     :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
-		System.err.println("	     :-cleanline : exporte des énoncés sans marqueurs spéficiques de l'oral");
-		System.err.println("	     :-clearchat : remplace les marqueurs + et apostrophes de chat par des marques standard");
-		System.err.println("	     :-raw : exporte le texte sans aucune marqueurs de locuteur ni marqueurs spéficiques de l'oral");
-		System.err.println("	     :-iramuteq : headers for iramuteq");
-		if (style == 2)
-			System.err.println("	     :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm ou lexico ou le trameur");
-		if (style == 2)
-			System.err.println("	     :-section : ajoute un indicateur de section en fin de chaque énoncé (pour lexico/le trameur)");
-		System.err.println("	     :-usage ou -help = affichage ce message");
-		// System.exit(1);
-	}
-
-	public static TierParams getTierParams(String fn, TierParams tp) {
-		List<String> ls = null;
-		try {
-			ls = loadTextFile(fn);
-		} catch (IOException e) {
-			System.err.println("Impossible de traiter le fichier: " + fn);
-			return null;
-		}
-		for (int k=0; k<ls.size(); k++) {
-			String l = ls.get(k);
-			String[] p = l.split("\\s+");
-			if (p.length > 0) {
-				if (p[0].equals("-n") || p[0].equals("n")) {
-					if (p.length < 2) {
-						System.out.println("Mauvaise ligne [" + l + "] dans le fichier paramètre: " + fn);
-						return null;
-					}
-					tp.setLevel(Integer.parseInt(p[1]));
-				} else if (p[0].equals("-s") || p[0].equals("s")) {
-					if (p.length < 2) {
-						System.out.println("Mauvaise ligne [" + l + "] dans le fichier paramètre: " + fn);
-						return null;
-					}
-					tp.addDontDisplay(p[1]);
-				} else if (p[0].equals("-a") || p[0].equals("a")) {
-					if (p.length < 2) {
-						System.out.println("Mauvaise ligne [" + l + "] dans le fichier paramètre: " + fn);
-						return null;
-					}
-					tp.addDoDisplay(p[1]);
-				} else {
-					System.out.println("Format inconnu dans le fichier paramètre: " + fn);
-					return null;
-				}
-			}
-		}
-		return tp;
-	}
-
-	public static boolean processArgs(String[] args, TierParams options, String usage, String ext1, String ext2, int style) {
-		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument\n");
-			Utils.printUsageMessage(usage, ext1, ext2, style);
-			return false;
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-o")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-to")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-from")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-n")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-a")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-s")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-c")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-f")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-tv")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-p")) {
-						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						Utils.getTierParams(args[i], options);
-					} else {
-						continue;
-					}
-				} catch (Exception e) {
-					Utils.printUsageMessage(usage, ext1, ext2, style);
-					return false;
-				}
-			}
-			for (int i = 0; i < args.length; i++) {
-				try {
-					if (args[i].equals("-i")) {
-						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.input = args[i];
-					} else if (args[i].equals("-o")) {
-						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.output = args[i];
-					} else if (args[i].equals("-to")) {
-						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.outputFormat = args[i];
-					} else if (args[i].equals("-from")) {
-						if (i+1 >= args.length) {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.inputFormat = args[i];
-					} else if (args[i].equals("-n")) {
-						if (i+1 >= args.length) {
-							System.err.println("le parametre -n n'est pas suivi d'une valeur");
-							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						try {
-							options.setLevel(Integer.parseInt(args[i]));
-						} catch(Exception e) {
-							System.err.println("Le paramètre -c n'est pas suivi d'un entier.");
-							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-					} else if (args[i].equals("-c")) {
-						if (i+1 >= args.length) {
-							System.err.println("le parametre -a n'est pas suivi d'une valeur");
-							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.addCommand(args[i]);
-					} else if (args[i].equals("-a")) {
-						if (i+1 >= args.length) {
-							System.err.println("le parametre -a n'est pas suivi d'une valeur");
-							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.addDoDisplay(args[i]);
-					} else if (args[i].equals("-s")) {
-						if (i+1 >= args.length) {
-							System.err.println("le parametre -s n'est pas suivi d'une valeur");
-							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.addDontDisplay(args[i]);
-					} else if (args[i].equals("-tv")) {
-						if (i+1 >= args.length) {
-							System.err.println("le parametre -tv n'est pas suivi d'une valeur");
-							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						options.addTv(args[i]);
-					} else if (args[i].equals("-f")) {
-						if (i+1 >= args.length) {
-							System.err.println("le parametre -f n'est pas suivi d'une valeur");
-							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-						i++;
-						if (args[i].equals("mor")) {
-							options.options = "mor";
-						} else if (args[i].equals("xmor")) {
-							options.options = "xmor";
-						} else if (args[i].equals("morext")) {
-							options.options = "morext";
-						} else if (args[i].equals("xmorext")) {
-							options.options = "xmorext";
-						} else {
-							Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
-						}
-					} else if (args[i].equals("-p")) {
-						i++;
-						continue;
-					} else if (args[i].equals("-stdevent")) {
-						leftBracket = "<"; // 27EA - "❮"; // "⟨" 27E8 - "❬" 
-						rightBracket = ">"; // 27EB - "❯"; // "⟩" 27E9 - "❭" - 276C à 2771 ❬ ❭ ❮ ❯ ❰ ❱ 
-						leftEvent = "[=! "; // 27E6 - "『"; // 300E - "⌈"; // u2308 
-						rightEvent = "]"; // 27E7 - "』"; // 300F - "⌋"; // u230b
-						leftParent = "[% "; // 2045 // "⁘"; // 2058 // "⁑" // 2051
-						rightParent = "]"; // 2046 // "⁘"; // 2058
-						leftCode = "[% "; // 231C - "⁌"; // 204C
-						rightCode = "]"; // 231F - "⁍"; // 204D
-						continue;
-					} else if (args[i].equals("-cleanline")) {
-						options.cleanLine = true;
-						continue;
-					} else if (args[i].equals("-nospreadtime")) {
-						options.nospreadtime = true;
-						continue;
-					} else if (args[i].equals("-pure")) {
-						Utils.teiStylePure = true;
-						continue;
-					} else if (args[i].equals("-clearchat")) {
-						options.clearChatFormat = true;
-						continue;
-					} else if (args[i].equals("-noheader")) {
-						options.noHeader = true;
-						continue;
-					} else if (args[i].equals("-raw")) {
-						options.raw = true;
-						continue;
-					} else if (args[i].equals("-concat")) {
-						options.concat = true;
-						continue;
-					} else if (args[i].equals("-iramuteq")) {
-						options.iramuteq = true;
-						options.raw = true;
-						continue;
-					} else if (args[i].equals("-section")) {
-						options.sectionDisplay = true;
-						continue;
-					} else {
-						Utils.printUsageMessage(usage, ext1, ext2, style);
-						return false;
-					}
-				} catch (Exception e) {
-					Utils.printUsageMessage(usage, ext1, ext2, style);
-					return false;
-				}
-			}
-		}
-		if (options.input == null) {
-			System.out.println("Pas de fichier à traiter");
-			return false;
-		}
-		return true;
 	}
 
 	public static void setAttrAnnotationBlocSupplement(Document docTEI, Element annotatedU, String string,

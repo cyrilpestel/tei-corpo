@@ -39,8 +39,8 @@ public class TeiToSrt extends TeiConverter {
 	 * @param outputName
 	 *            Nom du fichier de sortie (fichier SRT, a donc l'extenson .srt)
 	 */
-	public TeiToSrt(String inputName, String outputName, TierParams optionsTei) {
-		super(inputName, outputName, optionsTei);
+	public void transform(String inputName, String outputName, TierParams optionsTei) {
+		init(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
 		optionsOutput = optionsTei;
@@ -96,7 +96,7 @@ public class TeiToSrt extends TeiConverter {
 		ArrayList<TeiFile.Div> divs = tf.trans.divs;
 		for (Div d : divs) {
 			for (AnnotatedUtterance u : d.utterances) {
-				if (Utils.isNotEmptyOrNull(u.type)) {
+				if (Utils.isNotEmptyOrNull(u.type)) { // head of a div
 					if (!u.start.isEmpty()) {
 						float start = Float.parseFloat(u.start);
 						if (srtNumber > 1)
@@ -109,11 +109,12 @@ public class TeiToSrt extends TeiConverter {
 								TimeDivision.toMinutes(start + 1), TimeDivision.toSeconds(start + 1),
 								TimeDivision.toMilliSeconds(start + 1));
 						String[] splitType = u.type.split("\t");
-						try {
+						if (splitType.length > 1)
 							writeDiv(splitType[0], splitType[1]);
-						} catch (ArrayIndexOutOfBoundsException e) {
+						else if (splitType.length == 1)
 							out.println(splitType[0]);
-						}
+						else
+							out.println("-");
 					}
 				}
 				writeUtterance(u);
@@ -228,7 +229,7 @@ public class TeiToSrt extends TeiConverter {
 		}
 		if (optionsOutput.level <= 1) return;
 		String type = tier.name;
-		String tierContent = tier.content;
+		String tierContent = tier.getContent(optionsOutput.cleanLine);
 		String tierLine = "%" + type + ": " + tierContent.trim();
 		out.println(tierLine);
 	}
@@ -239,82 +240,18 @@ public class TeiToSrt extends TeiConverter {
 	public static void main(String args[]) throws IOException {
 		String usage = "Description: TeiToSrt convertit un fichier au format TEI en un fichier au format Srt%nUsage: TeiToSrt [-options] <file."
 				+ Utils.EXT + ">%n";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, 0))
-			System.exit(1);
-		String input = options.input;
-		String output = options.output;
+		TeiToSrt ttc = new TeiToSrt();
+		ttc.mainCommand(args, Utils.EXT, EXT, usage, 0);
+	}
 
-		File f = new File(input);
-
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans
-		// raccourcis spéciaux)
-		input = f.getCanonicalPath();
-
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-			}
-
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			}
-
-			new File(outputDir).mkdir();
-
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(Utils.EXT))) {
-					String outputFileName = Utils.basename(file.getName()) + EXT;
-					TeiToSrt ttc = new TeiToSrt(file.getAbsolutePath(), outputDir + outputFileName, options);
-					System.out.println(outputDir + outputFileName);
-					ttc.createOutput();
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		} else {
-			if (output == null) {
-				output = Utils.basename(input) + EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + Utils.basename(input) + EXT;
-				} else {
-					output = output + "/" + Utils.basename(input) + EXT;
-				}
-			}
-
-			if (!Utils.validFileFormat(output, EXT)) {
-				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .srt ");
-			}
-			TeiToSrt ttc = new TeiToSrt(new File(input).getAbsolutePath(), output, options);
-			if (ttc.tf != null) {
-				System.out.println("Reading " + input);
-				ttc.createOutput();
-				System.out.println("New file created " + output);
-			}
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		transform(input, output, options);
+		if (tf != null) {
+//			System.out.println("Reading " + input);
+			createOutput();
+//			System.out.println("New file created " + output);
 		}
-
 	}
 
 }

@@ -254,7 +254,7 @@ public class TeiToHtml {
 
 				if(Utils.isNotEmptyOrNull(speech)){
 					if(tf.trans.tierTypes.contains("morpho")){
-						String morpho = u2.getTier("morpho").get(0).content;
+						String morpho = u2.getTier("morpho").get(0).getContent();
 						String [] morphoSplit = morpho.split(" ");
 						String [] speechSplit = speech.split("\\s+|\\-'|\\_");
 						for (String desc : morphoSplit){
@@ -425,7 +425,7 @@ public class TeiToHtml {
 		if(!phons.isEmpty()){
 			for(Annot phon: phons){
 				out.printf("<span class=\"phon\" >%n" );
-				addTierNodes(phon.content);
+				addTierNodes(phon.getContent());
 				out.println("</span>");
 			}
 		}
@@ -435,7 +435,7 @@ public class TeiToHtml {
 		if(!coms.isEmpty()){
 			for(Annot com: coms){
 				out.printf("<span class=\"com\" >%n");
-				addTierNodes(com.content);
+				addTierNodes(com.getContent());
 				out.println("</span>");
 			}
 		}
@@ -445,7 +445,7 @@ public class TeiToHtml {
 		if(!sits.isEmpty()){
 			for(Annot sit: sits){
 				out.printf("<span class=\"sit\" >%n");
-				addTierNodes(sit.content);
+				addTierNodes(sit.getContent());
 				out.println("</span>");
 			}
 		}
@@ -455,7 +455,7 @@ public class TeiToHtml {
 		if(!acts.isEmpty()){
 			for(Annot act: acts){
 				out.printf("<span class=\"act\" >%n");
-				addTierNodes(act.content);
+				addTierNodes(act.getContent());
 				out.println("</span>");
 			}
 		}
@@ -464,7 +464,7 @@ public class TeiToHtml {
 		if(!others.isEmpty()){
 			for(Annot other: others){
 				out.printf("<span class=\"other\" >%n");
-				addTierNodes(other.content);
+				addTierNodes(other.getContent());
 				out.println("</span>");
 			}
 		}
@@ -626,7 +626,7 @@ public class TeiToHtml {
 	public static String tiersToString(ArrayList<String> tiersTypes, AnnotatedUtterance u){
 		String tiersToString = "";
 		for (Annot t : u.tiers){
-			tiersToString += t.name + " " + t.content + "\n";
+			tiersToString += t.name + " " + t.getContent() + "\n";
 		}
 		return tiersToString;
 	}

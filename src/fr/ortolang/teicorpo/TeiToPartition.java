@@ -33,7 +33,7 @@ public class TeiToPartition {
 	XPath teiXPath;
 	public TierParams optionsOutput;
 
-	TeiToPartition(XPath xpath, Document tei, TierParams optionsTei) {
+	void init(XPath xpath, Document tei, TierParams optionsTei) {
 		if (optionsTei == null) optionsTei = new TierParams();
 		optionsOutput = optionsTei;
 		teiDoc = tei;
@@ -88,31 +88,17 @@ public class TeiToPartition {
 			if (!Utils.isNotEmptyOrNull(name))
 				continue; // this is a note and not an utterance
 			if (optionsOutput != null) {
-				if (optionsOutput.isDontDisplay(name))
+				if (optionsOutput.isDontDisplay(name, 1))
 					continue;
-				if (!optionsOutput.isDoDisplay(name))
+				if (!optionsOutput.isDoDisplay(name, 1))
 					continue;
 			}
-//			String start = Utils.refID(annotGrp.getAttribute("start"));
-//			System.err.println("Start1: " + start);
-//			start = timeline.getTimeValue(start);
-//			System.err.println("Start2: " + start);
-//			String end = Utils.refID(annotGrp.getAttribute("end"));
-//			end = timeline.getTimeValue(end);
 			String start = au.start;
 			String end = au.end;
 			String id = au.id;
 			// String timeSG = (start.isEmpty() || end.isEmpty()) ? "ref" : "time"; // ref is impossible on u tags in ELAN
 			// si le nombre d'annotation de au.speeches > 1 il faudrait changer le statut des spans qui en dépendent
 			for (Annot a: au.speeches) {
-				/*
-				Annot annot = new Annot();
-				annot.content = annotElmt.getTextContent().trim();
-				annot.start = start;
-				annot.end = end;
-				annot.id = id;
-				annot.name = name;
-				*/
 				a.timereftype = "time";
 				String lgqt = "";
 				for (TierInfo ti : tierInfos) {
@@ -156,11 +142,12 @@ public class TeiToPartition {
 		if (optionsOutput != null) {
 			if (optionsOutput.level == 1)
 				return;
-			if (optionsOutput.isDontDisplay(typeSG))
+			if (optionsOutput.isDontDisplay(typeSG, 2))
 				return;
-			if (!optionsOutput.isDoDisplay(typeSG))
+			if (!optionsOutput.isDoDisplay(typeSG, 2))
 				return;
 		}
+		//System.err.printf("spanGrpCase %s%n", typeSG);
 		NodeList spans = spanGrp.getChildNodes();
 		String previousId = "";
 		if (spans == null)
@@ -180,7 +167,10 @@ public class TeiToPartition {
 				continue;
 			Element span = (Element) nodespan;
 			Annot annot = new Annot();
-			annot.content = getText(span).trim();
+			/*
+			 * deals with all types of span content.
+			 */
+			annot.setContent(AnnotatedUtterance.processSpan(span).trim());
 			String spid = span.getAttribute("xml:id");
 			if (!spid.isEmpty())
 				annot.id = spid;

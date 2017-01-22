@@ -75,8 +75,8 @@ public class AnonymousVideo extends TeiConverter {
 	 *            Nom du fichier d'entrée (fichier TEI, a donc l'extenstion
 	 *            .tei_corpo.xml)
 	 */
-	public AnonymousVideo(String inputName, String mediaName, String threads, boolean override, boolean debug) {
-		super(inputName, null, null);
+	public void transform(String inputName, String mediaName, String threads, boolean override, boolean debug) {
+		init(inputName, null, null);
 		transcriptFileName = inputName;
 		this.mediaName = mediaName;
 		this.threads = threads;
@@ -303,11 +303,28 @@ public class AnonymousVideo extends TeiConverter {
 			System.err.println(USAGE);
 			return;
 		}
-		AnonymousVideo av = new AnonymousVideo(input, mediaName, threads, override, debug);
+		AnonymousVideo av = new AnonymousVideo();
+		av.transform(input, mediaName, threads, override, debug);
 	}
 
 	@Override
 	public void writeSpeech(String loc, String speechContent, String startTime, String endTime) {
+		// nothing to do: not used for this application
+	}
+
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		// nothing to do: not used for this application
+	}
+
+	@Override
+	public void writeAddInfo(AnnotatedUtterance u) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void writeTier(Annot tier) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -36,8 +36,8 @@ public class TeiToText extends TeiConverter {
 	 * @param outputName
 	 *            Nom du fichier de sortie (fichier SRT, a donc l'extenson .txt)
 	 */
-	public TeiToText(String inputName, String outputName, TierParams optionsTei) {
-		super(inputName, outputName, optionsTei);
+	public void transform(String inputName, String outputName, TierParams optionsTei) {
+		init(inputName, outputName, optionsTei);
 		if (this.tf == null)
 			return;
 		outputWriter();
@@ -98,16 +98,17 @@ public class TeiToText extends TeiConverter {
 		for (Div d : divs) {
 			for (AnnotatedUtterance u : d.utterances) {
 				// u.print();
-				if (Utils.isNotEmptyOrNull(u.type)) {
+				if (Utils.isNotEmptyOrNull(u.type)) { // gead of a div
 					if (!u.start.isEmpty() && tf.optionsOutput.raw != true && tf.optionsOutput.level != 1) {
 						float start = Float.parseFloat(u.start);
 						out.printf("%f:%f\t", start, start+1);
 						String[] splitType = u.type.split("\t");
-						try {
+						if (splitType.length > 1)
 							writeDiv(splitType[0], splitType[1]);
-						} catch (ArrayIndexOutOfBoundsException e) {
+						else if (splitType.length == 1)
 							out.println(splitType[0]);
-						}
+						else
+							out.println("-");
 					}
 				}
 				writeUtterance(u);
@@ -142,14 +143,14 @@ public class TeiToText extends TeiConverter {
 	 *            Temps de fin de l'énoncé
 	 */
 	public void writeSpeech(String loc, String speechContent, String startTime, String endTime) {
+		/* already done in AnnotatedUtterance
 		if (optionsOutput != null) {
-			if (optionsOutput.isDontDisplay(loc))
+			if (optionsOutput.isDontDisplay(loc, 1))
 				return;
-			if (!optionsOutput.isDoDisplay(loc))
+			if (!optionsOutput.isDoDisplay(loc, 1))
 				return;
 		}
-		// System.out.println(loc + ' ' + startTime + ' ' + endTime +' ' +
-		// speechContent);
+		*/
 		// Si le temps de début n'est pas renseigné, on mettra par défaut le
 		// temps de fin (s'il est renseigné) moins une seconde.
 		if (!Utils.isNotEmptyOrNull(startTime)) {
@@ -167,6 +168,11 @@ public class TeiToText extends TeiConverter {
 			}
 		}
 
+		if (tf.optionsOutput.iramuteq == true) {
+			out.printf("-*%s%n", loc);
+		} else if (tf.optionsOutput.locutor == true) {
+			out.printf("-%s: ", loc);
+		}
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
 		if (tf.optionsOutput.raw == true)
@@ -190,9 +196,9 @@ public class TeiToText extends TeiConverter {
 	 */
 	public void writeAddInfo(AnnotatedUtterance u) {
 		if (optionsOutput != null) {
-			if (optionsOutput.isDontDisplay("com"))
+			if (optionsOutput.isDontDisplay("com", 1))
 				return;
-			if (!optionsOutput.isDoDisplay("com"))
+			if (!optionsOutput.isDoDisplay("com", 1))
 				return;
 		}
 		if (optionsOutput.raw == true || optionsOutput.noHeader == true) return;
@@ -210,148 +216,47 @@ public class TeiToText extends TeiConverter {
 	 * @param tier
 	 *            Le tier à écrire, au format : Nom du tier \t Contenu du tier
 	 */
+	@Override
 	public void writeTier(Annot tier) {
+		/* already done in AnnotatedUtterance
 		if (optionsOutput != null) {
-			if (optionsOutput.isDontDisplay(tier.name))
+			if (optionsOutput.isDontDisplay(tier.name, 2))
 				return;
-			if (!optionsOutput.isDoDisplay(tier.name))
+			if (!optionsOutput.isDoDisplay(tier.name, 2))
 				return;
 		}
+		*/
+		//System.out.printf("level=%d%n", optionsOutput.level);
 		if (optionsOutput.level == 1) return;
 		if (tf.optionsOutput.raw == true)
-			out.println(tier.content.trim());
+			out.println(tier.getContent().trim());
 		else {
 			String type = tier.name;
-			String tierContent = tier.content;
+			String tierContent = tier.getContent();
 			String tierLine = "\t\t\t%" + type + "\t" + tierContent.trim();
 			out.println(tierLine);
 		}
 	}
 
+	@Override
 	public void createOutput() {
 	}
 
 	public static void main(String args[]) throws IOException {
 		String usage = "Description: TeiToText convertit un fichier au format TEI en un fichier au format Text (txt)%nUsage: TeiToText [-options] <file."
 				+ Utils.EXT + ">%n";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, 0))
-			System.exit(1);
-		if (options.raw) options.cleanLine = true;
-		String input = options.input;
-		String output = options.output;
+		TeiToText ttc = new TeiToText();
+		ttc.mainCommand(args, Utils.EXT, EXT, usage, 2);
+	}
 
-		File f = new File(input);
-
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans
-		// raccourcis spéciaux)
-		input = f.getCanonicalPath();
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			if (options.concat == true) {
-				// pour l'option concat il faut avoir un vrai nom de fichier output
-				if (output == null) {
-					for (File file : teiFiles) {
-						String name = file.getName();
-						if (file.isFile() && (name.endsWith(Utils.EXT))) {
-							output = Utils.fullbasename(file) + ".concat.txt";
-							break;
-						}
-					}
-					if (output == null) {
-						System.err.println("pas de fichiers à traiter: arrêt");
-						return;
-					}
-				}
-				
-				System.out.println("Résultat de la concaténation dans " + output);
-
-				File outFile = new File(output);
-				if (outFile.exists()) {
-					if (outFile.isDirectory()) {
-						System.out.println("\n Erreur :" + output
-								+ " est un répertoire. Avec l'option concat ce doit être un fichier. \n");
-						System.exit(1);
-					}
-					outFile.delete();
-				}
-
-				for (File file : teiFiles) {
-					String name = file.getName();
-					if (file.isFile() && (name.endsWith(Utils.EXT))) {
-						TeiToText ttc = new TeiToText(file.getAbsolutePath(), output, options);
-						System.out.println("Traitement de " + name);
-						ttc.createOutput();
-					} else if (file.isDirectory()) {
-						// impossible to recurse with concat
-						System.err.println("Répertoire " + name + " ignoré en cas d'option -concat");
-					}
-				}
-				return;
-			}
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-			}
-
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			}
-
-			new File(outputDir).mkdir();
-
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(Utils.EXT))) {
-					String outputFileName = Utils.basename(file.getName()) + EXT;
-					TeiToText ttc = new TeiToText(file.getAbsolutePath(), outputDir + outputFileName, options);
-					System.out.println(outputDir + outputFileName);
-					ttc.createOutput();
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		} else {
-			if (output == null) {
-				output = Utils.basename(input) + EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + Utils.basename(input) + EXT;
-				} else {
-					output = output + "/" + Utils.basename(input) + EXT;
-				}
-			}
-
-			if (!Utils.validFileFormat(output, EXT)) {
-				System.err.println("\nLe fichier de sortie du programme doit avoir l'extension .txt ");
-			}
-			TeiToText ttc = new TeiToText(new File(input).getAbsolutePath(), output, options);
-			if (ttc.tf != null) {
-				System.out.println("Reading " + input);
-				ttc.createOutput();
-				System.out.println("New file created " + output);
-			}
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		transform(input, output, options);
+		if (tf != null) {
+//			System.out.println("Reading " + input);
+			createOutput();
+//			System.out.println("New file created " + output);
 		}
-
 	}
 
 }

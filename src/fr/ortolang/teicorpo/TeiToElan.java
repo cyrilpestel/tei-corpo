@@ -35,7 +35,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-public class TeiToElan {
+public class TeiToElan extends GenericMain {
 
 	TeiToPartition ttp = null;
 
@@ -67,7 +67,8 @@ public class TeiToElan {
 
 	// Constructeur à partir du nom du fichier TEI et du nom du fichier de
 	// sortie au format Elan
-	public TeiToElan(String inputName, String outputName, TierParams optionsTei) {
+	public void transform(String inputName, String outputName, TierParams optionsTei) {
+		ttp = new TeiToPartition();
 		if (optionsTei == null) optionsTei = new TierParams();
 		DocumentBuilderFactory factory = null;
 		try {
@@ -104,9 +105,10 @@ public class TeiToElan {
 					return null;
 				}
 			});
-			ttp = new TeiToPartition(xpath, teiDoc, optionsTei);
+			ttp.init(xpath, teiDoc, optionsTei);
 		} catch (Exception e) {
 			e.printStackTrace();
+			return;
 		}
 		this.inputName = inputName;
 		this.outputName = outputName;
@@ -501,6 +503,7 @@ public class TeiToElan {
 				cvref = setTierAtt(tier, type);
 			this.annot_doc.appendChild(tier);
 			for (Annot a : entry.getValue()) {
+//				System.out.println(a.toString());
 				Element annot = elanDoc.createElement("ANNOTATION");
 				if (a.timereftype.equals("time")) {
 					Element align_annot = elanDoc.createElement("ALIGNABLE_ANNOTATION");
@@ -509,13 +512,15 @@ public class TeiToElan {
 					align_annot.setAttribute("TIME_SLOT_REF2", timelineValueOf(a.end));
 					annot.appendChild(align_annot);
 					Element annotationValue = elanDoc.createElement("ANNOTATION_VALUE");
+					/*
 					if (ttp.optionsOutput.cleanLine == true)
 						annotationValue.setTextContent(a.cleanedContent);
 					else
-						annotationValue.setTextContent(a.content);
+					*/
+					annotationValue.setTextContent(a.getContent(ttp.optionsOutput.cleanLine));
 					if (Utils.isNotEmptyOrNull(cvref)) {
 						Map<String, String> cvi = cvs.get(cvref);
-						String cve = cvi.get(a.content);
+						String cve = cvi.get(a.getContent(ttp.optionsOutput.cleanLine));
 						if (Utils.isNotEmptyOrNull(cve))
 							align_annot.setAttribute("CVE_REF", cve);
 					}
@@ -529,10 +534,10 @@ public class TeiToElan {
 						ref_annot.setAttribute("PREVIOUS_ANNOTATION", a.previous);
 					annot.appendChild(ref_annot);
 					Element annotationValue = elanDoc.createElement("ANNOTATION_VALUE");
-					annotationValue.setTextContent(a.content);
+					annotationValue.setTextContent(a.getContent(ttp.optionsOutput.cleanLine));
 					if (Utils.isNotEmptyOrNull(cvref)) {
 						Map<String, String> cvi = cvs.get(cvref);
-						String cve = cvi.get(a.content);
+						String cve = cvi.get(a.getContent(ttp.optionsOutput.cleanLine));
 						if (Utils.isNotEmptyOrNull(cve))
 							ref_annot.setAttribute("CVE_REF", cve);
 					}
@@ -561,77 +566,18 @@ public class TeiToElan {
 	}
 
 	public static void main(String args[]) throws IOException {
-		Utils.printVersionMessage();
-
+		TierParams.printVersionMessage();
 		String usage = "Description: TeiToElan convertit un fichier au format Tei en un fichier au format Elan%nUsage: TeiToElan [-options] <file"
 				+ Utils.EXT + ">%n";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, 0))
-			System.exit(1);
-		String input = options.input;
-		String output = options.output;
+		TeiToElan tte = new TeiToElan();
+		tte.mainCommand(args, Utils.EXT, EXT, usage, 0);
+	}
 
-		File f = new File(input);
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans signes
-		// spéciaux(. et .. par ex))
-		input = f.getCanonicalPath();
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-			}
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			}
-			new File(outputDir).mkdir();
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(Utils.EXT))) {
-					String outputFileName = file.getName().split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-					TeiToElan tte = new TeiToElan(file.getAbsolutePath(), outputDir + outputFileName, options);
-					System.out.println(outputDir + outputFileName);
-					tte.createOutput();
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		} else {
-			if (output == null) {
-				output = input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-				} else {
-					output = output + "/" + input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-				}
-			}
-
-			if (!Utils.validFileFormat(input, Utils.EXT)) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension" + Utils.EXT);
-			}
-			TeiToElan tte = new TeiToElan(new File(input).getAbsolutePath(), output, options);
-			System.out.println("Reading " + input);
-			tte.createOutput();
-			System.out.println("New file created " + output);
-		}
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		transform(input, output, options);
+//		System.out.println("Reading " + input);
+		createOutput();
+//		System.out.println("New file created " + output);
 	}
 }

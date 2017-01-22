@@ -209,7 +209,7 @@ public class HT_ToTei {
 			if (!m.type.isEmpty())
 				media.setAttribute("mimeType", m.type);
 			else
-				media.setAttribute("mimeType", Utils.findMediaType(m.url));
+				media.setAttribute("mimeType", Utils.findMimeType(m.url));
 			recording.appendChild(media);
 		}
 
@@ -527,7 +527,7 @@ public class HT_ToTei {
 				// buildU//
 				Element u = docTEI.createElement("u");
 				Element seg = docTEI.createElement("seg");
-				seg.setTextContent(annot.content);
+				seg.setTextContent(annot.getContent());
 				u.appendChild(seg);
 				annotUEl.appendChild(u);
 				if (Utils.isNotEmptyOrNull(startStr)) {
@@ -578,7 +578,7 @@ public class HT_ToTei {
 						annotType1 = annot.name;
 					}
 					span = docTEI.createElement("span");
-					span.setTextContent(annot.content.trim());
+					span.setTextContent(annot.getContent().trim());
 					// System.out.println(annot.content.trim() + " --- >>> " +
 					// annot.dependantAnnotations );
 					if (Utils.isNotEmptyOrNull(annot.id)) {

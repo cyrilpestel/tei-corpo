@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class TeiConverter {
+public abstract class TeiConverter extends GenericMain {
 
 	// Représentation du fichier teiml à convertir
 	TeiFile tf;
@@ -30,7 +30,7 @@ public abstract class TeiConverter {
 	 * @param outputName
 	 *            Nom du fichier de sortie
 	 */
-	public TeiConverter(String inputName, String outputName, TierParams options) {
+	public void init(String inputName, String outputName, TierParams options) {
 		if (options == null) options = new TierParams();
 		File inputFile = new File(inputName);
 		if (!inputFile.exists()) {
@@ -54,6 +54,10 @@ public abstract class TeiConverter {
 	public abstract void createOutput();
 
 	public abstract void writeSpeech(String loc, String speechContent, String startTime, String endTime);
+
+	public abstract void writeAddInfo(AnnotatedUtterance u);
+	
+	public abstract void writeTier(Annot tier);
 
 	// Récupération des informations générales sur la transcription
 	public TransInfo getTransInfo() {
@@ -137,7 +141,8 @@ public abstract class TeiConverter {
 		for (int s = 0; s < u.speeches.size(); s++) {
 			String start = null;
 			String end = null;
-			String str = (optionsOutput.cleanLine == true) ? u.speeches.get(s).cleanedContent : u.speeches.get(s).content;
+//			String str = (optionsOutput.cleanLine == true) ? u.speeches.get(s).cleanedContent : u.speeches.get(s).content;
+			String str = u.speeches.get(s).getContent(optionsOutput.cleanLine == true);
 			speech = toChatLine(str).trim();
 			speech = speech.replaceAll("\n", "");
 			start = u.speeches.get(s).start;
@@ -180,15 +185,5 @@ public abstract class TeiConverter {
 		for (Annot tier : u.tiers)
 			writeTier(tier);
 		writeAddInfo(u);
-	}
-
-	public void writeAddInfo(AnnotatedUtterance u) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void writeTier(Annot tier) {
-		// TODO Auto-generated method stub
-		
 	}
 }

@@ -20,7 +20,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 
-public class TeiToPraat {
+public class TeiToPraat extends GenericMain {
 
 	TeiToPartition ttp = null;
 
@@ -47,8 +47,9 @@ public class TeiToPraat {
 
 	// Constructeur à partir du nom du fichier TEI et du nom du fichier de
 	// sortie au format Elan
-	public TeiToPraat(String inputName, String outputName, TierParams optionsTei) {
+	public void transform(String inputName, String outputName, TierParams optionsTei) {
 		if (optionsTei == null) optionsTei = new TierParams();
+		ttp = new TeiToPartition();
 		DocumentBuilderFactory factory = null;
 		try {
 			File teiFile = new File(inputName);
@@ -84,7 +85,7 @@ public class TeiToPraat {
 					return null;
 				}
 			});
-			ttp = new TeiToPartition(xpath, teiDoc, optionsTei);
+			ttp.init(xpath, teiDoc, optionsTei);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -171,7 +172,7 @@ public class TeiToPraat {
 				double end = Double.parseDouble(a.end);
 				out.printf("            xmin = %s%n", printDouble(start));
 				out.printf("            xmax = %s%n", printDouble(end));
-				out.printf("            text = \"%s\"%n", a.content.replace("\"", "\"\""));
+				out.printf("            text = \"%s\"%n", a.getContent(ttp.optionsOutput.cleanLine).replace("\"", "\"\""));
 				nk++;
 			}
 		}
@@ -182,77 +183,18 @@ public class TeiToPraat {
 	}
 
 	public static void main(String args[]) throws IOException {
-		Utils.printVersionMessage();
-
+		TierParams.printVersionMessage();
 		String usage = "Description: TeiToPraat convertit un fichier au format Tei en un fichier au format Praat%nUsage: TeiToPraat [-options] <file"
 				+ Utils.EXT + ">%n";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usage, Utils.EXT, EXT, 0))
-			System.exit(1);
-		String input = options.input;
-		String output = options.output;
+		TeiToPraat tte = new TeiToPraat();
+		tte.mainCommand(args, Utils.EXT, Utils.EXT_PUBLISH + EXT, usage, 0);
+	}
 
-		File f = new File(input);
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans signes
-		// spéciaux(. et .. par ex))
-		input = f.getCanonicalPath();
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-			}
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			}
-			new File(outputDir).mkdir();
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(Utils.EXT))) {
-					String outputFileName = file.getName().split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-					TeiToPraat tte = new TeiToPraat(file.getAbsolutePath(), outputDir + outputFileName, options);
-					System.out.println(outputDir + outputFileName);
-					tte.createOutput();
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		} else {
-			if (output == null) {
-				output = input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					output = output + input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-				} else {
-					output = output + "/" + input.split("\\.")[0] + Utils.EXT_PUBLISH + EXT;
-				}
-			}
-
-			if (!Utils.validFileFormat(input, Utils.EXT)) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension" + Utils.EXT);
-			}
-			TeiToPraat tte = new TeiToPraat(new File(input).getAbsolutePath(), output, options);
-			System.out.println("Reading " + input);
-			tte.createOutput();
-			System.out.println("New file created " + output);
-		}
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		transform(input, output, options);
+//		System.out.println("Reading " + input);
+		createOutput();
+//		System.out.println("New file created " + output);
 	}
 }

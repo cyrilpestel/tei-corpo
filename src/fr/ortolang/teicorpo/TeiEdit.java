@@ -33,7 +33,7 @@ import org.w3c.dom.NodeList;
 
 import fr.ortolang.teicorpo.TeiFile.Div;
 
-public class TeiEdit {
+public class TeiEdit extends GenericMain {
 
 	// Document TEI à lire
 	public Document teiDoc;
@@ -54,7 +54,7 @@ public class TeiEdit {
 	// resultat
 	boolean ok;
 
-	public TeiEdit(String pInputName, String pOutputName, TierParams optionsTei) {
+	public void transform(String pInputName, String pOutputName, TierParams optionsTei) {
 		optionsOutput = optionsTei;
 		inputName = pInputName;
 		outputName = pOutputName;
@@ -142,8 +142,8 @@ public class TeiEdit {
 					}
 				}
 			}
-			if (cmd.startsWith("mediamime=")) {
-				String media = cmd.substring(10);
+			if (cmd.startsWith("mimetype=")) {
+				String media = cmd.substring(9);
 				int nth = 0;
 				if (media.startsWith(":")) {
 					int p = media.substring(1).indexOf(":");
@@ -151,13 +151,13 @@ public class TeiEdit {
 						String num = media.substring(1, p+1);
 						int numint = Integer.parseInt(num);
 						if (numint >= 0 && numint <= 10) {
-							System.out.printf("Changement du media mime type n°:  %d%n", numint);
+							System.out.printf("Changement du media type n°:  %d%n", numint);
 							nth = numint;
 							media = media.substring(p+2);
 						}
 					}
 				}
-				System.out.printf("Changement du media mime type : %s%n", media);
+				System.out.printf("Changement du media type : %s%n", media);
 				NodeList recStmt = teiDoc.getElementsByTagName("recordingStmt");
 				if (recStmt != null && recStmt.getLength() > 0) {
 					NodeList medias = ((Element)recStmt.item(0)).getElementsByTagName("media");
@@ -167,6 +167,7 @@ public class TeiEdit {
 						else {
 							Element m = (Element) medias.item(nth);
 							m.setAttribute("mimeType", media);
+							m.removeAttribute("mediaType"); // si cet attribut existe.
 						}
 					}
 				}
@@ -243,6 +244,8 @@ public class TeiEdit {
 	public void createOutput() {
 		File itest = new File(inputName);
 		File otest = new File(outputName);
+		// System.out.printf("Edit: %s %s%n", inputName, outputName);
+		// return;
 		String itname;
 		String otname;
 		try {
@@ -252,6 +255,7 @@ public class TeiEdit {
 			e1.printStackTrace();
 			return;
 		}
+		System.out.printf("Edit: %s %s%n", itname, otname);
 		
 		if (itname.equals(otname) && !optionsOutput.commands.contains("replace")) {
 			System.err.println("Le fichier sortie est le même que le fichier entrée: utiliser le paramètre -c replace pour remplacer le fichier");
@@ -280,113 +284,26 @@ public class TeiEdit {
 
 	// Programme principal
 	public static void main(String args[]) throws IOException {
-		Utils.printVersionMessage();
+		TierParams.printVersionMessage();
 
 		String usageString = "Description: TeiEdit permet de modifier des éléments d'un fichier Tei.%nUsage: TeiEdit -c command [-options] <"
 				+ Utils.EXT + ">%n";
-		TierParams options = new TierParams();
-		// Parcours des arguments
-		if (!Utils.processArgs(args, options, usageString, Utils.EXT, Utils.EXT, 0)) {
-			System.out.printf("%n\tcommands available with option -c command :%n\t-c media=value%n\t-c mediamime=value%n\t-c docname=value%n\t-c chgtime=value%n\t-c replace%n");
-			return;
-		}
-		String input = options.input;
-		String output = options.output;
+		TeiEdit ttc = new TeiEdit();
+		ttc.mainCommand(args, Utils.EXT, ".chg.xml", usageString, 3);
+	}
+//			System.out.println("Reading " + input);
+//			TeiEdit ttt = new TeiEdit(new File(input).getAbsolutePath(), output, options);
+//			if (ttt.ok) {
+//				ttt.createOutput();
+//				System.out.println("File modified " + output);
+//			}
 
-		File f = new File(input);
-		// Permet d'avoir le nom complet du fichier (chemin absolu, sans signes
-		// spéciaux(. et .. par ex))
-		input = f.getCanonicalPath();
-
-		if (f.isDirectory()) {
-			File[] teiFiles = f.listFiles();
-
-			String outputDir = "";
-			if (output == null) {
-				if (input.endsWith("/")) {
-					outputDir = input.substring(0, input.length() - 1);
-				} else {
-					outputDir = input + "/";
-				}
-				System.err.println("Attention répertoires entrée et sortie identiques");
-			} else {
-				outputDir = output;
-				if (!outputDir.endsWith("/")) {
-					outputDir = output + "/";
-				}
-				File fdirout = new File(outputDir);
-				// Permet d'avoir le nom complet du fichier (chemin absolu, sans
-				// signes
-				// spéciaux(. et .. par ex))
-				output = fdirout.getCanonicalPath();
-				if (input.equals(output)) {
-					System.err.println("Attention répertoires entrée et sortie identiques");
-				}
-			}
-			
-			File outFile = new File(outputDir);
-			if (outFile.exists()) {
-				if (!outFile.isDirectory()) {
-					System.out.println("\n Erreur :" + output
-							+ " est un fichier, vous devez spécifier un nom de dossier pour le stockage des résultats. \n");
-					System.exit(1);
-				}
-			} else {
-				new File(outputDir).mkdir();
-			}
-
-			for (File file : teiFiles) {
-				String name = file.getName();
-				if (file.isFile() && (name.endsWith(Utils.EXT))) {
-					String outputFileName;
-					if (options.commands.contains("replace"))
-						outputFileName = name;
-					else
-						outputFileName = Utils.basename(input) + "_chg" + Utils.EXT;
-					TeiEdit ttt = new TeiEdit(file.getAbsolutePath(), outputDir + outputFileName, options);
-					if (ttt.ok) {
-						System.out.println(outputDir + outputFileName);
-						ttt.createOutput();
-					}
-				} else if (file.isDirectory()) {
-					args[0] = "-i";
-					args[1] = file.getAbsolutePath();
-					main(args);
-				}
-			}
-		}
-
-		else {
-			if (!(Utils.validFileFormat(input, Utils.EXT))) {
-				System.err.println("Le fichier d'entrée du programme doit avoir l'extension " + Utils.EXT);
-				return;
-			}
-
-			if (output == null) {
-				if (options.commands.contains("replace"))
-					output = input;
-				else
-					output = Utils.basename(input) + "_chg" + Utils.EXT;
-			} else if (new File(output).isDirectory()) {
-				if (output.endsWith("/")) {
-					if (options.commands.contains("replace"))
-						output = output + input;
-					else
-						output = output + Utils.basename(input) + "_chg" + Utils.EXT;
-				} else {
-					if (options.commands.contains("replace"))
-						output = output + "/" + input;
-					else
-						output = output + "/" + Utils.basename(input) + "_chg" + Utils.EXT;
-				}
-			}
-
-			System.out.println("Reading " + input);
-			TeiEdit ttt = new TeiEdit(new File(input).getAbsolutePath(), output, options);
-			if (ttt.ok) {
-				ttt.createOutput();
-				System.out.println("File modified " + output);
-			}
+	@Override
+	public void mainProcess(String input, String output, TierParams options) {
+		transform(input, output, options);
+		if (ok) {
+			System.out.println(output);
+			createOutput();
 		}
 	}
 }
