@@ -174,16 +174,16 @@ public class TeiTreeTagger extends GenericMain {
 			for (int i=0; i < aBlocks.getLength(); i++) {
 				Element eAU = (Element) aBlocks.item(i);
 				AnnotatedUtterance au = new AnnotatedUtterance();
-				au.process(eAU, null, null, null, false);
+				au.process(eAU, null, null, optionsOutput, false);
 				// mettre en place l'élément qui recevra l'analyse syntaxique.
 				Element syntaxGrp = teiDoc.createElement("spanGrp");
-				syntaxGrp.setAttribute("type", "pos");
+				syntaxGrp.setAttribute("type", "conll");
 				numAU++;
-				syntaxGrp.setAttribute("id", "pos" + numAU);
+				syntaxGrp.setAttribute("id", "tt" + numAU);
 				syntaxGrp.setIdAttribute("id", true);
 				eAU.appendChild(syntaxGrp);
 				// préparer le fichier d'analyse syntaxique
-				out.printf("<%s>%n", "pos" + numAU);
+				out.printf("<%s>%n", "tt" + numAU);
 				// decouper au.cleanedSpeech
 				ArrayList<String> p = Tokenizer.splitTextTT(
 						optionsOutput.clearChatFormat
@@ -211,6 +211,21 @@ public class TeiTreeTagger extends GenericMain {
 		 * Le fichier résultat de TREETAGGER existe
 		 * récupérer les résultats
 		 */
+        // ajouter les informations de structure du document
+		if (optionsOutput.conll == true) {
+			/*
+			 * version conll
+			 */
+			insertTemplate("conll", LgqType.SYMB_DIV, Utils.ANNOTATIONBLOC);
+			insertTemplate("word", LgqType.SYMB_ASSOC, "conll");
+			insertTemplate("pos", LgqType.SYMB_ASSOC, "conll");
+			insertTemplate("lemma", LgqType.SYMB_ASSOC, "conll");
+		} else {
+			/*
+			 * version <w>
+			 */
+			insertTemplate("conll", LgqType.SYMB_DIV, Utils.ANNOTATIONBLOC);
+		}
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(outputNameResults), "UTF-8"));
@@ -249,15 +264,69 @@ public class TeiTreeTagger extends GenericMain {
 		return true;
 	}
 
+	public void insertTemplate(String code, String type, String parent) {
+		Element templateNote = getTemplate(teiDoc);
+		if (templateNote == null) {
+			System.err.println("serious error: no template");
+			return;
+		}
+		
+		Element note = teiDoc.createElement("note");
+
+		Element noteCode = teiDoc.createElement("note");
+		noteCode.setAttribute("type", "code");
+		noteCode.setTextContent(code);
+		note.appendChild(noteCode);
+
+		Element noteType = teiDoc.createElement("note");
+		noteType.setAttribute("type", "type");
+		noteType.setTextContent(type);
+		note.appendChild(noteType);
+
+		Element noteParent = teiDoc.createElement("note");
+		noteParent.setAttribute("type", "parent");
+		noteParent.setTextContent(parent);
+		note.appendChild(noteParent);
+
+		templateNote.appendChild(note);
+	}
+
+	public Element getTemplate(Document doc) {
+		NodeList nlNotesStmt = doc.getElementsByTagName("notesStmt");
+		if (nlNotesStmt.getLength() < 1) return null;
+		NodeList notesStmt = nlNotesStmt.item(0).getChildNodes();
+		for (int i=0; i < notesStmt.getLength(); i++) {
+			Node n = notesStmt.item(i);
+			if (n.getNodeName().equals("note")) {
+				Element e = (Element)n;
+				if (e.getAttribute("type").equals("TEMPLATE_DESC")) {
+					return e;
+				}
+			}
+		}
+		return null;
+	}
+
 	private boolean flush(String lastID, TaggedUtterance tu) {
 		Element spG = teiDoc.getElementById(lastID);
 		if (spG == null) {
 			System.err.println("cannot find element: " + lastID);
 			return false;
+
 		}
-		Element elt = tu.createSpan(teiDoc);
-		spG.appendChild(elt);
 		spG.removeAttribute("id");
+		if (optionsOutput.conll == true) {
+			/*
+			 * version conll
+			 */
+			tu.createSpanConll(spG, teiDoc);
+		} else {
+			/*
+			 * version <w>
+			 */
+			Element elt = tu.createSpanW(teiDoc);
+			spG.appendChild(elt);
+		}
 		return true;
 	}
 

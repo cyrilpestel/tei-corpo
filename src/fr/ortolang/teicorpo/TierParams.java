@@ -72,6 +72,7 @@ class TierParams {
 	boolean eraseDone;
 	ArrayList<DescTier> ldt = new ArrayList<DescTier>();
 	boolean shortextension;
+	boolean conll;
 
 	TierParams() {
 		verbose = false;
@@ -102,6 +103,7 @@ class TierParams {
 		outputFormat = "";
 		inputFormat = "";
 		shortextension = false;
+		conll = false;
 	}
 	void addCommand(String s) {
 		commands.add(s);
@@ -439,6 +441,9 @@ class TierParams {
 						continue;
 					} else if (args[i].equals("-short")) {
 						options.shortextension = true;
+						continue;
+					} else if (args[i].equals("-conll")) {
+						options.conll = true;
 						continue;
 					} else if (args[i].equals("-append")) {
 						options.erase = false;

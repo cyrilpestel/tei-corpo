@@ -125,7 +125,7 @@ public class AnnotatedUtterance {
 					//System.out.printf("TTTTT : %s%n", speech);
 					speech = Utils.cleanStringPlusEntities(speech);
 					cleanedSpeech = ConventionsToChat.clean(Utils.cleanStringPlusEntities(cleanedSpeech));
-					if (options.clearChatFormat) {
+					if (options != null && options.clearChatFormat) {
 						speech = ConventionsToChat.chatToText(speech);
 						cleanedSpeech = ConventionsToChat.chatToText(cleanedSpeech);
 					}
@@ -192,7 +192,8 @@ public class AnnotatedUtterance {
 				// ref.
 			} else {
 				// not text.
-				spanContent += " " + elt.getTextContent(); // TODO faire mieux						
+				// spanContent += " " + elt.getTextContent();
+				// this should be processed in including spanGrp and span						
 			}
 		}
 		return spanContent;

@@ -139,6 +139,7 @@ public class TeiToPartition {
 	public void spanGrpCase(TreeMap<String, ArrayList<Annot>> tiers, Element spanGrp, String id, String name,
 			String timeref, String start, String end) {
 		String typeSG = spanGrp.getAttribute("type");
+		//System.err.printf("Test2 spanGrpCase %s%n", typeSG);
 		if (optionsOutput != null) {
 			if (optionsOutput.level == 1)
 				return;
@@ -152,13 +153,23 @@ public class TeiToPartition {
 		String previousId = "";
 		if (spans == null)
 			return;
+		int ntot = 0;
+		for (int z = 0; z < spans.getLength(); z++) {
+			Node nodespan = spans.item(z);
+			// System.out.printf("%d %s %d %n", z, nodespan.getNodeName(),
+			// nodespan.getNodeType());
+			if (!nodespan.getNodeName().equals("span"))
+				continue;
+			ntot++;
+		}
 		Double timelength = -1.0;
 		try {
-			timelength = (Double.parseDouble(end) - Double.parseDouble(start)) / spans.getLength();
+			timelength = (Double.parseDouble(end) - Double.parseDouble(start)) / ntot;
 		} catch (Exception e) {
 			timelength = -1.0;
 		}
-		// System.out.printf("XX: %s %s %f %n", start, end, timelength);
+		//System.out.printf("XX: %s %s %f %n", start, end, timelength);
+		int nth = 0;
 		for (int z = 0; z < spans.getLength(); z++) {
 			Node nodespan = spans.item(z);
 			// System.out.printf("%d %s %d %n", z, nodespan.getNodeName(),
@@ -195,9 +206,9 @@ public class TeiToPartition {
 				 */
 				// System.out.printf("++ %d %s %n", z, annot);
 				if (timelength > 0.0) {
-					Double refstart = z * timelength + Double.parseDouble(start);
-					Double refend = (z + 1) * timelength + Double.parseDouble(start);
-					// System.out.printf("-- %d %f %f %n", z, refstart, refend);
+					Double refstart = ((double)nth) * timelength + Double.parseDouble(start);
+					Double refend = (((double)nth) + 1.0) * timelength + Double.parseDouble(start);
+					// System.out.printf("-- %d %f %f %n", nth, refstart, refend);
 					annot.start = Double.toString(refstart);
 					annot.end = Double.toString(refend);
 				}
@@ -214,13 +225,13 @@ public class TeiToPartition {
 				if (Utils.isNotEmptyOrNull(tend)) {
 					annot.end = timeline.getTimeValue(Utils.refID(tend));
 				}
-				// System.out.printf("time %s %s %n", annot.start, annot.end);
 			}
 			String lgqt = "";
 			for (TierInfo ti : tierInfos) {
 				if (ti.tier_id.equals(typeSG))
 					lgqt = ti.type.lgq_type_id == null ? "-" : ti.type.lgq_type_id;
 			}
+			//System.out.printf("Z %d time %s %s%n", nth, annot.start, annot.end);
 			addElementToMap(tiers, typeSG, annot, lgqt, name);
 			NodeList spanGrps = span.getChildNodes();
 			for (int l = 0; l < spanGrps.getLength(); l++) {
@@ -228,11 +239,9 @@ public class TeiToPartition {
 				if (!nodeSpanGrp.getNodeName().equals("spanGrp"))
 					continue;
 				Element subSpanGrp = (Element) nodeSpanGrp;
-				if (annot.timereftype == "ref")
-					spanGrpCase(tiers, subSpanGrp, annot.id, name, annot.timereftype, start, end);
-				else
-					spanGrpCase(tiers, subSpanGrp, annot.id, name, annot.timereftype, annot.start, annot.end);
+				spanGrpCase(tiers, subSpanGrp, annot.id, name, annot.timereftype, annot.start, annot.end);
 			}
+			nth++;
 		}
 	}
 
