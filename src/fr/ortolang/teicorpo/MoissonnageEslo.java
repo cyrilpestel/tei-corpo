@@ -112,7 +112,9 @@ public class MoissonnageEslo {
 		// createMetaFiles();
 	}
 
-	public void getDataFiles() throws ParserConfigurationException {
+	public void getDataFiles(String user) throws ParserConfigurationException {
+		String head  = "curl ";
+		if (user != null) head += "--user " + user + " "; 
 		NodeList records = this.docMetadatas.getElementsByTagName("record");
 		for (int i = 0; i < records.getLength(); i++) {
 			Element record = (Element) records.item(i);
@@ -130,7 +132,7 @@ public class MoissonnageEslo {
 					) {
 					if (identifierURL.contains("/exist/crdo/eslo/private_eslo/"))
 						identifierURL = identifierURL.replaceFirst("/exist/crdo/eslo/private_eslo/", "/exist/rest/db/corpus/eslo/private_eslo/");
-					System.out.println("curl --user parisse:pc01 " + identifierURL + " > " + Utils.lastname(identifierURL) + " # " + recordName);
+					System.out.println(head + identifierURL + " > " + Utils.lastname(identifierURL) + " # " + recordName);
 				}
 			}
 
@@ -144,7 +146,7 @@ public class MoissonnageEslo {
 				if(dcTermURL.endsWith(".wav") 
 					|| dcTermURL.endsWith(".mp3")
 					) { 
-					System.out.println("curl --user parisse:pc01 " + dcTermURL + " > " + Utils.lastname(dcTermURL) + " # " + recordName);
+					System.out.println(head + dcTermURL + " > " + Utils.lastname(dcTermURL) + " # " + recordName);
 				}
 			}
 		}
@@ -195,19 +197,23 @@ public class MoissonnageEslo {
 	public static void main(String args[]) throws IOException, ParserConfigurationException {
 		String inputName = null;
 		String outputName = ".";
+		String user = null;
 
 		// parcours des arguments
 		if (args.length == 0) {
-			System.err.println("Vous n'avez spécifié aucun argument -: java -cp conversions.jar fr.ortolang.teicorpo.MoissonnageEslo -u URL -o output-dir.\n");
+			System.err.println("Vous n'avez spécifié aucun argument -: java -cp conversions.jar fr.ortolang.teicorpo.MoissonnageEslo -url URL -user USER -o output-dir.\n");
 		} else {
 			for (int i = 0; i < args.length; i++) {
 				try {
-					if (args[i].equals("-u")) {
+					if (args[i].equals("-url")) {
 						i++;
 						inputName = args[i];
 					} else if (args[i].equals("-o")) {
 						i++;
 						outputName = args[i];
+					} else if (args[i].equals("-user")) {
+						i++;
+						user = args[i];
 					}
 				} catch (Exception e) {
 					System.err.println("Problème arguments.\n");
@@ -239,7 +245,7 @@ public class MoissonnageEslo {
 			System.out.println("# URL: " + urlName);
 			me.getDocument(urlName);
 			me.createMetaFiles(outputName);
-			me.getDataFiles();
+			me.getDataFiles(user);
 			
 			String rt = me.getResumptionToken();
 			if (rt != null) {

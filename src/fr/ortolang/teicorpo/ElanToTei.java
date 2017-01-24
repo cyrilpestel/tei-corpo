@@ -13,9 +13,9 @@ public class ElanToTei extends GenericMain {
 	ElanToHT ElanToHT;
 	HT_ToTei ht;
 
-	public void transform(String inputFile, String outputName) throws IOException {
+	public void transform(String inputFile, String outputName, TierParams options) throws IOException {
 		ElanToHT = new ElanToHT(new File(inputFile));
-		ht = new HT_ToTei(ElanToHT.ht);
+		ht = new HT_ToTei(ElanToHT.ht, options);
 
 		Utils.setDocumentName(ht.docTEI, Utils.lastname(outputName));
 		Utils.createFile(outputName, ht.docTEI);
@@ -38,7 +38,7 @@ public class ElanToTei extends GenericMain {
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
 		try {
-			transform(input, output);
+			transform(input, output, options);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

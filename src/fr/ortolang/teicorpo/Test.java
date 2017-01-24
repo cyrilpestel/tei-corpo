@@ -42,6 +42,7 @@ public class Test {
 		System.out.printf("%s --> %s%n", args[0], args[0].endsWith("") ? "yes" : "no");
 		System.out.printf("%s --> %s%n", args[0], Utils.extname(args[0]));
 		*/
+		/*
 		String input = "";
 		File f = new File(args[0]);
 		try {
@@ -60,5 +61,15 @@ public class Test {
 					System.out.println("Dir: " + name);
 			}
 		}
+		*/
+		double d = 0.0;
+		try {
+			d = Double.parseDouble(args[0]);
+		} catch (Exception e) {
+			e.toString();
+			System.out.println("not a double");
+			d = 40.0;
+		}
+		System.out.println(d);
 	}
 }

@@ -85,14 +85,17 @@ public class HT_ToTei {
 	Element mainDiv;
 
 	ArrayList<Element> annotatedUElements;
+	
+	TierParams options = null;
 
 	static int ID = 1;
 
-	public HT_ToTei(HierarchicTrans hiertrans) throws IOException {
+	public HT_ToTei(HierarchicTrans hiertrans, TierParams tp) throws IOException {
 
 		tiersNames = new HashSet<String>();
 		annotatedUElements = new ArrayList<Element>();
 		ht = hiertrans;
+		if (tp != null) options = tp;
 
 		DocumentBuilderFactory factory = null;
 
@@ -246,7 +249,10 @@ public class HT_ToTei {
 			altGrp.appendChild(alt);
 			person.appendChild(altGrp);
 
-			setAttr(person, "age", participant.age);
+			if (!participant.age.isEmpty())
+				setAttr(person, "age", Utils.normaliseAge(participant.age));
+			else
+				setAttr(person, "age", Utils.normaliseAge(options.defaultAge));
 			setAttr(person, "role", participant.role);
 			setAttr(person, "source", participant.corpus);
 			if (Utils.isNotEmptyOrNull(participant.sex)) {
@@ -527,7 +533,7 @@ public class HT_ToTei {
 				// buildU//
 				Element u = docTEI.createElement("u");
 				Element seg = docTEI.createElement("seg");
-				seg.setTextContent(annot.getContent());
+				seg.setTextContent(annot.content);
 				u.appendChild(seg);
 				annotUEl.appendChild(u);
 				if (Utils.isNotEmptyOrNull(startStr)) {
@@ -578,7 +584,7 @@ public class HT_ToTei {
 						annotType1 = annot.name;
 					}
 					span = docTEI.createElement("span");
-					span.setTextContent(annot.getContent().trim());
+					span.setTextContent(annot.content.trim());
 					// System.out.println(annot.content.trim() + " --- >>> " +
 					// annot.dependantAnnotations );
 					if (Utils.isNotEmptyOrNull(annot.id)) {

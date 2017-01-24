@@ -435,7 +435,9 @@ public class ClanToTei extends GenericMain {
 				person.appendChild(langKnowledge);
 			}
 			if (Utils.isNotEmptyOrNull(part.age)) {
-				person.setAttribute("age", part.age);
+				person.setAttribute("age", Utils.normaliseAge(part.age));
+			} else {
+				person.setAttribute("age", Utils.normaliseAge(tparams.defaultAge));
 			}
 			if (Utils.isNotEmptyOrNull(part.sex)) {
 				if (part.sex.toLowerCase().substring(0, 1).equals("m")) {

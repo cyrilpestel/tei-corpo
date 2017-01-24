@@ -45,13 +45,13 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.2"; // full version with Elan, Clan, Transcriber and Praat + other tools and TeiCorpo
-	public static String versionDate = "23/01/2017 8:30";
+	public static String versionSoft = "1.2"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "21/11/2016 8:30";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
 	public static boolean teiStylePure = false;
-
+	
 	public static String shortPause = " # ";
 	public static String longPause = " ## ";
 	public static String veryLongPause = " ### ";
@@ -756,5 +756,20 @@ public class Utils {
 			list.appendChild(item);
 			item.appendChild(desc);
 		}
+	}
+
+	public static String normaliseAge(String age) {
+		double d;
+		try {
+			d = Double.parseDouble(age);
+		} catch (Exception e) {
+			System.err.println("age anormal: " + age);
+			return "40.02";
+		}
+		if (d < 0.0 || d > 120.0) {
+			System.err.println("age anormal: " + age);
+			return "40.02";
+		}
+		return age;
 	}
 }

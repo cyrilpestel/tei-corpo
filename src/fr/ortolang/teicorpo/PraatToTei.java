@@ -61,6 +61,8 @@ public class PraatToTei extends GenericMain {
 	private Map<String, String> tierNames;
 	private Map<String, ArrayList<Annot>> annotationMap;
 	private PraatSpecialChars lookUp;
+	
+	private TierParams optionsTEI = null;
 
 	private enum SN_POSITION {// short notation line position
 		OUTSIDE, // not in any type of tier
@@ -274,9 +276,6 @@ public class PraatToTei extends GenericMain {
 		BufferedReader reader = null;
 
 		try {
-			if (encoding == null)
-				encoding = EncodingDetector.detect(gridFile.getAbsolutePath());
-			if (verbose) System.out.println("Read encoding: " + encoding);
 			if (encoding == null) {
 				reader = new BufferedReader(new InputStreamReader(new FileInputStream(gridFile)));
 			} else {
@@ -287,6 +286,15 @@ public class PraatToTei extends GenericMain {
 					reader = new BufferedReader(new InputStreamReader(new FileInputStream(gridFile)));
 				}
 			}
+			// Praat files on Windows and Linux are created with encoding
+			// "Cp1252"
+			// on Mac with encoding "MacRoman". The ui could/should be extended
+			// with an option to specify the encoding
+			// InputStreamReader isr = new InputStreamReader(
+			// new FileInputStream(gridFile));
+			// System.out.println("Encoding: " + isr.getEncoding());
+			// System.out.println("Read encoding: " + encoding);
+			if (verbose) System.out.println("Read encoding: " + encoding);
 
 			boolean isShortNotation = isShortNotation(reader);
 			if (verbose) System.out.println("Praat TextGrid is in short notation: " + isShortNotation);
@@ -806,7 +814,9 @@ public class PraatToTei extends GenericMain {
 		}
 	}
 
-	public boolean convertFromPraatToTei(String inputfile, String outputfile, String encoding, ArrayList<DescTier> ldt, String mediaName) {
+	public boolean convertFromPraatToTei(String inputfile, String outputfile, TierParams options) { 
+		// String encoding, ArrayList<DescTier> ldt, String mediaName) {
+		optionsTEI = options;
 		try {
 			/*
 			 * try to find a param file
@@ -814,14 +824,11 @@ public class PraatToTei extends GenericMain {
 			String bn = Utils.fullbasename(inputfile);
 			File fnb = new File(bn + ".paramtei");
 			if (fnb.exists()) {
-				if (ldt.size() > 0) {
+				if (optionsTEI.ldt.size() > 0) {
 					System.err.println("Attention paramètres commande peut-être ignorés pour " + inputfile);
 				}
 				if (verbose) System.out.println("Utilisation du fichier paramètres " + fnb.toString());
-				TierParams prs = new TierParams();
-				prs.encoding = encoding;
-				prs.mediaName = mediaName;
-				if (TierParams.getTierParams(fnb.toString(), ldt, prs) == false)
+				if (TierParams.getTierParams(fnb.toString(), optionsTEI.ldt, optionsTEI) == false)
 					System.err.println("Erreur de traitement du fichier paramètres: " + fnb.toString());
 			}
 			init(inputfile, true, 100, encoding);
@@ -837,8 +844,8 @@ public class PraatToTei extends GenericMain {
 			ht.fileName = inputFileObject.getName();
 			ht.filePath = inputFileObject.getAbsolutePath();
 
-			if (Utils.isNotEmptyOrNull(mediaName)) {
-				Media m = new Media("", (new File(mediaName)).getAbsolutePath());
+			if (Utils.isNotEmptyOrNull(optionsTEI.mediaName)) {
+				Media m = new Media("", (new File(optionsTEI.mediaName)).getAbsolutePath());
 				ht.metaInf.medias.add(m);
 			} else {
 				String url = Utils.findClosestMedia("", inputfile, "audio");
@@ -851,10 +858,10 @@ public class PraatToTei extends GenericMain {
 				value.participant = element.getKey();
 				// find if the tier is in the list of constraints
 				boolean found = false;
-				for (int j = 0; j < ldt.size(); j++) {
+				for (int j = 0; j < optionsTEI.ldt.size(); j++) {
 					// System.out.println(" " + j + " :- " +
 					// ldt.get(j).print());
-					DescTier a = ldt.get(j);
+					DescTier a = optionsTEI.ldt.get(j);
 					if (a.tier.equalsIgnoreCase(value.participant)) {
 						value.type.lgq_type_id = value.participant;
 						value.type.constraint = DescTier.whichType(a.type);
@@ -916,7 +923,7 @@ public class PraatToTei extends GenericMain {
 				ht.metaInf.participants.add(p);
 			}
 			ht.partionRepresentationToHierachic(annotationMap);
-			HT_ToTei hiertransToTei = new HT_ToTei(ht);
+			HT_ToTei hiertransToTei = new HT_ToTei(ht, optionsTEI);
 			// System.out.println(outputfile);
 			Utils.setDocumentName(hiertransToTei.docTEI, Utils.lastname(outputfile));
 			Utils.createFile(outputfile, hiertransToTei.docTEI);
@@ -939,7 +946,7 @@ public class PraatToTei extends GenericMain {
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
 		verbose = options.verbose;
-		convertFromPraatToTei(input, output, options.encoding, options.ldt, options.mediaName);
+		convertFromPraatToTei(input, output, options);
 //		System.out.println("New file TEI created: " + output);
 	}
 }

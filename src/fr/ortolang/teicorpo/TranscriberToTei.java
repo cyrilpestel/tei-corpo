@@ -54,6 +54,8 @@ public class TranscriberToTei extends GenericMain {
 	ArrayList<String> times;
 	ArrayList<Element> timeElements;
 	Double maxTime = 0.0;
+	
+	private TierParams optionsTEI = null;
 
 	/**
 	 * décrit par la DTD TEI_CORPO_DTD.
@@ -61,8 +63,9 @@ public class TranscriberToTei extends GenericMain {
 	 * @param inputFile
 	 *            : fichier à convertir, au format Transcriber
 	 */
-	public void transform(File inputFile, boolean valid) {
-
+	public void transform(File inputFile, TierParams options) {
+		optionsTEI = options;
+		
 		utteranceId = 0;
 		whenId = 0;
 		times = new ArrayList<String>();
@@ -76,7 +79,7 @@ public class TranscriberToTei extends GenericMain {
 		DocumentBuilderFactory factory = null;
 		try {
 			factory = DocumentBuilderFactory.newInstance();
-			Utils.setDTDvalidation(factory, valid);
+			Utils.setDTDvalidation(factory, options.dtdValidation);
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			this.docTRS = builder.parse(this.inputTRS);
 			this.rootTRS = this.docTRS.getDocumentElement();
@@ -395,6 +398,7 @@ public class TranscriberToTei extends GenericMain {
 			NamedNodeMap map = speaker.getAttributes();
 			Element person = this.docTEI.createElement("person");
 			particDesc.appendChild(person);
+			person.setAttribute("age", Utils.normaliseAge(optionsTEI.defaultAge));
 			for (int j = 0; j < map.getLength(); j++) {
 				Node att = map.item(j);
 				String attName = att.getNodeName();
@@ -1047,7 +1051,7 @@ public class TranscriberToTei extends GenericMain {
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
 		// System.out.println("Lecture de " + input);
-		transform(new File(input), options.dtdValidation);
+		transform(new File(input), options);
 		Utils.setDocumentName(docTEI, Utils.lastname(output));
 		Utils.createFile(output, docTEI);
 		// System.out.println("New file created " + output);

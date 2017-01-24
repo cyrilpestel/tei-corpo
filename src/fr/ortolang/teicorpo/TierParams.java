@@ -72,7 +72,7 @@ class TierParams {
 	boolean eraseDone;
 	ArrayList<DescTier> ldt = new ArrayList<DescTier>();
 	boolean shortextension;
-	boolean conll;
+	String defaultAge;
 
 	TierParams() {
 		verbose = false;
@@ -103,7 +103,7 @@ class TierParams {
 		outputFormat = "";
 		inputFormat = "";
 		shortextension = false;
-		conll = false;
+		defaultAge = "40.01";
 	}
 	void addCommand(String s) {
 		commands.add(s);
@@ -146,35 +146,11 @@ class TierParams {
 		return false;
 	}
 	boolean isDoDisplay(String s) {
-		return isDoDisplay(s,0);
-	}
-	boolean isDontDisplay(String s) {
-		return isDontDisplay(s,0);
-	}
-	boolean isDoDisplay(String s, int level) {
 		if (doDisplay.size() < 1) return true;
-		if (level >= 3) {
-			if (TierParams.test("=3", doDisplay)) return true;
-		}
-		if (level == 2) {
-			if (TierParams.test("=2", doDisplay)) return true;
-		}
-		if (level == 1) {
-			if (TierParams.test("=1", doDisplay)) return true;
-		}
 		return TierParams.test(s, doDisplay);
 	}
-	boolean isDontDisplay(String s, int level) {
+	boolean isDontDisplay(String s) {
 		if (dontDisplay.size() < 1) return false;
-		if (level >= 3) {
-			if (TierParams.test("=3", dontDisplay)) return true;
-		}
-		if (level == 2) {
-			if (TierParams.test("=2", dontDisplay)) return true;
-		}
-		if (level == 1) {
-			if (TierParams.test("=1", dontDisplay)) return true;
-		}
 		return TierParams.test(s, dontDisplay);
 	}
 
@@ -278,6 +254,9 @@ class TierParams {
 					} else if (args[i].equals("-e")) {
 						i++;
 						continue;
+					} else if (args[i].equals("-age")) {
+						i++;
+						continue;
 					} else if (args[i].equals("-t")) {
 						i++;
 						i++;
@@ -373,6 +352,14 @@ class TierParams {
 						}
 						i++;
 						options.addDontDisplay(args[i]);
+					} else if (args[i].equals("-age")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -age n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.defaultAge = args[i];
 					} else if (args[i].equals("-tv")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -tv n'est pas suivi d'une valeur");
@@ -441,9 +428,6 @@ class TierParams {
 						continue;
 					} else if (args[i].equals("-short")) {
 						options.shortextension = true;
-						continue;
-					} else if (args[i].equals("-conll")) {
-						options.conll = true;
 						continue;
 					} else if (args[i].equals("-append")) {
 						options.erase = false;

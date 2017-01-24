@@ -71,6 +71,7 @@ public class ConventionsToChat {
 	}
 
 	public static String clean(String l) {
+		l = l.replaceAll( "\\&.*?\\s", " " );
 		l = l.replaceAll( "\\([.\\d]\\)", "" );
 		l = l.replaceAll( "\\(", "" );
 		l = l.replaceAll( "\\)", "" );
@@ -90,7 +91,23 @@ public class ConventionsToChat {
 		l = l.replaceAll( "⟫", "" );
 		l = l.replaceAll( "‹", "" );
 		l = l.replaceAll( "›", "" );
+		l = l.replaceAll( "⌊", "" );
+		l = l.replaceAll( "⌋", "" );
+		l = l.replaceAll( "⌈", "" );
+		l = l.replaceAll( "⌉", "" );
+		l = l.replaceAll( ":", "" );
+		// ⌊ &=SNIFF ⌋
+		// when we'd ⌈ go out of ⌉ town and
 		l = l.replaceAll( "0", "" );
+		l = l.replaceAll( "1", "" );
+		l = l.replaceAll( "2", "" );
+		l = l.replaceAll( "3", "" );
+		l = l.replaceAll( "4", "" );
+		l = l.replaceAll( "5", "" );
+		l = l.replaceAll( "6", "" );
+		l = l.replaceAll( "7", "" );
+		l = l.replaceAll( "8", "" );
+		l = l.replaceAll( "9", "" );
 		//l = l.replaceAll( " +", " " ); // garder les marqueurs de fin d'énoncé
 		return l;
 	}
