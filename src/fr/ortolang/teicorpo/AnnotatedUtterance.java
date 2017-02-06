@@ -1,6 +1,7 @@
 /**
  * @author Myriam Majdoub & Christophe Parisse
  * Représentations des informations d'un énoncé en format texte à partir d'un format TEI.
+ * 
  */
 
 package fr.ortolang.teicorpo;
@@ -33,7 +34,7 @@ public class AnnotatedUtterance {
 	// énoncé (avec bruits, pauses...)
 	public String speech;
 	// Enoncé pur
-	public String cleanedSpeech;
+	public String nomarkerSpeech;
 	// Marque de div: si l'utterance marque le début d'un div, le type de
 	// div est spécifié dans ce champ
 	// Servira à repérer les divisions dans la transcription
@@ -60,11 +61,11 @@ public class AnnotatedUtterance {
 		String s = "Id[" + id + "] Type[" + type + "] Start[" + start + "] End[" + end + "] SpkName[" + speakerName + "]\n";
 		s += "Speeches[" + speeches.size() + "]\n";
 		for (Annot utt : speeches) {
-			s += "{" + utt.content + "} {" + utt.cleanedContent + "}\n";
+			s += "{" + utt.getContent(false) + "} {" + utt.getContent(true) + "}\n";
 		}
 		s += "Tiers[" + tiers.size() + "]\n";
 		for (Annot tier : tiers) {
-			s += "/" + tier.name + "/ /" + tier.content + "/\n";
+			s += "/" + tier.name + "/ /" + tier.getContent(false) + "/\n";
 		}
 		return s;
 	}
@@ -91,42 +92,39 @@ public class AnnotatedUtterance {
 		tiers = new ArrayList<Annot>();
 		tierTypes = new HashSet<String>();
 		if (options != null) {
-			if (options.isDontDisplay(speakerCode))
+			if (options.isDontDisplay(speakerCode, 1))
 				return false;
-			if (!options.isDoDisplay(speakerCode))
+			if (!options.isDoDisplay(speakerCode, 1))
 				return false;
 		}
+		//System.out.printf("Yes.%n");
 		if (transInfo != null)
 			speakerName = transInfo.getParticipantName(speakerCode);
 		else
 			speakerName = "";
 		NodeList annotUElements = annotatedU.getChildNodes();
 		// Parcours des éléments contenus dans u et construction des
-		// variables speech, cleanedSpeech et speeches en fonction.
+		// variables speech, nomarkerSpeech et speeches en fonction.
 		for (int i = 0; i < annotUElements.getLength(); i++) {
 			if (Utils.isElement(annotUElements.item(i))) {
 				Element annotUEl = (Element) annotUElements.item(i);
 				String nodeName = annotUEl.getNodeName();
 				/*
 				 * Cas élément "u": dans ce cas, on concatène tous les u pour
-				 * former cleanedSpeech, de même pour speech mais en incluant
+				 * former nomarkerSpeech, de même pour speech mais en incluant
 				 * les éventuels bruits/incidents qui ont lieu lors de l'énoncé
 				 * (sous la forme d'une chaîne de caractère prédéfinie). On
 				 * ajoute tous les énoncés dans speeches.
 				 */
 				if (nodeName.equals("u")) {
-					cleanedSpeech = "";
+					nomarkerSpeech = "";
 					speech = "";
 					NodeList us = annotUEl.getChildNodes();
 					processSeg(us);
 					//System.out.printf("TTTTT : %s%n", speech);
 					speech = Utils.cleanStringPlusEntities(speech);
-					cleanedSpeech = ConventionsToChat.clean(Utils.cleanStringPlusEntities(cleanedSpeech));
-					if (options != null && options.clearChatFormat == true) {
-						speech = ConventionsToChat.clearChatFormat(speech);
-						cleanedSpeech = ConventionsToChat.clearChatFormat(cleanedSpeech);
-					}
-					Annot a = new Annot(speakerName, start, end, speech, cleanedSpeech);
+					nomarkerSpeech = Utils.cleanStringPlusEntities(nomarkerSpeech);
+					Annot a = new Annot(speakerName, start, end, speech, nomarkerSpeech);
 					if (nthid == 0) {
 						a.id = id;
 						nthid++;
@@ -135,35 +133,95 @@ public class AnnotatedUtterance {
 						nthid++;
 					}
 					speeches.add(a);
-					// System.out.printf("TTTTT endofseg: %s %s %s%n", start,
-					// end, speech);
+					// System.out.printf("TTTTT endofseg: %s %s %s%n", start, end, speech);
 				} else if (nodeName.equals("spanGrp") && doSpan == true) {
 					// Ajout des tiers
 					String type = annotUEl.getAttribute("type");
 					if (options != null) {
 						if (options.level == 1)
 							continue;
-						if (options.isDontDisplay(type))
+						if (options.isDontDisplay(type, 2))
 							continue;
-						if (!options.isDoDisplay(type))
+						if (!options.isDoDisplay(type, 2))
 							continue;
 					}
-					NodeList spans = annotUEl.getElementsByTagName("span");
-					for (int y = 0; y < spans.getLength(); y++) {
-						Element span = (Element) spans.item(y);
-
-						tiers.add(new Annot(type, Utils.cleanEntities(span.getTextContent())));
-
-						tierTypes.add(type);//
-						if (!type.equals("pho") && !type.equals("act") && !type.equals("sit") && !type.equals("com")
-								&& !type.equals("morpho")) {
-							tierTypes.add("other");
+					if (type.equals("conll") || type.equals("treetagger")) {
+						Annot at = new Annot();
+						at.name = type;
+						at.dependantAnnotations = new ArrayList<Annot>();
+						NodeList spans = annotUEl.getChildNodes();
+						for (int k=0; k<spans.getLength(); k++) {
+							Node n = spans.item(k);
+							if (n.getNodeName().equals("span")) {
+								Annot w = new Annot();
+								w.dependantAnnotations = new ArrayList<Annot>();
+								w.name = "wordcatlemma";
+								w.setContent(Utils.getText((Element)n));
+								NodeList spanElts = n.getChildNodes();
+								for (int l=0; l<spanElts.getLength(); l++) {
+									Node m = spanElts.item(l);
+									if (m.getNodeName().equals("spanGrp")) {
+										String text = m.getTextContent();
+										String attr = ((Element)m).getAttribute("type");
+										Annot e = new Annot();
+										e.name = attr;
+										e.setContent(text);
+										w.dependantAnnotations.add(e);
+									}
+								}
+								at.dependantAnnotations.add(w);
+							}
+						}
+						tiers.add(at);
+					} else {
+						NodeList spans = annotUEl.getElementsByTagName("span");
+						for (int y = 0; y < spans.getLength(); y++) {
+							Element span = (Element) spans.item(y);
+							tiers.add(new Annot(type, processSpan(span)));
+							tierTypes.add(type);//
+							if (!type.equals("pho") && !type.equals("act") && !type.equals("sit") && !type.equals("com")
+									&& !type.equals("morpho")) {
+								tierTypes.add("other");
+							}
 						}
 					}
 				}
 			}
 		}
 		return true;
+	}
+
+	static public String processSpan(Element span) {
+		String spanContent = "";
+		// the span might be decomposed into elements.
+		NodeList spanElements = span.getChildNodes();
+		for (int k = 0; k < spanElements.getLength(); k++) {
+			Node elt = spanElements.item(k);
+			if (elt.getNodeType() == Node.TEXT_NODE) {
+				if (!spanContent.isEmpty()) spanContent += " ";
+				spanContent += elt.getTextContent();
+				// text.
+			} else if (elt.getNodeType() == Node.ELEMENT_NODE && elt.getNodeName() == "ref") {
+				NodeList refs = elt.getChildNodes();
+				for (int x = 0; x < refs.getLength(); x++) {
+					Node w = refs.item(x);
+					if (w.getNodeType() == Node.ELEMENT_NODE) {
+						Element we = (Element)w;
+//						System.err.println(w.toString() + "++" + w.getTextContent());
+						if (!spanContent.isEmpty()) spanContent += " ";
+						spanContent += we.getAttribute("ana") + "_";
+						spanContent += we.getAttribute("lemma") + "_";
+						spanContent += w.getTextContent();
+					}
+				}
+				// ref.
+			} else {
+				// not text.
+				// spanContent += " " + elt.getTextContent();
+				// this should be processed in including spanGrp and span						
+			}
+		}
+		return spanContent;
 	}
 
 	public void processSeg(NodeList us) {
@@ -180,17 +238,17 @@ public class AnnotatedUtterance {
 				Element segChildEl = (Element) segChild;
 				if (segChildName.equals("pause")) {
 					if (segChildEl.getAttribute("type").equals("short")) {
-						// cleanedSpeech += genericPause;
+						// nomarkerSpeech += genericPause;
 						speech += shortPause;
 					} else if (segChildEl.getAttribute("type").equals("long")) {
-						// cleanedSpeech += genericPause;
+						// nomarkerSpeech += genericPause;
 						speech += longPause;
 					} else if (segChildEl.getAttribute("type").equals("verylong")) {
-						// cleanedSpeech += genericPause;
+						// nomarkerSpeech += genericPause;
 						speech += veryLongPause;
 					} else if (segChildEl.getAttribute("type").equals("chrono")) {
 						String chronoPause = " " + Utils.specificPause + segChildEl.getAttribute("dur") + " ";
-						// cleanedSpeech += genericPause;
+						// nomarkerSpeech += genericPause;
 						speech += chronoPause;
 					}
 				}
@@ -268,7 +326,7 @@ public class AnnotatedUtterance {
 					try {
 						vocal += segChildEl.getElementsByTagName("desc").item(0).getTextContent();
 					} finally {
-						cleanedSpeech += vocal + " ";
+						nomarkerSpeech += vocal + " ";
 						speech += Utils.leftCode + vocal + "/VOC " + Utils.rightCode;
 					}
 				} else if (segChildName.equals("seg")) {
@@ -279,8 +337,8 @@ public class AnnotatedUtterance {
 						sync = teiTimeline.getTimeValue(segChildEl.getAttribute("synch"));
 					else
 						sync = segChildEl.getAttribute("synch");
-					// creer une ligne avec speech, cleanedSpeech, addspeech
-					Annot a = new Annot(speakerName, start, sync, speech, cleanedSpeech);
+					// creer une ligne avec speech, nomarkerSpeech, addspeech
+					Annot a = new Annot(speakerName, start, sync, speech, nomarkerSpeech);
 					if (nthid == 0) {
 						a.id = id;
 						nthid++;
@@ -293,7 +351,7 @@ public class AnnotatedUtterance {
 					// start, sync, speech);
 					start = sync;
 					speech = "";
-					cleanedSpeech = "";
+					nomarkerSpeech = "";
 				}
 				// Tiers de type "morpho"
 				else if (segChildName.equals("morpho")) {
@@ -317,7 +375,7 @@ public class AnnotatedUtterance {
 				String content = segChild.getTextContent() + " ";
 				if (Utils.isNotEmptyOrNull(content.trim())) {
 					speech += content;
-					cleanedSpeech += content;
+					nomarkerSpeech += content;
 					// Dans speeches, pour chaque énoncé (seg), il peut y
 					// avoir des marques temporelles
 					// On ajoute donc chaque énoncé sous cette forme
@@ -387,5 +445,9 @@ public class AnnotatedUtterance {
 			v += desc.getTextContent();
 		}
 		return v;
+	}
+
+	public String getTeiLine(boolean b) {
+		return b ? nomarkerSpeech : speech;
 	}
 }

@@ -9,6 +9,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class Internal {
 	public String s;
@@ -62,6 +64,7 @@ public class Test {
 			}
 		}
 		*/
+		/*
 		double d = 0.0;
 		try {
 			d = Double.parseDouble(args[0]);
@@ -71,5 +74,17 @@ public class Test {
 			d = 40.0;
 		}
 		System.out.println(d);
+		*/
+		String os = System.getProperty("os.name");
+		System.out.println(os);
+		/*
+		Pattern pp = Pattern.compile("(\\d+);(\\d+)\\.(\\d+)");
+		Matcher mm = pp.matcher(args[0]);
+		boolean bb = mm.matches();
+		if (bb) {
+			System.out.printf("%s // %s // %s%n", mm.group(1), mm.group(2), mm.group(3));
+		}
+		*/
+		
 	}
 }

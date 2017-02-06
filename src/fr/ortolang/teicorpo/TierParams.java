@@ -13,12 +13,20 @@ class DescTier {
 	String tier;
 	String type;
 	String parent;
+	String workingTier;
+	String workingParent;
 
 	public String toString() {
 		String s = "Tier: " + tier + " type(" + type + ") parent(" + parent + ")";
 		return s;
 	}
-	// DescTier() { tier=null; type=null; parent=null; };
+	DescTier() {
+		tier = null;
+		type = null;
+		parent = null;
+		workingTier = null;
+		workingParent = null;
+	};
 
 	/**
 	 * check and return type value
@@ -40,12 +48,16 @@ class DescTier {
 			return LgqType.TIME_INT;
 		return null;
 	}
+	public String workingToString() {
+		String s = "Tier: " + workingTier + " type(" + type + ") parent(" + workingParent + ")";
+		return s;
+	}
 }
 
 class TierParams {
 	boolean verbose;
 	boolean forceEmpty;
-	boolean cleanLine;
+	boolean rawLine;
 	boolean sectionDisplay;
 	List <String> input;
 	String output;
@@ -73,6 +85,11 @@ class TierParams {
 	ArrayList<DescTier> ldt = new ArrayList<DescTier>();
 	boolean shortextension;
 	String defaultAge;
+	String situation;
+	boolean ignorePraatNumbering;
+	boolean conll;
+	String syntax;
+	String normalize;
 
 	TierParams() {
 		verbose = false;
@@ -86,7 +103,7 @@ class TierParams {
 		dontDisplay = new HashSet<String>();
 		level = 0; // all levels
 		forceEmpty = true;
-		cleanLine = false;
+		rawLine = false;
 		noHeader = false;
 		clearChatFormat = false;
 		raw = false;
@@ -104,6 +121,11 @@ class TierParams {
 		inputFormat = "";
 		shortextension = false;
 		defaultAge = "40.01";
+		situation = null;
+		ignorePraatNumbering = false;
+		conll = false;
+		syntax = "";
+		normalize ="";
 	}
 	void addCommand(String s) {
 		commands.add(s);
@@ -130,6 +152,14 @@ class TierParams {
 		return (level == 0 || t <= level) ? true : false; // si level == 0 all else if 't' is <= level
 	}
 	*/
+	String praatParamsToString() {
+		String s = "Encoding: " + ((encoding==null)?"none":encoding);
+		for (int i=0; i < ldt.size(); i++) {
+			s += " " + ldt.get(i).toString();
+		}
+		return s;
+	}
+	
 	private static boolean test(String s, HashSet<String> dd) {
 		s = s.toLowerCase();
 		for (String f: dd) {
@@ -145,15 +175,39 @@ class TierParams {
 		}
 		return false;
 	}
+	
 	boolean isDoDisplay(String s) {
-		if (doDisplay.size() < 1) return true;
-		return TierParams.test(s, doDisplay);
+		return isDoDisplay(s,0);
 	}
 	boolean isDontDisplay(String s) {
+		return isDontDisplay(s,0);
+	}
+	boolean isDoDisplay(String s, int level) {
+		if (doDisplay.size() < 1) return true;
+		if (level >= 3) {
+			if (TierParams.test("=3", doDisplay)) return true;
+		}
+		if (level == 2) {
+			if (TierParams.test("=2", doDisplay)) return true;
+		}
+		if (level == 1) {
+			if (TierParams.test("=1", doDisplay)) return true;
+		}
+		return TierParams.test(s, doDisplay);
+	}
+	boolean isDontDisplay(String s, int level) {
 		if (dontDisplay.size() < 1) return false;
+		if (level >= 3) {
+			if (TierParams.test("=3", dontDisplay)) return true;
+		}
+		if (level == 2) {
+			if (TierParams.test("=2", dontDisplay)) return true;
+		}
+		if (level == 1) {
+			if (TierParams.test("=1", dontDisplay)) return true;
+		}
 		return TierParams.test(s, dontDisplay);
 	}
-
 
 	public static void printVersionMessage() {
     	System.out.println("Conversions (version "+ Utils.versionSoft +") " + Utils.versionDate + " Version TEI_CORPO: " + Utils.versionTEI);
@@ -169,12 +223,8 @@ class TierParams {
 		System.err.println("         :-n niveau: niveau d'imbrication (1 pour lignes principales)");
 		System.err.println("         :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
 		System.err.println("         :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
-		System.err.println("         :-cleanline : exporte des énoncés sans marqueurs spéficiques de l'oral");
-		System.err.println("         :-clearchat : remplace les marqueurs + et apostrophes de chat par des marques standard");
-		System.err.println("         :-raw : exporte le texte sans aucune marqueurs de locuteur ni marqueurs spéficiques de l'oral");
-		System.err.println("         :-iramuteq : headers for iramuteq");
-		System.err.println("         :-concat : concaténation des fichiers résultats for iramuteq");
-		System.err.println("         :-append : pas d'effacement préalable du fichier destination si concaténation");
+		System.err.println("         :-rawLine : exporte des énoncés sans marqueurs spéficiques de l'oral");
+		System.err.println("         :-normalize format : normalisation réalisée à partir du format origine 'format' - options : clan");
 		System.err.println("         :-short : les extensions fichiers autre que TEI_CORPO ne contiennent pas tei_corpo");
 		System.err.println("         :--dtd cette option permet de vérifier que les fichiers Transcriber sont conformes à leur dtd");
 		System.err.println("            si cette option est spécifiée, la dtd (Trans-14.dtd) doit se trouver dans le même repertoire que le fichier Transcriber\n"
@@ -194,6 +244,20 @@ class TierParams {
 			System.err.println("         *** paramètre pour export dans TXM/Iramuteq/Le Trameur ***");
 			System.err.println("         :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm ou lexico ou le trameur");
 			System.err.println("         :-section : ajoute un indicateur de section en fin de chaque énoncé (pour lexico/le trameur)");
+			System.err.println("         :-syntax nom : choix pour la syntaxe à exporter");
+		}
+		if (style == 6) {
+			System.err.println("         :-raw : exporte le texte sans aucune marqueurs de locuteur ni marqueurs spéficiques de l'oral");
+			System.err.println("         :-iramuteq : headers for iramuteq");
+			System.err.println("         *** paramètre pour export dans Iramuteq ***");
+			System.err.println("         :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm ou lexico ou le trameur");
+			System.err.println("         :-concat : concaténation des fichiers résultats for iramuteq");
+			System.err.println("         :-append : pas d'effacement préalable du fichier destination si concaténation");
+		}
+		if (style == 7) {
+			System.err.println("         :-conll : export syntaxique au format conll (vertical)");
+			System.err.println("         :-model nom : fichier modèle pour la syntaxe");
+			System.err.println("         :-syntax nom : choix pour la syntaxe à générer");
 		}
 		System.err.println("	     :-usage ou -help = affichage ce message");
 		// System.exit(1);
@@ -217,59 +281,66 @@ class TierParams {
 			return false;
 		} else {
 			for (int i = 0; i < args.length; i++) {
+				String argument = args[i].toLowerCase();
 				try {
-					if (args[i].equals("-i")) {
+					if (argument.equals("-i")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-o")) {
+					} else if (argument.equals("-o")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-to")) {
+					} else if (argument.equals("-to")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-from")) {
+					} else if (argument.equals("-from")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-n")) {
+					} else if (argument.equals("-n")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-a")) {
+					} else if (argument.equals("-a")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-s")) {
+					} else if (argument.equals("-s")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-c")) {
+					} else if (argument.equals("-c")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-f")) {
+					} else if (argument.equals("-f")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-tv")) {
+					} else if (argument.equals("-tv")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-m")) {
+					} else if (argument.equals("-m")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-e")) {
+					} else if (argument.equals("-e")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-age")) {
+					} else if (argument.equals("-age")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-t")) {
+					} else if (argument.equals("-syntax")) {
+						i++;
+						continue;
+					} else if (argument.equals("-situation")) {
+						i++;
+						continue;
+					} else if (argument.equals("-t")) {
 						i++;
 						i++;
 						i++;
 						continue;
-					} else if (args[i].equals("-p")) {
+					} else if (argument.equals("-p")) {
 						if (i+1 >= args.length) {
 							printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						getTierParams(args[i], options.ldt, options);
-					} else if (args[i].equals("-h") || args[i].equals("-help") || args[i].equals("-usage")) {
+					} else if (argument.equals("-h") || argument.equals("-help") || argument.equals("-usage")) {
 						printUsageMessage(usage, ext1, ext2, style);
 						return false;
 					} else {
@@ -281,15 +352,16 @@ class TierParams {
 				}
 			}
 			for (int i = 0; i < args.length; i++) {
+				String argument = args[i].toLowerCase();
 				try {
-					if (args[i].equals("-i")) {
+					if (argument.equals("-i")) {
 						if (i+1 >= args.length) {
 							printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
 						options.input.add(args[i]);
-					} else if (args[i].equals("-o")) {
+					} else if (argument.equals("-o")) {
 						if (i+1 >= args.length) {
 							printUsageMessage(usage, ext1, ext2, style);
 							return false;
@@ -300,21 +372,21 @@ class TierParams {
 						}
 						i++;
 						options.output = args[i];
-					} else if (args[i].equals("-to")) {
+					} else if (argument.equals("-to")) {
 						if (i+1 >= args.length) {
 							printUsageMessage(usage, "-", "-", style);
 							return false;
 						}
 						i++;
 						options.outputFormat = TeiCorpo.extensions(args[i]);
-					} else if (args[i].equals("-from")) {
+					} else if (argument.equals("-from")) {
 						if (i+1 >= args.length) {
 							printUsageMessage(usage, "-", "-", style);
 							return false;
 						}
 						i++;
 						options.inputFormat = TeiCorpo.extensions(args[i]);
-					} else if (args[i].equals("-n")) {
+					} else if (argument.equals("-n")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -n n'est pas suivi d'une valeur");
 							// printUsageMessage(usage, ext1, ext2, style);
@@ -328,7 +400,7 @@ class TierParams {
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
-					} else if (args[i].equals("-c")) {
+					} else if (argument.equals("-c")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -c n'est pas suivi d'une valeur");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
@@ -336,7 +408,7 @@ class TierParams {
 						}
 						i++;
 						options.addCommand(args[i]);
-					} else if (args[i].equals("-a")) {
+					} else if (argument.equals("-a")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -a n'est pas suivi d'une valeur");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
@@ -344,7 +416,7 @@ class TierParams {
 						}
 						i++;
 						options.addDoDisplay(args[i]);
-					} else if (args[i].equals("-s")) {
+					} else if (argument.equals("-s")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -s n'est pas suivi d'une valeur");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
@@ -352,7 +424,7 @@ class TierParams {
 						}
 						i++;
 						options.addDontDisplay(args[i]);
-					} else if (args[i].equals("-age")) {
+					} else if (argument.equals("-age")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -age n'est pas suivi d'une valeur");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
@@ -360,7 +432,23 @@ class TierParams {
 						}
 						i++;
 						options.defaultAge = args[i];
-					} else if (args[i].equals("-tv")) {
+					} else if (argument.equals("-syntax")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -syntax n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.syntax = args[i];
+					} else if (argument.equals("-situation")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -situation est absent");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.situation = args[i];
+					} else if (argument.equals("-tv")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -tv n'est pas suivi d'une valeur");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
@@ -368,29 +456,29 @@ class TierParams {
 						}
 						i++;
 						options.addTv(args[i]);
-					} else if (args[i].equals("-f")) {
+					} else if (argument.equals("-f")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -f n'est pas suivi d'une valeur");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
 						i++;
-						if (args[i].equals("mor")) {
+						if (argument.equals("mor")) {
 							options.options = "mor";
-						} else if (args[i].equals("xmor")) {
+						} else if (argument.equals("xmor")) {
 							options.options = "xmor";
-						} else if (args[i].equals("morext")) {
+						} else if (argument.equals("morext")) {
 							options.options = "morext";
-						} else if (args[i].equals("xmorext")) {
+						} else if (argument.equals("xmorext")) {
 							options.options = "xmorext";
 						} else {
 							printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}
-					} else if (args[i].equals("-p")) {
+					} else if (argument.equals("-p")) {
 						i++;
 						continue;
-					} else if (args[i].equals("-stdevent")) {
+					} else if (argument.equals("-stdevent")) {
 						Utils.leftBracket = "<"; // 27EA - "❮"; // "⟨" 27E8 - "❬" 
 						Utils.rightBracket = ">"; // 27EB - "❯"; // "⟩" 27E9 - "❭" - 276C à 2771 ❬ ❭ ❮ ❯ ❰ ❱ 
 						Utils.leftEvent = "[=! "; // 27E6 - "『"; // 300E - "⌈"; // u2308 
@@ -400,57 +488,68 @@ class TierParams {
 						Utils.leftCode = "[% "; // 231C - "⁌"; // 204C
 						Utils.rightCode = "]"; // 231F - "⁍"; // 204D
 						continue;
-					} else if (args[i].equals("-cleanline")) {
-						options.cleanLine = true;
+					} else if (argument.equals("-rawline")) {
+						options.rawLine = true;
 						continue;
-					} else if (args[i].equals("-nospreadtime")) {
+					} else if (argument.equals("-nospreadtime")) {
 						options.nospreadtime = true;
 						continue;
-					} else if (args[i].equals("-pure")) {
+					} else if (argument.equals("-pure")) {
 						Utils.teiStylePure = true;
 						continue;
-					} else if (args[i].equals("--dtd")) {
+					} else if (argument.equals("--dtd")) {
 						options.dtdValidation = true;
-					} else if (args[i].equals("-clearchat")) {
-						options.clearChatFormat = true;
+					} else if (argument.equals("-normalize")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -normalize n'est pas suivi d'une valeur");
+							return false;
+						}
+						i++;
+						options.normalize = args[i];
 						continue;
-					} else if (args[i].equals("-noheader")) {
+					} else if (argument.equals("-noheader")) {
 						options.noHeader = true;
 						continue;
-					} else if (args[i].equals("-v")) {
+					} else if (argument.equals("-ipn")) {
+						options.ignorePraatNumbering = true;
+						continue;
+					} else if (argument.equals("-v")) {
 						options.verbose = true;
 						continue;
-					} else if (args[i].equals("-raw")) {
+					} else if (argument.equals("-raw")) {
 						options.raw = true;
 						continue;
-					} else if (args[i].equals("-concat")) {
+					} else if (argument.equals("-concat")) {
 						options.concat = true;
 						continue;
-					} else if (args[i].equals("-short")) {
+					} else if (argument.equals("-conll")) {
+						options.conll = true;
+						continue;
+					} else if (argument.equals("-short")) {
 						options.shortextension = true;
 						continue;
-					} else if (args[i].equals("-append")) {
+					} else if (argument.equals("-append")) {
 						options.erase = false;
 						continue;
-					} else if (args[i].equals("-iramuteq")) {
+					} else if (argument.equals("-iramuteq")) {
 						options.iramuteq = true;
 						options.raw = true;
 						options.concat = true;
 						continue;
-					} else if (args[i].equals("-loc")) {
+					} else if (argument.equals("-loc")) {
 						options.locutor = true;
 						continue;
-					} else if (args[i].equals("-section")) {
+					} else if (argument.equals("-section")) {
 						options.sectionDisplay = true;
 						continue;
-					} else if (args[i].equals("-m")) {
+					} else if (argument.equals("-m")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -m n'est pas suivi d'une valeur");
 							return false;
 						}
 						i++;
 						options.mediaName = args[i];
-					} else if (args[i].equals("-e")) {
+					} else if (argument.equals("-e")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -e n'est pas suivi d'une valeur");
 							return false;
@@ -458,7 +557,7 @@ class TierParams {
 						i++;
 						options.encoding = args[i];
 						options.detectEncoding = false;
-					} else if (args[i].equals("-t")) {
+					} else if (argument.equals("-t")) {
 						if (i+3 >= args.length) {
 							System.err.println("le parametre -m n'est pas suivi d'une valeur");
 							return false;
@@ -475,7 +574,7 @@ class TierParams {
 						i++;
 						d.parent = args[i];
 						options.ldt.add(d);
-					} else if (args[i].equals("-d")) {
+					} else if (argument.equals("-d")) {
 						options.detectEncoding = false;
 						options.encoding = "UTF-8";
 					} else {

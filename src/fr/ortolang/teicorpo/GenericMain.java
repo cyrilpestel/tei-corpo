@@ -174,12 +174,14 @@ public abstract class GenericMain {
 						output += input;
 					} else {
 						// output = options.output + Utils.basename(input) + options.outputFormat;
+						String bn = Utils.basename(input);
 						if (options.shortextension) {
-							String bn = Utils.basename(input);
 							if (bn.endsWith(Utils.EXT_PUBLISH))
 								output += bn.substring(0, bn.length() - Utils.EXT_PUBLISH.length()) + options.outputFormat;
 							else
 								output += bn + options.outputFormat;
+						} else {
+							output += bn + options.outputFormat;
 						}
 					}
 				} else {

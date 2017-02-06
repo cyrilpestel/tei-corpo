@@ -379,7 +379,7 @@ public class TeiToClan extends TeiConverter {
 	 * @param tier
 	 *            Le tier à écrire, au format : Nom du tier \t Contenu du tier
 	 */
-	public void writeTier(Annot tier) {
+	public void writeTier(AnnotatedUtterance u, Annot tier) {
 		String type = tier.name;
 		String tierContent = tier.getContent();
 		String tierLine = "%" + type + ":\t" + tierContent.replaceAll("\\s+", " ").trim();

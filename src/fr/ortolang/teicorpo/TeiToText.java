@@ -176,15 +176,15 @@ public class TeiToText extends TeiConverter {
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
 		if (tf.optionsOutput.raw == true)
-			out.println(tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent);
+			out.println(speechContent);
 		else {
 			if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
 				float start = Float.parseFloat(startTime);
 				float end = Float.parseFloat(endTime);
 				out.printf("%f:%f\t", start, end);
-				out.println(loc + "\t" + (tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent));
+				out.println(loc + "\t" + speechContent);
 			} else {
-				out.println("\t\t" + loc + "\t" + (tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent));
+				out.println("\t\t" + loc + "\t" + speechContent);
 			}
 		}
 	}
@@ -217,7 +217,7 @@ public class TeiToText extends TeiConverter {
 	 *            Le tier à écrire, au format : Nom du tier \t Contenu du tier
 	 */
 	@Override
-	public void writeTier(Annot tier) {
+	public void writeTier(AnnotatedUtterance u, Annot tier) {
 		/* already done in AnnotatedUtterance
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay(tier.name, 2))
@@ -246,7 +246,7 @@ public class TeiToText extends TeiConverter {
 		String usage = "Description: TeiToText convertit un fichier au format TEI en un fichier au format Text (txt)%nUsage: TeiToText [-options] <file."
 				+ Utils.EXT + ">%n";
 		TeiToText ttc = new TeiToText();
-		ttc.mainCommand(args, Utils.EXT, EXT, usage, 2);
+		ttc.mainCommand(args, Utils.EXT, EXT, usage, 6);
 	}
 
 	@Override

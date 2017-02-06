@@ -57,11 +57,19 @@ public class HierarchicTrans{
 	//  Passage de la représentation partition à la représentation hierarchique  
 	//  Ne fonctionne que si les informations sur les tiers sont bien renseignées
 	//  Représentation partition : une map clé = nom du tier, valeur = liste des annotations, ordonné ou non ???? 
-	public void partionRepresentationToHierachic(Map<String, ArrayList<Annot>> partition_annotations){
+	public void partionRepresentationToHierachic(Map<String, ArrayList<Annot>> partition_annotations, TierParams optionsTEI){
 		//Ajout des tiers principaux d'abord : ceux qui ne dépendent d'aucune autre annotation
 		//Dans les linguistic-type, la contrainte "-" signifie qu'il s'agit d'un type principal
 		for(Map.Entry<String , ArrayList<Annot>> entry : partition_annotations.entrySet()){
 			String tierName = entry.getKey();
+			//System.out.printf(">>%s%n", tierName);
+			if (tierName != null && optionsTEI != null) {
+				if (optionsTEI.isDontDisplay(tierName, 1))
+					continue;
+				if (!optionsTEI.isDoDisplay(tierName, 1))
+					continue;
+			}
+			//System.out.printf("OK%n");
 			if(this.tiersInfo.get(tierName).type.constraint.equals(LgqType.ROOT)){
 				this.hierarchic_representation.put(tierName, entry.getValue());
 			}
@@ -127,21 +135,25 @@ public class HierarchicTrans{
 		}
 	}
 */
-	public boolean isInclude(String mainStart, String mainEnd, String subStart, String subEnd ){
-		Double mainStartDouble = Double.parseDouble((mainStart));
-		Double mainEndDouble = Double.parseDouble((mainEnd));
-		Double subStartDouble = Double.parseDouble((subStart));
-		Double subEndDouble = Double.parseDouble((subEnd));
-		boolean val = (subStartDouble >= mainStartDouble && subEndDouble <= mainEndDouble);
-		//System.out.println(mainStartDouble + "-" + mainEndDouble + "->" + subStartDouble + "-" + subEndDouble + "  resBool ->  "+  val);
-		return val;
+	public boolean isInclude(String mainStart, String mainEnd, String subStart, String subEnd ) {
+		try {
+			Double mainStartDouble = Double.parseDouble((mainStart));
+			Double mainEndDouble = Double.parseDouble((mainEnd));
+			Double subStartDouble = Double.parseDouble((subStart));
+			Double subEndDouble = Double.parseDouble((subEnd));
+			boolean val = (subStartDouble >= mainStartDouble && subEndDouble <= mainEndDouble);
+			//System.out.println(mainStartDouble + "-" + mainEndDouble + "->" + subStartDouble + "-" + subEndDouble + "  resBool ->  "+  val);
+			return val;
+		} catch(Exception e) {
+			return false;
+		}
 	}
 
 	public static void main (String args[]) throws IOException{
 		//Exemple
 		HierarchicTrans ht = new HierarchicTrans();
 		HashMap<String, ArrayList<Annot>> partition_annotations = new HashMap<String, ArrayList<Annot>>();
-		ht.partionRepresentationToHierachic(partition_annotations);
+		ht.partionRepresentationToHierachic(partition_annotations, null);
 
 	}
 }

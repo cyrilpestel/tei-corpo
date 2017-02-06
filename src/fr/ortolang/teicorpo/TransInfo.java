@@ -163,7 +163,7 @@ public class TransInfo {
 				for (int i = 0; i < settings.getLength(); i++) {
 					Element d = (Element) settings.item(i);
 					Element activity = (Element) d.getElementsByTagName("activity").item(0);
-					String c = activity.getTextContent().trim();
+					String c = activity != null ? activity.getTextContent().trim() : "";
 					// System.out.printf("Theme: %s %s %n",
 					// d.getAttribute("xml:id"), c);
 					situations.put(d.getAttribute("xml:id"), c);

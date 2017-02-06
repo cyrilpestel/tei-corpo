@@ -14,8 +14,10 @@ class AfficheurFlux implements Runnable {
 
     private final InputStream inputStream;
     private PrintWriter out;
+    private boolean verbose;
 
-    AfficheurFlux(InputStream inputStream, String outputName) {
+    AfficheurFlux(InputStream inputStream, String outputName, boolean verbose) {
+    	this.verbose = verbose;
         this.inputStream = inputStream;
         if (outputName != null) {
     		try {
@@ -41,8 +43,9 @@ class AfficheurFlux implements Runnable {
             while ((ligne = br.readLine()) != null) {
             	if (out != null)
                     out.println(ligne);
-            	else
-            		System.out.println(ligne);
+            	else {
+            		if (verbose) System.out.println(ligne);
+            	}
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -87,12 +90,12 @@ public class ExternalCommand {
 		return null;
 	}
 
-    public static void command(String[] args, String output) {
-        System.err.println("Début du programme");
+    public static void command(String[] args, String output, boolean verbose) {
+        if (verbose) System.err.println("Début du programme : " + Utils.join(args));
         try {
             Process p = Runtime.getRuntime().exec(args);
-            AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream(), output);
-            AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream(), null);
+            AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream(), output, verbose);
+            AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream(), null, verbose);
 
             new Thread(fluxSortie).start();
             new Thread(fluxErreur).start();
@@ -103,7 +106,7 @@ public class ExternalCommand {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.err.println("Fin du programme");
+        if (verbose) System.err.println("Fin du programme");
     }
     
     public static void main(String[] args) {

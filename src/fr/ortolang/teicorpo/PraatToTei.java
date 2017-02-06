@@ -13,10 +13,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 /**
  * A class to extract annotations from a Praat .TextGrid file. Only
@@ -304,8 +307,8 @@ public class PraatToTei extends GenericMain {
 				return;
 			}
 
-			tierNames = new HashMap<String, String>(4);
-			annotationMap = new HashMap<String, ArrayList<Annot>>(4);
+			tierNames = new LinkedHashMap<String, String>();
+			annotationMap = new HashMap<String, ArrayList<Annot>>();
 
 			ArrayList<Annot> records = new ArrayList<Annot>();
 			Annot record = null;
@@ -509,8 +512,8 @@ public class PraatToTei extends GenericMain {
 			throw new IOException("The reader object is null, cannot read from the file.");
 		}
 
-		tierNames = new HashMap<String, String>(4);
-		annotationMap = new HashMap<String, ArrayList<Annot>>(4);
+		tierNames = new LinkedHashMap<String, String>();
+		annotationMap = new HashMap<String, ArrayList<Annot>>();
 
 		ArrayList<Annot> records = new ArrayList<Annot>();
 		Annot record = null;
@@ -831,12 +834,21 @@ public class PraatToTei extends GenericMain {
 				if (TierParams.getTierParams(fnb.toString(), optionsTEI.ldt, optionsTEI) == false)
 					System.err.println("Erreur de traitement du fichier paramètres: " + fnb.toString());
 			}
-			init(inputfile, true, 100, encoding);
+			try {
+				if (options.detectEncoding == true)
+					options.encoding = EncodingDetector.detect(inputfile);
+			} catch (Exception e) {
+				;
+			}
+			init(inputfile, true, 100, options.encoding);
 			if (verbose) System.out.println("Fichier " + inputfile + " Encoding: " + (encoding != null ? encoding : "par défaut"));
 			/*
 			 * construire un hierarchic trans
 			 */
 			HierarchicTrans ht = new HierarchicTrans();
+			ht.initial_format = "Praat";
+			ht.metaInf.version = Utils.versionSoft;
+			ht.metaInf.time_units = "s";
 			/*
 			 * construire tiers info
 			 */
@@ -852,6 +864,47 @@ public class PraatToTei extends GenericMain {
 				Media m = new Media("", (new File(url)).getAbsolutePath());
 				ht.metaInf.medias.add(m);
 			}
+			if (optionsTEI.ignorePraatNumbering == false) {
+				for (int i=0; i<optionsTEI.ldt.size(); i++) {
+					DescTier a = optionsTEI.ldt.get(i);
+					try {
+						a.workingTier = a.tier; // reinit if not found
+						a.workingParent = a.parent;
+						int t = Integer.valueOf(a.tier);
+						int p = Integer.valueOf(a.parent);
+						// replace numbers by true values
+						int nth = 1; // tier number
+						for (Map.Entry<String, String> element : tierNames.entrySet()) {
+							if (nth == t) {
+								TierInfo value = new TierInfo();
+								value.participant = element.getKey();
+								a.workingTier = value.participant;
+								break;
+							}
+							nth++;
+						}
+						nth = 1; // tier number
+						for (Map.Entry<String, String> element : tierNames.entrySet()) {
+							if (nth == p) {
+								TierInfo value = new TierInfo();
+								value.participant = element.getKey();
+								a.workingParent = value.participant;
+								break;
+							}
+							nth++;
+						}
+					} catch (Exception e) {
+						continue;
+					}
+				}
+			} else {
+				// we need a copy in the working fields
+				for (int i=0; i<optionsTEI.ldt.size(); i++) {
+					DescTier a = optionsTEI.ldt.get(i);
+					a.workingTier = a.tier;
+					a.workingParent = a.parent;
+				}				
+			}
 			if (verbose) System.out.println("TIERS Information");
 			for (Map.Entry<String, String> element : tierNames.entrySet()) {
 				TierInfo value = new TierInfo();
@@ -862,7 +915,7 @@ public class PraatToTei extends GenericMain {
 					// System.out.println(" " + j + " :- " +
 					// ldt.get(j).print());
 					DescTier a = optionsTEI.ldt.get(j);
-					if (a.tier.equalsIgnoreCase(value.participant)) {
+					if (a.workingTier.equalsIgnoreCase(value.participant)) {
 						value.type.lgq_type_id = value.participant;
 						value.type.constraint = DescTier.whichType(a.type);
 						if (value.type.constraint == LgqType.SYMB_ASSOC || value.type.constraint == LgqType.SYMB_DIV) {
@@ -870,9 +923,9 @@ public class PraatToTei extends GenericMain {
 						} else {
 							value.type.time_align = true;
 						}
-						value.parent = a.parent;
+						value.parent = a.workingParent;
 						found = true;
-						if (verbose) System.out.println("TIER: " + a.toString());
+						if (verbose) System.out.println("TIER: " + a.workingToString());
 						break;
 					}
 				}
@@ -895,9 +948,6 @@ public class PraatToTei extends GenericMain {
 			 * ht.tiersInfo.entrySet()){ System.out.println(entry.getKey() + " "
 			 * + entry.getValue().toString()); }
 			 */
-			ht.initial_format = "Praat";
-			ht.metaInf.version = Utils.versionSoft;
-			ht.metaInf.time_units = "s";
 
 			/*
 			 * construire timeline not necessary will be done later when
@@ -922,9 +972,10 @@ public class PraatToTei extends GenericMain {
 				p.id = tierInfo.getKey();
 				ht.metaInf.participants.add(p);
 			}
-			ht.partionRepresentationToHierachic(annotationMap);
+			ht.partionRepresentationToHierachic(annotationMap, optionsTEI);
 			HT_ToTei hiertransToTei = new HT_ToTei(ht, optionsTEI);
 			// System.out.println(outputfile);
+			Utils.setTranscriptionDesc(hiertransToTei.docTEI, "praat", "1.0", optionsTEI.praatParamsToString());
 			Utils.setDocumentName(hiertransToTei.docTEI, Utils.lastname(outputfile));
 			Utils.createFile(outputfile, hiertransToTei.docTEI);
 

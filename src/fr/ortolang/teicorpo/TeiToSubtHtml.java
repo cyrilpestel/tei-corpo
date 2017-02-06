@@ -266,14 +266,14 @@ public class TeiToSubtHtml extends TeiConverter{
 	 * Ecriture des tiers: lignes qui commencent par le signe pourcent %
 	 * @param tier	Le tier à écrire, au format : Nom du tier \t Contenu du tier
 	 */
-	public void writeTier(Annot tier) {
+	public void writeTier(AnnotatedUtterance u, Annot tier) {
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay(tier.name)) return;
 			if (!optionsOutput.isDoDisplay(tier.name)) return;
 		}
 		String type = tier.name;
-		String tierContent = tier.getContent(optionsOutput.cleanLine);
-		String tierLine = tierContent.trim();
+		String tierContent = tier.getContent();
+		String tierLine = "%" + type + ": " + tierContent.trim();
 		printContinuation("%"+type+":", tierLine);	
 	}
 

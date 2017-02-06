@@ -512,15 +512,12 @@ public class TeiToElan extends GenericMain {
 					align_annot.setAttribute("TIME_SLOT_REF2", timelineValueOf(a.end));
 					annot.appendChild(align_annot);
 					Element annotationValue = elanDoc.createElement("ANNOTATION_VALUE");
-					/*
-					if (ttp.optionsOutput.cleanLine == true)
-						annotationValue.setTextContent(a.cleanedContent);
-					else
-					*/
-					annotationValue.setTextContent(a.getContent(ttp.optionsOutput.cleanLine));
+					String str = a.getContent(ttp.optionsOutput.rawLine);
+					String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput, "elan");
+					annotationValue.setTextContent(strNorm);
 					if (Utils.isNotEmptyOrNull(cvref)) {
 						Map<String, String> cvi = cvs.get(cvref);
-						String cve = cvi.get(a.getContent(ttp.optionsOutput.cleanLine));
+						String cve = cvi.get(a.getContent(ttp.optionsOutput.rawLine));
 						if (Utils.isNotEmptyOrNull(cve))
 							align_annot.setAttribute("CVE_REF", cve);
 					}
@@ -534,10 +531,12 @@ public class TeiToElan extends GenericMain {
 						ref_annot.setAttribute("PREVIOUS_ANNOTATION", a.previous);
 					annot.appendChild(ref_annot);
 					Element annotationValue = elanDoc.createElement("ANNOTATION_VALUE");
-					annotationValue.setTextContent(a.getContent(ttp.optionsOutput.cleanLine));
+					String str = a.getContent(ttp.optionsOutput.rawLine);
+					String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput, "elan");
+					annotationValue.setTextContent(strNorm);
 					if (Utils.isNotEmptyOrNull(cvref)) {
 						Map<String, String> cvi = cvs.get(cvref);
-						String cve = cvi.get(a.getContent(ttp.optionsOutput.cleanLine));
+						String cve = cvi.get(a.getContent(ttp.optionsOutput.rawLine));
 						if (Utils.isNotEmptyOrNull(cve))
 							ref_annot.setAttribute("CVE_REF", cve);
 					}

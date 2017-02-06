@@ -232,10 +232,19 @@ public class HT_ToTei {
 	}
 
 	public void setProfileDescElement() {
+		Node profileDesc = docTEI.getElementsByTagName("profileDesc").item(0);
+		
+		Element settingDesc = docTEI.createElement("settingDesc");
+		Element setting = docTEI.createElement("setting");
+		Element activity = docTEI.createElement("activity");
+		if (options.situation != null) activity.setTextContent(options.situation);
+		setting.appendChild(activity);
+		setting.setAttribute("xml:id", "d0");
+		settingDesc.appendChild(setting);
+		profileDesc.appendChild(settingDesc);
 		// ParticDesc
 		int loc_nb = 1;
 		Element particDesc = docTEI.createElement("particDesc");
-		Node profileDesc = docTEI.getElementsByTagName("profileDesc").item(0);
 		profileDesc.appendChild(particDesc);
 		Element listPerson = docTEI.createElement("listPerson");
 		particDesc.appendChild(listPerson);
@@ -249,10 +258,10 @@ public class HT_ToTei {
 			altGrp.appendChild(alt);
 			person.appendChild(altGrp);
 
-			if (!participant.age.isEmpty())
-				setAttr(person, "age", Utils.normaliseAge(participant.age));
-			else
+			if (participant.age == null || participant.age.isEmpty())
 				setAttr(person, "age", Utils.normaliseAge(options.defaultAge));
+			else
+				setAttr(person, "age", Utils.normaliseAge(participant.age));
 			setAttr(person, "role", participant.role);
 			setAttr(person, "source", participant.corpus);
 			if (Utils.isNotEmptyOrNull(participant.sex)) {
@@ -318,11 +327,11 @@ public class HT_ToTei {
 		Element appInfo = docTEI.createElement("appInfo");
 		encodingDesc.appendChild(appInfo);
 		Element application = docTEI.createElement("application");
-		application.setAttribute("ident", ht.initial_format);
-		application.setAttribute("version", ht.metaInf.version);
+		application.setAttribute("ident", "TeiCorpo");
+		application.setAttribute("version", Utils.versionSoft);
 		Element desc = this.docTEI.createElement("desc");
 		application.appendChild(desc);
-		desc.setTextContent("Transcription created with Elan and converted to TEI_CORPO");
+		desc.setTextContent("Transcription converted with TeiCorpo and to TEI_CORPO");
 		appInfo.appendChild(application);
 	}
 
@@ -490,6 +499,8 @@ public class HT_ToTei {
 	public void buildTrans() {
 		Element body = (Element) docTEI.getElementsByTagName("body").item(0);
 		mainDiv = Utils.createDivHead(docTEI);
+		mainDiv.setAttribute("type", "Situation");
+		mainDiv.setAttribute("subtype", "d0");
 		Utils.setDivHeadAttr(docTEI, mainDiv, "start", "#T0");
 		body.appendChild(mainDiv);
 		// Création des annotU principaux
@@ -506,14 +517,18 @@ public class HT_ToTei {
 			// String spk = ht.tiersInfo.get(annotType).participant;
 			ArrayList<Annot> annotList = entry.getValue();
 			for (Annot annot : annotList) {
-				if (!annot.end.isEmpty()) {
-					Double t = Double.parseDouble(annot.end);
-					if (t > maxTime)
-						maxTime = t;
-				} else if (!annot.start.isEmpty()) {
-					Double t = Double.parseDouble(annot.start);
-					if (t > maxTime)
-						maxTime = t;
+				try {
+					if (!annot.end.isEmpty()) {
+						Double t = Double.parseDouble(annot.end);
+						if (t > maxTime)
+							maxTime = t;
+					} else if (!annot.start.isEmpty()) {
+						Double t = Double.parseDouble(annot.start);
+						if (t > maxTime)
+							maxTime = t;
+					}
+				} catch(Exception e) {
+					
 				}
 				Element annotUEl = Utils.createAnnotationBloc(docTEI);
 				// Set annotatedU attributes
@@ -533,7 +548,7 @@ public class HT_ToTei {
 				// buildU//
 				Element u = docTEI.createElement("u");
 				Element seg = docTEI.createElement("seg");
-				seg.setTextContent(annot.content);
+				seg.setTextContent(annot.getContent());
 				u.appendChild(seg);
 				annotUEl.appendChild(u);
 				if (Utils.isNotEmptyOrNull(startStr)) {
@@ -584,7 +599,7 @@ public class HT_ToTei {
 						annotType1 = annot.name;
 					}
 					span = docTEI.createElement("span");
-					span.setTextContent(annot.content.trim());
+					span.setTextContent(annot.getContent().trim());
 					// System.out.println(annot.content.trim() + " --- >>> " +
 					// annot.dependantAnnotations );
 					if (Utils.isNotEmptyOrNull(annot.id)) {

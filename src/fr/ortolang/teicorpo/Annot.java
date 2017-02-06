@@ -98,8 +98,14 @@ public class Annot {
 		/*
 		 * correct values if end time before begin time
 		 */
-		float beginTimeFloat = Float.parseFloat(beginTime);
-		float endTimeFloat = Float.parseFloat(endTime);
+		float beginTimeFloat = (float) -1.0;
+		float endTimeFloat = (float) -1.0;
+		try {
+			beginTimeFloat = Float.parseFloat(beginTime);
+			endTimeFloat = Float.parseFloat(endTime);
+		} catch(Exception e) {
+			;
+		}
 		if (endTimeFloat < beginTimeFloat && endTime != "-1") {
 			String sw = endTime;
 			endTime = beginTime;
@@ -115,17 +121,17 @@ public class Annot {
 	}
 
 	public String toString() {
-		String s = "NAME = " + name + "; ID = " + id;
+		String s = "NAME = (" + name + "); ID = (" + id;
 		if (timereftype.equals("ref")) {
-			s += "; LINK = " + link;
+			s += "); LINK = (" + link;
 		} else {
-			s += "; START = " + start + "; END = " + end;
+			s += "); START = (" + start + "); END = (" + end;
 		}
-		s += "; CONTENT = " + content;
+		s += "); CONTENT = (" + content.trim() + ")";
 		int i = 0;
 		if (dependantAnnotations != null)
 			while (i < dependantAnnotations.size()) {
-				s += "\n\t" + dependantAnnotations.get(i).toString();
+				s += "\nDA: " + String.valueOf(i) + ". " + dependantAnnotations.get(i).toString();
 				i++;
 				if (i >= 10) {
 					s += "\n\t...";

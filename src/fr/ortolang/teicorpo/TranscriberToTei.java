@@ -113,6 +113,16 @@ public class TranscriberToTei extends GenericMain {
 		}
 		// Conversion
 		this.conversion();
+		String version = "none";
+		NamedNodeMap map = this.rootTRS.getAttributes();
+		for (int i = 0; i < map.getLength(); i++) {
+			String attName = map.item(i).getNodeName();
+			String attValue = map.item(i).getNodeValue();
+			if (attName == "version" && attValue != "") {
+				version = attValue;
+			}
+		}
+		Utils.setTranscriptionDesc(docTEI, "transcriber", version, "no information on TRS format");
 	}
 
 	/**
@@ -209,19 +219,12 @@ public class TranscriberToTei extends GenericMain {
 		Element appInfo = this.docTEI.createElement("appInfo");
 		encodingDesc.appendChild(appInfo);
 		Element application = this.docTEI.createElement("application");
-		application.setAttribute("ident", "Transcriber");
+		application.setAttribute("ident", "TeiCorpo");
+		application.setAttribute("version", Utils.versionSoft);
 		appInfo.appendChild(application);
-		NamedNodeMap map = this.rootTRS.getAttributes();
-		for (int i = 0; i < map.getLength(); i++) {
-			String attName = map.item(i).getNodeName();
-			String attValue = map.item(i).getNodeValue();
-			if (attName == "version" && attValue != "") {
-				application.setAttribute("version", attValue);
-			}
-		}
 		Element desc = this.docTEI.createElement("desc");
 		application.appendChild(desc);
-		desc.setTextContent("Transcription created with Transcriber and converted to TEI_CORPO - Soft version: "
+		desc.setTextContent("Transcription converted with TeiCorpo and to TEI_CORPO - Soft version: "
 				+ Utils.versionSoft);
 	}
 
@@ -353,6 +356,7 @@ public class TranscriberToTei extends GenericMain {
 		if (t != null && t.hasAttribute("desc")) {
 			Element setting = docTEI.createElement("setting");
 			Element activity = docTEI.createElement("activity");
+			if (optionsTEI.situation != null) activity.setTextContent(optionsTEI.situation);
 			setting.appendChild(activity);
 			setting.setAttribute("xml:id", "d0");
 			settingDesc.appendChild(setting);
@@ -378,7 +382,11 @@ public class TranscriberToTei extends GenericMain {
 			settingDesc.appendChild(setting);
 			Element p = this.docTEI.createElement("activity");
 			setting.appendChild(p);
-			p.setTextContent("no setting information");
+			if (optionsTEI.situation != null)
+					p.setTextContent(optionsTEI.situation);
+			else
+				p.setTextContent("no setting information");
+			setting.setAttribute("xml:id", "d0");
 		}
 	}
 
@@ -447,6 +455,8 @@ public class TranscriberToTei extends GenericMain {
 		Element body = (Element) this.docTEI.getElementsByTagName("body").item(0);
 		Element episode = (Element) this.docTRS.getElementsByTagName("Episode").item(0);
 		Element divEpisode = Utils.createDivHead(this.docTEI);
+		divEpisode.setAttribute("type", "Situation");
+		divEpisode.setAttribute("subtype", "d0");
 		body.appendChild(divEpisode);
 		NamedNodeMap attrs = episode.getAttributes();
 		if (attrs.getLength() != 0) {

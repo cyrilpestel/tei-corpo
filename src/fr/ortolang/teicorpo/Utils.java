@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -45,8 +46,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.2"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "21/11/2016 8:30";
+	public static String versionSoft = "1.23"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "06/02/2017 19:30";
 //	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
@@ -710,6 +711,39 @@ public class Utils {
 		// if not done
 		((Element)list.item(0)).appendChild(item);
 	}
+	
+	public static void setTranscriptionDesc(Document docTEI, String id, String version, String desc) {
+		NodeList trDesc = docTEI.getElementsByTagName("transcriptionDesc");
+		Element item;
+		if (trDesc.getLength() < 1) {
+			NodeList encDesc = docTEI.getElementsByTagName("encodingDesc");
+			if (encDesc.getLength() < 1) {
+				System.err.println("manque encoding desc: information non ajoutée");
+				return;
+			}
+			item = docTEI.createElement("transcriptionDesc");
+			((Element)encDesc.item(0)).appendChild(item);
+		} else {
+			item = ((Element)trDesc.item(0));
+		}
+		if (!id.isEmpty()) {
+			item.setAttribute("ident", id);
+		}
+		if (!version.isEmpty()) {
+			item.setAttribute("version", version);
+		}
+		if (!desc.isEmpty()) {
+			Element d;
+			NodeList list = item.getElementsByTagName("desc");
+			if (list.getLength() < 1) {
+				d = docTEI.createElement("desc");
+				item.appendChild(d);
+			} else {
+				d = ((Element)list.item(0));
+			}
+			d.setTextContent(desc);
+		}
+	}
 
 	public static void setRevisionInfo(Document docTEI, Element revisionDesc, String input, String output) {
 		if (revisionDesc ==  null) {
@@ -759,17 +793,73 @@ public class Utils {
 	}
 
 	public static String normaliseAge(String age) {
-		double d;
 		try {
-			d = Double.parseDouble(age);
+			// case y;m.d
+			Pattern pp = Pattern.compile("(\\d+);(\\d+)\\.(\\d+)");
+			Matcher mm = pp.matcher(age);
+			boolean bb = mm.matches();
+			if (bb) {
+				double y = Double.parseDouble(mm.group(1));
+				double m = Double.parseDouble(mm.group(2));
+				double d = Double.parseDouble(mm.group(3));
+				return Double.toString(y + (m*30.5 + d)/365.0);
+			}
+			// case y;m
+			pp = Pattern.compile("(\\d+);(\\d+)");
+			mm = pp.matcher(age);
+			bb = mm.matches();
+			if (bb) {
+				double y = Double.parseDouble(mm.group(1));
+				double m = Double.parseDouble(mm.group(2));
+				return Double.toString(y + (m*30.5)/365.0);
+			}
+			// case y;m.
+			pp = Pattern.compile("(\\d+);(\\d+)\\.");
+			mm = pp.matcher(age);
+			bb = mm.matches();
+			if (bb) {
+				double y = Double.parseDouble(mm.group(1));
+				double m = Double.parseDouble(mm.group(2));
+				return Double.toString(y + (m*30.5)/365.0);
+			}
+			// case y;
+			pp = Pattern.compile("(\\d+);");
+			mm = pp.matcher(age);
+			bb = mm.matches();
+			if (bb) {
+				double y = Double.parseDouble(mm.group(1));
+				return Double.toString(y);
+			}
+			double d = Double.parseDouble(age);
+			if (d < 0.0 || d > 120.0) {
+				System.err.println("age hors limites: (" + age + ")");
+				return "40.02";
+			}
 		} catch (Exception e) {
 			System.err.println("age anormal: " + age);
-			return "40.02";
-		}
-		if (d < 0.0 || d > 120.0) {
-			System.err.println("age anormal: " + age);
-			return "40.02";
+			return "40.03";
 		}
 		return age;
+	}
+
+	public static String normaliseActivity(String a) {
+		String [] s = {"jeu", "discours", "leçon", "interaction", "entretien", "interview", "enfantadulte"};
+		if (java.util.Arrays.asList(s).indexOf(a) >= 0)
+			return a;
+		System.err.printf("activité inconnue: %s%n", a);
+		return null;
+	}
+
+	static String getText(Element e) {
+		String s = "";
+		NodeList nle = e.getChildNodes();
+		for (int i = 0; i < nle.getLength(); i++) {
+			// System.out.printf("-- %d %s %n", i, nle.item(i));
+			Node ei = nle.item(i);
+			if (Utils.isText(ei)) {
+				s += ei.getTextContent();
+			}
+		}
+		return s;
 	}
 }

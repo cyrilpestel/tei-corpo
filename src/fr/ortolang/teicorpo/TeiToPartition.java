@@ -122,19 +122,6 @@ public class TeiToPartition {
 		}
 	}
 
-	String getText(Element e) {
-		String s = "";
-		NodeList nle = e.getChildNodes();
-		for (int i = 0; i < nle.getLength(); i++) {
-			// System.out.printf("-- %d %s %n", i, nle.item(i));
-			Node ei = nle.item(i);
-			if (Utils.isText(ei)) {
-				s += ei.getTextContent();
-			}
-		}
-		return s;
-	}
-
 	// Traitement des spanGrp pour ajout dans la structure Map
 	public void spanGrpCase(TreeMap<String, ArrayList<Annot>> tiers, Element spanGrp, String id, String name,
 			String timeref, String start, String end) {
@@ -361,4 +348,20 @@ public class TeiToPartition {
 
 	}
 
+	public static String getOriginalFormat(Document doc) {
+		NodeList trDesc = doc.getElementsByTagName("transcriptionDesc");
+		Element item;
+		if (trDesc.getLength() < 1) {
+			return "";
+		} else {
+			item = ((Element)trDesc.item(0));
+		}
+		String ident = item.getAttribute("ident");
+//		String version = item.getAttribute("version");
+		return ident;
+	}
+
+	public String originalFormat() {
+		return getOriginalFormat(teiDoc);
+	}
 }

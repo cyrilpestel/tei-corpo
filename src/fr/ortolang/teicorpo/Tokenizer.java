@@ -54,6 +54,9 @@ public class Tokenizer {
 	/** The F clitic. */
 	static String FClitic = "";
 
+	/** The punctuation. */
+	static String NonAlphaSymbols = "`£*$,;:?./+=#@!-_()\'\"\\n\\r";
+
 	/** The Token. */
 	static HashMap<String, Integer> Token = new HashMap<String, Integer>();
 
@@ -75,7 +78,7 @@ public class Tokenizer {
 			break;
 		case "fr": // French
 			PClitic = "[dcjlmnstDCJLNMST]\'|[Qq]u\'|[Jj]usqu\'|[Ll]orsqu\'";
-			FClitic = "-t-elles?|-t-ils?|-t-on|-ce|-elles?|-ils?|-je|-la|-les?|-leur|-lui|-mmes?|-m\'|-moi|-nous|-on|-toi|-tu|-t\'|-vous|-en|-y|-ci|-l";
+			FClitic = "-t-elles?|-t-ils?|-t-on|-ce|-elles?|-ils?|-je|-la|-les?|-leur|-lui|-mes?|-m\'|-moi|-nous|-on|-toi|-tu|-t\'|-vous|-en|-y|-ci|-elle|-il";
 			break;
 		}
 
@@ -290,6 +293,9 @@ public class Tokenizer {
 	}
 
 	private static void addAList(ArrayList<String> al, String buffer) {
+		if (isOnlyMadeOf(buffer, NonAlphaSymbols)) {
+			buffer = ".";
+		}
 		int p = buffer.indexOf("\n");
 		if (p < 0)
 			al.add(buffer);
@@ -298,6 +304,16 @@ public class Tokenizer {
 				al.add(buffer.substring(0,p));
 			if (p != buffer.length() - 1)
 				al.add(buffer.substring(p+1));
+		}
+	}
+
+	private static boolean isOnlyMadeOf(String s, String symb) {
+		if (s.matches("^[" + symb + "]+$")) {
+			// contains only listed chars
+			return true;
+		} else {
+			// contains other chars
+			return false;
 		}
 	}
 

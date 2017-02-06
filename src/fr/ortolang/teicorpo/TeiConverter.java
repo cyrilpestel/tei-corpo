@@ -57,7 +57,7 @@ public abstract class TeiConverter extends GenericMain {
 
 	public abstract void writeAddInfo(AnnotatedUtterance u);
 	
-	public abstract void writeTier(Annot tier);
+	public abstract void writeTier(AnnotatedUtterance u, Annot tier);
 
 	// Récupération des informations générales sur la transcription
 	public TransInfo getTransInfo() {
@@ -97,34 +97,6 @@ public abstract class TeiConverter extends GenericMain {
 		}
 	}
 
-	public static String convertSpecialCodes(String initial) {
-		initial = initial.replaceAll("\\byy(\\s|$)\\b", "yyy ");
-		initial = initial.replaceAll("\\bxx(\\s|$)\\b", "xxx ");
-		initial = initial.replaceAll("\\bww(\\s|$)\\b", "www ");
-		initial = initial.replaceAll("\\*\\*\\*", "xxx");
-		return ConventionsToChat.setConv(initial);
-	}
-
-	/**
-	 * Dans Chat, les lignes principales doivent se terminer par un symbole de
-	 * fin de ligne (spécifié dans le fichier depfile.cut). Cette méthode
-	 * vérifie si c'est bien le cas et si ça ne l'est pas elle rajoute le signe
-	 * point (par défaut) à la fin de la ligne à écrire.
-	 * 
-	 * @param line
-	 *            Ligne à renvoyer.
-	 * @return
-	 */
-	public String toChatLine(String line) {
-		String patternStr = "(\\+\\.\\.\\.|\\+/\\.|\\+!\\?|\\+//\\.|\\+/\\?|\\+\"/\\.|\\+\"\\.|\\+//\\?|\\+\\.\\.\\?|\\+\\.|\\.|\\?|!)\\s*$";
-		Pattern pattern = Pattern.compile(patternStr);
-		Matcher matcher = pattern.matcher(line);
-		if (!matcher.find()) {
-			line += ".";
-		}
-		return line;
-	}
-
 	/**
 	 * Ecriture des utterances
 	 * 
@@ -132,7 +104,6 @@ public abstract class TeiConverter extends GenericMain {
 	 *            L'utterance à écrire
 	 */
 	public void writeUtterance(AnnotatedUtterance u) {
-		String speech;
 		/*
 		 * Chaque utterance a une liste d'énoncé, dans un format spécifique:
 		 * start;end__speech
@@ -141,10 +112,6 @@ public abstract class TeiConverter extends GenericMain {
 		for (int s = 0; s < u.speeches.size(); s++) {
 			String start = null;
 			String end = null;
-//			String str = (optionsOutput.cleanLine == true) ? u.speeches.get(s).cleanedContent : u.speeches.get(s).content;
-			String str = u.speeches.get(s).getContent(optionsOutput.cleanLine == true);
-			speech = toChatLine(str).trim();
-			speech = speech.replaceAll("\n", "");
 			start = u.speeches.get(s).start;
 			end = u.speeches.get(s).end;
 
@@ -178,12 +145,15 @@ public abstract class TeiConverter extends GenericMain {
 				end = u.end;
 			}
 
+			String str = u.speeches.get(s).getContent(optionsOutput.rawLine);
+			String speech = NormalizeSpeech.parseText(str, tf.originalFormat(), optionsOutput, "");
+
 			// Ecriture de l'énoncé
-			writeSpeech(u.speakerCode, convertSpecialCodes(speech).replaceAll("\\s+", " "), start, end);
+			writeSpeech(u.speakerCode, speech, start, end);
 		}
 		// écriture des tiers
 		for (Annot tier : u.tiers)
-			writeTier(tier);
+			writeTier(u, tier);
 		writeAddInfo(u);
 	}
 }

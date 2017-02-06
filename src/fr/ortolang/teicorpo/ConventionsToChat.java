@@ -4,10 +4,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConventionsToChat {
-
-	public static String clearChatFormat(String s){
-		return s.replaceAll("' ", "'").replaceAll("\\+", " ");
-	}
 	
 	public static String noise(String s){
 		Pattern p1 = Pattern.compile("(\\s|^\\s*)(\\*) ([^/\\*]*) (B/\\*)");
@@ -59,14 +55,17 @@ public class ConventionsToChat {
 	}
 	
 	public static String chatToText(String s) {
+		// FClitic = "-t-elles?|-t-ils?|-t-on|-ce|-elles?|-ils?|-je|-la|-les?|-leur|-lui|-mes?|-m\'|-moi|-nous|-on|-toi|-tu|-t\'|-vous|-en|-y|-ci|-elle|-il";
 		String patternStr = "(\\+\\.\\.\\.|\\+/\\.|\\+!\\?|\\+//\\.|\\+/\\?|\\+\"/\\.|\\+\"\\.|\\+//\\?|\\+\\.\\.\\?|\\+\\.)\\s*$";
 		Pattern pattern = Pattern.compile(patternStr);
 		Matcher matcher = pattern.matcher(s);
 		if (matcher.find()) {
 			s  = s.replace(matcher.group(), ".");
 		}
-		s = s.replaceAll("\\+", "-");
+		s = s.replaceAll("\\+", " ");
 		s = s.replaceAll("_", " ");
+		s = s.replaceAll("' ", "'");
+		s = s.replaceAll(",", "");
 		return s;
 	}
 
@@ -109,6 +108,7 @@ public class ConventionsToChat {
 		l = l.replaceAll( "8", "" );
 		l = l.replaceAll( "9", "" );
 		//l = l.replaceAll( " +", " " ); // garder les marqueurs de fin d'énoncé
+		//l = l.replaceAll( "' ", "'" );
 		return l;
 	}
 	

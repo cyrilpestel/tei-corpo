@@ -118,8 +118,15 @@ public class TeiTreeTagger extends GenericMain {
 	}
 	
 	public String getTreeTaggerLocation() {
-		String os = System.getProperty("os.name");
-		if (os.equals("linux") || os.equals("Mac OS X")) {
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.indexOf("mac") >= 0) {
+			String p = ExternalCommand.getLocation("tree-tagger-macos","TREE_TAGGER");
+			if (p != null) return p;
+			p = ExternalCommand.getLocation("bin/tree-tagger-macos","TREE_TAGGER");
+			if (p != null) return p;
+			System.err.println("Cannot find tree-tagger-macos program");
+			return null;
+		} else if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0) {
 			String p = ExternalCommand.getLocation("tree-tagger","TREE_TAGGER");
 			if (p != null) return p;
 			p = ExternalCommand.getLocation("bin/tree-tagger","TREE_TAGGER");
@@ -136,7 +143,7 @@ public class TeiTreeTagger extends GenericMain {
 		}
 	}
 
-	private String getTreeTaggerModel() {
+	public String getTreeTaggerModel() {
 		String p = ExternalCommand.getLocation("spoken-french.par","TREE_TAGGER");
 		if (p != null) return p;
 		p = ExternalCommand.getLocation("model/spoken-french.par","TREE_TAGGER");
@@ -177,18 +184,15 @@ public class TeiTreeTagger extends GenericMain {
 				au.process(eAU, null, null, optionsOutput, false);
 				// mettre en place l'élément qui recevra l'analyse syntaxique.
 				Element syntaxGrp = teiDoc.createElement("spanGrp");
-				syntaxGrp.setAttribute("type", "conll");
+				syntaxGrp.setAttribute("type", "treetagger");
 				numAU++;
 				syntaxGrp.setAttribute("id", "tt" + numAU);
 				syntaxGrp.setIdAttribute("id", true);
 				eAU.appendChild(syntaxGrp);
 				// préparer le fichier d'analyse syntaxique
 				out.printf("<%s>%n", "tt" + numAU);
-				// decouper au.cleanedSpeech
-				ArrayList<String> p = Tokenizer.splitTextTT(
-						optionsOutput.clearChatFormat
-						? ConventionsToChat.clearChatFormat(au.cleanedSpeech)
-						: au.cleanedSpeech);
+				// decouper au.nomarkerSpeech
+				ArrayList<String> p = Tokenizer.splitTextTT(au.getTeiLine(true));
 				for (int ti = 0; ti < p.size(); ti++)
 					out.printf("%s%n", p.get(ti));
 			}
@@ -206,7 +210,7 @@ public class TeiTreeTagger extends GenericMain {
         	System.out.println("tree-tagger files not found: stop.");
         	return false;
         }
-        ExternalCommand.command(commande, outputNameResults);
+        ExternalCommand.command(commande, outputNameResults, optionsOutput.verbose);
 		/*
 		 * Le fichier résultat de TREETAGGER existe
 		 * récupérer les résultats
@@ -216,7 +220,7 @@ public class TeiTreeTagger extends GenericMain {
 			/*
 			 * version conll
 			 */
-			insertTemplate("conll", LgqType.SYMB_DIV, Utils.ANNOTATIONBLOC);
+			insertTemplate("treetagger", LgqType.SYMB_DIV, Utils.ANNOTATIONBLOC);
 			insertTemplate("word", LgqType.SYMB_ASSOC, "conll");
 			insertTemplate("pos", LgqType.SYMB_ASSOC, "conll");
 			insertTemplate("lemma", LgqType.SYMB_ASSOC, "conll");
@@ -224,7 +228,7 @@ public class TeiTreeTagger extends GenericMain {
 			/*
 			 * version <w>
 			 */
-			insertTemplate("conll", LgqType.SYMB_DIV, Utils.ANNOTATIONBLOC);
+			insertTemplate("treetagger", LgqType.SYMB_ASSOC, Utils.ANNOTATIONBLOC);
 		}
 		BufferedReader reader = null;
 		try {
@@ -362,18 +366,13 @@ public class TeiTreeTagger extends GenericMain {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("Result in " + outputName);
+		if (optionsOutput.verbose == true) System.out.println("Result in " + outputName);
 	}
 
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
-		System.out.println("Reading " + input);
+		if (options.verbose == true) System.out.println("Reading " + input);
 		init(input, output, options);
-/*		if (ok) {
-			createOutput();
-			System.out.println("File modified " + output);
-		}
-*/
 	}
 
 	/*
@@ -387,6 +386,6 @@ public class TeiTreeTagger extends GenericMain {
 		String usageString = "Description: TeiTreeTagger permet d'appliquer le programme TreeTagger sur un fichier Tei.%nUsage: TeiTreeTagger -c command [-options] <"
 				+ Utils.EXT + ">%n";
 		TeiTreeTagger ttt = new TeiTreeTagger();
-		ttt.mainCommand(args, Utils.EXT, TT_EXT + Utils.EXT, usageString, 0);
+		ttt.mainCommand(args, Utils.EXT, TT_EXT + Utils.EXT, usageString, 7);
 	}
 }

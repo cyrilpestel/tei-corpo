@@ -324,7 +324,7 @@ public class AnonymousVideo extends TeiConverter {
 	}
 
 	@Override
-	public void writeTier(Annot tier) {
+	public void writeTier(AnnotatedUtterance u, Annot tier) {
 		// TODO Auto-generated method stub
 		
 	}

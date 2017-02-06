@@ -181,12 +181,19 @@ public class TeiToTxm extends TeiConverter {
 	 *            Temps de fin de l'énoncé
 	 */
 	public void writeSpeech(String loc, String speechContent, String startTime, String endTime) {
+		if (optionsOutput.syntax.equals("tt"))
+			return;
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay(loc))
 				return;
 			if (!optionsOutput.isDoDisplay(loc))
 				return;
 		}
+		Element u = generateUStart(loc, startTime, endTime);
+		generateU(u, speechContent, loc);
+	}
+
+	Element generateUStart(String loc, String startTime, String endTime) {
 		// System.out.println(loc + ' ' + startTime + ' ' + endTime +' ' +
 		// speechContent);
 		// Si le temps de début n'est pas renseigné, on mettra par défaut le
@@ -206,34 +213,104 @@ public class TeiToTxm extends TeiConverter {
 			}
 		}
 
+		Element u = txmDoc.createElement("u");
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin
 		if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
-			Element u = txmDoc.createElement("u");
 			u.setAttribute("who", loc);
 			u.setAttribute("start", Double.toString(Double.parseDouble(startTime)));
 			u.setAttribute("end", Double.toString(Double.parseDouble(endTime)));
-			generateU(u, tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent, loc);
 			// u.setTextContent(speechContent);
-			head.appendChild(u);
 		} else {
-			Element u = txmDoc.createElement("u");
 			u.setAttribute("who", loc);
 			u.setAttribute("start", "");
 			u.setAttribute("end", "");
-			generateU(u, tf.optionsOutput.cleanLine?ConventionsToChat.chatToText(speechContent):speechContent, loc);
 			// u.setTextContent(speechContent);
-			head.appendChild(u);
+		}
+		head.appendChild(u);
+		return u;
+	}
+
+	@Override
+	public void writeAddInfo(AnnotatedUtterance u) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void writeTier(AnnotatedUtterance au, Annot tier) {
+		if (optionsOutput.syntax.equals("tt") || optionsOutput.syntax.equals("treetagger")) {
+			// System.out.println("writeTier: " + tier.name);
+			if (tier.name.equals("treetagger")) {
+				Element u = generateUStart(au.speakerCode, au.start, au.end);
+				// System.out.println("writeTier: " + tier.toString());
+				// get loc age
+				String age = "";
+				ArrayList<TeiParticipant> part = getParticipants();
+				for (TeiParticipant tp: part) {
+					if (tp == null || tp.id == null || au.speakerCode == null) continue;
+					if (tp.id.equals(au.speakerCode)) {
+						age = tp.age;
+					}
+				}
+				// tier.name
+				if (tier.dependantAnnotations != null)
+					for (int i=0; i < tier.dependantAnnotations.size(); i++) {
+						Annot aw = tier.dependantAnnotations.get(i);
+						Element we = txmDoc.createElement("w");
+						if (!au.speakerCode.isEmpty()) {
+							we.setAttribute("loc", au.speakerCode);
+							we.setAttribute("age", age);
+						}
+						for (Map.Entry<String, String> entry : optionsOutput.tv.entrySet()) {
+						    String key = entry.getKey();
+						    String value = entry.getValue();
+							we.setAttribute(key, value);
+						}
+						for (int k=0; k < aw.dependantAnnotations.size(); k++) {
+							Annot kw = aw.dependantAnnotations.get(k);
+							if (kw.name.equals("word")) {
+								we.setTextContent(kw.getContent().trim());
+							} else if (kw.name.equals("pos")) {
+								we.setAttribute("pos", kw.getContent().trim());
+							} else if (kw.name.equals("lemma")) {
+								we.setAttribute("lemma", kw.getContent().trim());
+							}
+						}
+						u.appendChild(we);
+					}
+			}
 		}
 	}
 
 	void generateU(Element u, String speechContent, String loc) {
-		String[] s = speechContent.split("\\s+");
-		for (String w: s) {
+		/*
+		 * Tokenize the line.
+		 */
+		// String[] s = speechContent.split("\\s+");
+		ArrayList<String> p = Tokenizer.splitTextTT(speechContent);
+		// for (int ti = 0; ti < p.size(); ti++) out.printf("%s%n", p.get(ti));
+		/*
+		 * write word information
+		 */
+		// get loc age
+		String age = "";
+		ArrayList<TeiParticipant> part = getParticipants();
+		for (TeiParticipant tp: part) {
+			if (tp == null || tp.id == null || loc == null) continue;
+			if (tp.id.equals(loc)) {
+				age = tp.age;
+			}
+		}
+		// for (String w: s) {
+		for (int ti = 0; ti < p.size(); ti++) {
 			Element we = txmDoc.createElement("w");
-			we.setTextContent(w);
-			if (!loc.isEmpty())
+			// we.setTextContent(w);
+			we.setTextContent(p.get(ti));
+			if (!loc.isEmpty()) {
 				we.setAttribute("loc", loc);
+				we.setAttribute("age", age);
+			}
 			for (Map.Entry<String, String> entry : optionsOutput.tv.entrySet()) {
 			    String key = entry.getKey();
 			    String value = entry.getValue();
@@ -280,17 +357,5 @@ public class TeiToTxm extends TeiConverter {
 			createOutput();
 //			System.out.println("New file created " + output);
 		}
-	}
-
-	@Override
-	public void writeAddInfo(AnnotatedUtterance u) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void writeTier(Annot tier) {
-		// TODO Auto-generated method stub
-		
 	}
 }
