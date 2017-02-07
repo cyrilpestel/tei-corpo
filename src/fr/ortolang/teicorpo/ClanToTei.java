@@ -276,8 +276,8 @@ public class ClanToTei extends GenericMain {
 			Element note = docTEI.createElement("note");
 			addNotes.appendChild(note);
 			ChatLine cl = new ChatLine(cf.birth);
-			note.setAttribute("type", cl.head);
-			note.setTextContent(cl.tail);
+			note.setAttribute("type", "other");
+			note.setTextContent(cl.head + " " + cl.tail);
 		}
 
 		if (!cf.comments.isEmpty() || !cf.otherInfo.isEmpty() || cf.transcriber != null) {
@@ -299,8 +299,8 @@ public class ClanToTei extends GenericMain {
 			for (String info : cf.otherInfo) {
 				Element note = docTEI.createElement("note");
 				ChatLine cl = new ChatLine(info);
-				note.setAttribute("type", cl.head);
-				note.setTextContent(cl.tail);
+				note.setAttribute("type", "other");
+				note.setTextContent(cl.head + " " + cl.tail);
 				addNotes.appendChild(note);
 			}
 		}
@@ -361,6 +361,8 @@ public class ClanToTei extends GenericMain {
 		div.setAttribute("subtype", "d" + descID);
 		if (cf.situation != null) {
 			ChatLine cl = new ChatLine(cf.situation);
+			activity.setTextContent(cl.tail);
+			/*
 			String a = Utils.normaliseActivity(cl.tail);
 			if (a != null) {
 				activity.setTextContent(a);
@@ -370,6 +372,7 @@ public class ClanToTei extends GenericMain {
 			Element p = docTEI.createElement("p");
 			p.setTextContent(cl.tail);
 			setting.appendChild(p);
+			*/
 			div.setAttribute("type", "Situation");
 		}
 		settingDesc.appendChild(setting);
@@ -387,6 +390,8 @@ public class ClanToTei extends GenericMain {
 	 */
 	public Element addNewDiv(Element parent, String type, String subj) {
 		Element setting = docTEI.createElement("setting");
+		setting.setTextContent(subj);
+		/*
 		String a = Utils.normaliseActivity(subj);
 		if (a != null) {
 			Element activity = docTEI.createElement("activity");
@@ -397,6 +402,7 @@ public class ClanToTei extends GenericMain {
 			p.setTextContent(subj);
 			setting.appendChild(p);
 		}
+		*/
 		descID++;
 		setting.setAttribute("xml:id", "d" + descID);
 		Element settingDesc = (Element) docTEI.getElementsByTagName("settingDesc").item(0);

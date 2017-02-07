@@ -94,6 +94,18 @@ public class TeiToClan extends TeiConverter {
 		writeProperty("Time start", tf.transInfo.startTime);
 	}
 
+	String toAge(String age) {
+		double dage = Double.parseDouble(age);
+		int y = (int)dage;
+		double d = (dage - (double)y) * 365.0;
+		if (d < 1.0) {
+			return String.format("%d;",y);
+		}
+		int m = (int)(d / 30.5);
+		double dd = d - ((double)m * 30.5);
+		return String.format("%d;%02d.%02d", y, m, (int)dd);
+	}
+	
 	/**
 	 * Ajout des lignes concernant les locuteurs: une ligne Participant
 	 * contenant une brève description des locuteurs; et une ligne Id par
@@ -119,7 +131,7 @@ public class TeiToClan extends TeiConverter {
 			}
 			participantsIDS += toString(p.corpus) + "|";
 			participantsIDS += toString(p.id) + "|";
-			participantsIDS += toString(p.age) + "|";
+			participantsIDS += toAge(p.age) + "|";
 			participantsIDS += toString(p.sex) + "|"; // already converted
 			participantsIDS += toString(p.adds.get("group")) + "|";
 			participantsIDS += toString(p.adds.get("socecStatus")) + "|";
@@ -205,16 +217,16 @@ public class TeiToClan extends TeiConverter {
 				writeProperty("Exceptions", Utils.getInfo2(note));
 			} else if (note.toLowerCase().substring(1).startsWith("options")) {
 				writeProperty("Options", Utils.getInfo2(note));
-			} else if (note.toLowerCase().substring(1).startsWith("@birth")
-					|| note.toLowerCase().substring(1).startsWith("@birthplace")) {
-				String noteType = Utils.getInfoType(note);
-				writeProperty(noteType.substring(1, noteType.length() - 2), Utils.getInfo2(note));
+			} else if (note.toLowerCase().substring(1).startsWith("comment")) {
+				out.printf("@Comment:\t%s%n", note.substring("[comment] ".length()));
+			} else if (note.toLowerCase().substring(1).startsWith("other")) {
+				out.printf("%s%n", note.substring("[other] ".length()));
 			} else {
 				writeProperty("Comment", note);
 			}
 		}
 		// version: comment
-		writeProperty("Comment", teiHeader.version);
+		writeProperty("Comment", "TeiCorpo version: " + teiHeader.version);
 	}
 
 	/**
@@ -271,7 +283,7 @@ public class TeiToClan extends TeiConverter {
 		if (type.equals("Situation"))
 			return false;
 		boolean eg = false;
-		String theme = Utils.cleanString(tf.transInfo.situations.get(themeId));
+		String theme = tf.transInfo.situations.get(themeId);
 		// || type.toLowerCase().startsWith("situation")
 		if (type.toLowerCase().startsWith("g") && !theme.toLowerCase().equals(tf.trans.sit.toLowerCase())) {
 			out.println("@G:\t" + theme);
@@ -352,7 +364,7 @@ public class TeiToClan extends TeiConverter {
 		// On ajoute les informations temporelles seulement si on a un temps de
 		// début et un temps de fin (Chat ne traite pas les points temporels)
 		if (Utils.isNotEmptyOrNull(endTime) && Utils.isNotEmptyOrNull(startTime)) {
-			out.print("\u0015" + toMilliseconds(Float.parseFloat(startTime)) + "_"
+			out.print(" \u0015" + toMilliseconds(Float.parseFloat(startTime)) + "_"
 					+ toMilliseconds(Float.parseFloat(endTime)) + "\u0015");
 		}
 		out.println();
@@ -408,7 +420,7 @@ public class TeiToClan extends TeiConverter {
 
 	public void createOutput() {
 		if (out != null)
-			out.printf("@End");
+			out.println("@End");
 	}
 
 	public static String convertSpecialCodes(String initial) {

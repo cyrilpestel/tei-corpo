@@ -53,6 +53,7 @@ public class AnnotatedUtterance {
 	public String veryLongPause;
 
 	public TeiTimeline teiTimeline;
+	public TierParams optionsTEI = null;
 
 	/**
 	 * Impression des utterances : liste des énoncés
@@ -71,11 +72,18 @@ public class AnnotatedUtterance {
 	}
 
 	public boolean process(Element annotatedU, TeiTimeline teiTimeline, TransInfo transInfo, TierParams options, boolean doSpan) {
+		optionsTEI = options;
 		this.teiTimeline = teiTimeline;
 		// Initialisation des variables d'instances
-		shortPause = Utils.shortPause;
-		longPause = Utils.longPause;
-		veryLongPause = Utils.veryLongPause;
+		if (options != null && options.outputFormat == ".cha") {
+			shortPause = Utils.shortPauseCha;
+			longPause = Utils.longPauseCha;
+			veryLongPause = Utils.veryLongPauseCha;
+		} else {
+			shortPause = Utils.shortPause;
+			longPause = Utils.longPause;
+			veryLongPause = Utils.veryLongPause;
+		}
 		annotU = annotatedU;
 		id = Utils.getAttrAnnotationBloc(annotatedU, "xml:id");
 		nthid = 0;
@@ -247,7 +255,11 @@ public class AnnotatedUtterance {
 						// nomarkerSpeech += genericPause;
 						speech += veryLongPause;
 					} else if (segChildEl.getAttribute("type").equals("chrono")) {
-						String chronoPause = " " + Utils.specificPause + segChildEl.getAttribute("dur") + " ";
+						String chronoPause = " " + (
+								(optionsTEI != null && optionsTEI.outputFormat == ".cha")
+								? String.format(Utils.specificPause, segChildEl.getAttribute("dur"))
+								: String.format(Utils.specificPauseCha, segChildEl.getAttribute("dur"))
+								) + " ";
 						// nomarkerSpeech += genericPause;
 						speech += chronoPause;
 					}

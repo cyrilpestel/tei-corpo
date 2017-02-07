@@ -146,7 +146,7 @@ public abstract class TeiConverter extends GenericMain {
 			}
 
 			String str = u.speeches.get(s).getContent(optionsOutput.rawLine);
-			String speech = NormalizeSpeech.parseText(str, tf.originalFormat(), optionsOutput, "");
+			String speech = NormalizeSpeech.parseText(str, tf.originalFormat(), optionsOutput);
 
 			// Ecriture de l'énoncé
 			writeSpeech(u.speakerCode, speech, start, end);

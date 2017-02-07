@@ -173,7 +173,7 @@ public class TeiToPraat extends GenericMain {
 				out.printf("            xmin = %s%n", printDouble(start));
 				out.printf("            xmax = %s%n", printDouble(end));
 				String str = a.getContent(ttp.optionsOutput.rawLine);
-				String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput, "praat");
+				String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput);
 				out.printf("            text = \"%s\"%n", strNorm);
 				nk++;
 			}

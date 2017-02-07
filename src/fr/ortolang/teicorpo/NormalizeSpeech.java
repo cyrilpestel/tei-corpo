@@ -34,11 +34,12 @@ public class NormalizeSpeech {
 	}
 
 	
-	public static String parseText(String str, String originalFormat, TierParams optionsOutput, String cible) {
+	public static String parseText(String str, String originalFormat, TierParams optionsOutput) {
 		String firstpass, secondpass;
 		String format = (optionsOutput == null || optionsOutput.normalize.isEmpty()) ? originalFormat : optionsOutput.normalize;
+		String target = (optionsOutput == null || optionsOutput.target.isEmpty()) ? optionsOutput.outputFormat : optionsOutput.target;
 		//System.out.printf("/%s/ /%s/ /%s/%n", str, originalFormat, format);
-		if (format.equals("clan")) {
+		if (format.equals("clan") && !target.equals(".cha")) {
 			String s1 = toChatLine(str).trim();
 			String s2 = ConventionsToChat.clean(s1);
 			String s3 = convertSpecialCodes(s2).replaceAll("\\s+", " ");
@@ -47,7 +48,7 @@ public class NormalizeSpeech {
 		} else {
 			firstpass = str;
 		}
-		if (cible.equals("praat")) {
+		if (target.equals(".texgrid")) {
 			secondpass = firstpass.replace("\"", "\"\"");
 		} else {
 			secondpass = firstpass;
@@ -57,6 +58,6 @@ public class NormalizeSpeech {
 	}
 
 	public static void main(String[] args) {
-		System.out.printf("%s : %s%n", args[0], parseText(args[0], args[1], null, null));
+		System.out.printf("%s : %s%n", args[0], parseText(args[0], args[1], null));
 	}
 }

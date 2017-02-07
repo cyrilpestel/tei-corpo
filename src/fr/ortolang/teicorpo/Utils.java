@@ -46,9 +46,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.23"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "06/02/2017 19:30";
-//	public static String TEI_ALL = "http://localhost/teiconvertbeta/tei_all.dtd";
+	public static String versionSoft = "1.24"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "07/02/2017 18:00";
 	public static String TEI_ALL = "http://ct3.ortolang.fr/tei-corpo/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
 	public static boolean teiStylePure = false;
@@ -56,7 +55,11 @@ public class Utils {
 	public static String shortPause = " # ";
 	public static String longPause = " ## ";
 	public static String veryLongPause = " ### ";
-	public static String specificPause = "#";
+	public static String specificPause = "#%s";
+	public static String shortPauseCha = " (.) ";
+	public static String longPauseCha = " (..) ";
+	public static String veryLongPauseCha = " (...) ";
+	public static String specificPauseCha = "(%s)";
 	
 	public static String leftBracket = "⟪"; // 27EA - "❮"; // "⟨" 27E8 - "❬" 
 	public static String rightBracket = "⟫"; // 27EB - "❯"; // "⟩" 27E9 - "❭" - 276C à 2771 ❬ ❭ ❮ ❯ ❰ ❱ 

@@ -90,6 +90,7 @@ class TierParams {
 	boolean conll;
 	String syntax;
 	String normalize;
+	String target;
 
 	TierParams() {
 		verbose = false;
@@ -126,6 +127,7 @@ class TierParams {
 		conll = false;
 		syntax = "";
 		normalize ="";
+		target ="";
 	}
 	void addCommand(String s) {
 		commands.add(s);
@@ -225,6 +227,7 @@ class TierParams {
 		System.err.println("         :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
 		System.err.println("         :-rawLine : exporte des énoncés sans marqueurs spéficiques de l'oral");
 		System.err.println("         :-normalize format : normalisation réalisée à partir du format origine 'format' - options : clan");
+		System.err.println("         :-target format : normalisation réalisée en direction du format sortie si contradiction avec -to");
 		System.err.println("         :-short : les extensions fichiers autre que TEI_CORPO ne contiennent pas tei_corpo");
 		System.err.println("         :--dtd cette option permet de vérifier que les fichiers Transcriber sont conformes à leur dtd");
 		System.err.println("            si cette option est spécifiée, la dtd (Trans-14.dtd) doit se trouver dans le même repertoire que le fichier Transcriber\n"
@@ -323,6 +326,12 @@ class TierParams {
 						i++;
 						continue;
 					} else if (argument.equals("-syntax")) {
+						i++;
+						continue;
+					} else if (argument.equals("-normalize")) {
+						i++;
+						continue;
+					} else if (argument.equals("-target")) {
 						i++;
 						continue;
 					} else if (argument.equals("-situation")) {
@@ -506,6 +515,14 @@ class TierParams {
 						}
 						i++;
 						options.normalize = args[i];
+						continue;
+					} else if (argument.equals("-target")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -target n'est pas suivi d'une valeur");
+							return false;
+						}
+						i++;
+						options.target = TeiCorpo.extensions(args[i]);
 						continue;
 					} else if (argument.equals("-noheader")) {
 						options.noHeader = true;

@@ -513,7 +513,7 @@ public class TeiToElan extends GenericMain {
 					annot.appendChild(align_annot);
 					Element annotationValue = elanDoc.createElement("ANNOTATION_VALUE");
 					String str = a.getContent(ttp.optionsOutput.rawLine);
-					String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput, "elan");
+					String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput);
 					annotationValue.setTextContent(strNorm);
 					if (Utils.isNotEmptyOrNull(cvref)) {
 						Map<String, String> cvi = cvs.get(cvref);
@@ -532,7 +532,7 @@ public class TeiToElan extends GenericMain {
 					annot.appendChild(ref_annot);
 					Element annotationValue = elanDoc.createElement("ANNOTATION_VALUE");
 					String str = a.getContent(ttp.optionsOutput.rawLine);
-					String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput, "elan");
+					String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput);
 					annotationValue.setTextContent(strNorm);
 					if (Utils.isNotEmptyOrNull(cvref)) {
 						Map<String, String> cvi = cvs.get(cvref);
