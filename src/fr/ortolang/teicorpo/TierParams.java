@@ -91,6 +91,7 @@ class TierParams {
 	String syntax;
 	String normalize;
 	String target;
+	String model;
 
 	TierParams() {
 		verbose = false;
@@ -126,6 +127,7 @@ class TierParams {
 		ignorePraatNumbering = false;
 		conll = false;
 		syntax = "";
+		model = "";
 		normalize ="";
 		target ="";
 	}
@@ -168,9 +170,9 @@ class TierParams {
 			if (f.startsWith("*") && f.endsWith("*")) {
 				if (s.indexOf(f.substring(1, f.length()-2)) >= 0) return true;
 			} else if (f.startsWith("*")) {
-				if (s.indexOf(f.substring(1)) >= 0) return true;
+				if (s.startsWith(f.substring(1))) return true;
 			} else if (f.endsWith("*")) {
-				if (s.indexOf(f.substring(0, f.length()-1)) >= 0) return true;
+				if (s.endsWith(f.substring(0, f.length()-1))) return true;
 			} else {
 				if (s.equals(f)) return true;
 			}
@@ -328,6 +330,9 @@ class TierParams {
 					} else if (argument.equals("-syntax")) {
 						i++;
 						continue;
+					} else if (argument.equals("-model")) {
+						i++;
+						continue;
 					} else if (argument.equals("-normalize")) {
 						i++;
 						continue;
@@ -449,9 +454,17 @@ class TierParams {
 						}
 						i++;
 						options.syntax = args[i];
+					} else if (argument.equals("-model")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -model n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.model = args[i];
 					} else if (argument.equals("-situation")) {
 						if (i+1 >= args.length) {
-							System.err.println("le parametre -situation est absent");
+							System.err.println("le parametre -situation n'est pas suivi d'une valeur");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
 							return false;
 						}

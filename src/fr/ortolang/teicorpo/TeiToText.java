@@ -253,9 +253,9 @@ public class TeiToText extends TeiConverter {
 	public void mainProcess(String input, String output, TierParams options) {
 		transform(input, output, options);
 		if (tf != null) {
-//			System.out.println("Reading " + input);
+			if (options.verbose) System.out.println("Txt: Reading " + input);
 			createOutput();
-//			System.out.println("New file created " + output);
+			if (options.verbose) System.out.println("Txt: New file created " + output);
 		}
 	}
 

@@ -194,6 +194,7 @@ public class TeiToPraat extends GenericMain {
 
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
+		options.target = ".texgrid";
 		transform(input, output, options);
 //		System.out.println("Reading " + input);
 		createOutput();

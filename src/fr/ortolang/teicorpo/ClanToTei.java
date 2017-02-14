@@ -627,14 +627,13 @@ public class ClanToTei extends GenericMain {
 						i++;
 					}
 				} else {
-					
-					// System.out.printf(">>%s%n", cl.head);
+					//System.out.printf(">>%s%n", cl.head);
 					if (cl.head != null && tparams != null) {
-						if (tparams.isDontDisplay(cl.head, 1)) {
+						if (tparams.isDontDisplay(cl.head.substring(1), 1)) {
 							i++;
 							continue;
 						}
-						if (!tparams.isDoDisplay(cl.head, 1)) {
+						if (!tparams.isDoDisplay(cl.head.substring(1), 1)) {
 							i++;
 							continue;
 						}
@@ -724,9 +723,19 @@ public class ClanToTei extends GenericMain {
 	public void set_AnnotU_element(String[] tiers, Element u) {
 		if (tiers.length > 0) {
 			for (String tier : tiers) {
+				ChatLine cl = new ChatLine(tier);
+				if (cl.head != null && tparams != null) {
+					if (tparams.level == 1)
+						continue;
+					if (tparams.isDontDisplay(cl.head.substring(1), 2)) {
+						continue;
+					}
+					if (!tparams.isDoDisplay(cl.head.substring(1), 2)) {
+						continue;
+					}
+				}
 				Element spanGrp = docTEI.createElement("spanGrp");
 				u.appendChild(spanGrp);
-				ChatLine cl = new ChatLine(tier);
 				if (cl.head.equals("tim")) {
 					Element time = docTEI.createElement("time");
 					time.setAttribute("when", cl.tail);
@@ -1559,8 +1568,8 @@ public class ClanToTei extends GenericMain {
 
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
-		System.out.println("Lecture de " + input);
-		System.out.println("New file TEI created: " + output);
+		if (options.verbose) System.out.println("Clan: source: " + input);
+		if (options.verbose) System.out.println("Clan: target: " + output);
 		try {
 			transform(input, options);
 		} catch (Exception e) {

@@ -144,9 +144,10 @@ public class TeiTreeTagger extends GenericMain {
 	}
 
 	public String getTreeTaggerModel() {
-		String p = ExternalCommand.getLocation("spoken-french.par","TREE_TAGGER");
+		String model = (!optionsOutput.model.isEmpty()) ? optionsOutput.model : "spoken-french.par";
+		String p = ExternalCommand.getLocation(model,"TREE_TAGGER");
 		if (p != null) return p;
-		p = ExternalCommand.getLocation("model/spoken-french.par","TREE_TAGGER");
+		p = ExternalCommand.getLocation("model" + model,"TREE_TAGGER");
 		if (p != null) return p;
 		System.err.println("Cannot find spoken-french.par model");
 		return null;
@@ -191,8 +192,10 @@ public class TeiTreeTagger extends GenericMain {
 				eAU.appendChild(syntaxGrp);
 				// préparer le fichier d'analyse syntaxique
 				out.printf("<%s>%n", "tt" + numAU);
+				String utt = au.nomarkerSpeech;
+				String parsedUtt = NormalizeSpeech.parseText(utt, TeiToPartition.getOriginalFormat(teiDoc), optionsOutput);
 				// decouper au.nomarkerSpeech
-				ArrayList<String> p = Tokenizer.splitTextTT(au.getTeiLine(true));
+				ArrayList<String> p = Tokenizer.splitTextTT(parsedUtt);
 				for (int ti = 0; ti < p.size(); ti++)
 					out.printf("%s%n", p.get(ti));
 			}

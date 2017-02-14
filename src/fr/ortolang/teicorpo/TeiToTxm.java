@@ -181,7 +181,7 @@ public class TeiToTxm extends TeiConverter {
 	 *            Temps de fin de l'énoncé
 	 */
 	public void writeSpeech(String loc, String speechContent, String startTime, String endTime) {
-		if (optionsOutput.syntax.equals("tt"))
+		if (optionsOutput.syntax.equals("tt") || optionsOutput.syntax.equals("treetagger"))
 			return;
 		if (optionsOutput != null) {
 			if (optionsOutput.isDontDisplay(loc))
@@ -254,7 +254,7 @@ public class TeiToTxm extends TeiConverter {
 					}
 				}
 				// tier.name
-				if (tier.dependantAnnotations != null)
+				if (tier.dependantAnnotations != null) {
 					for (int i=0; i < tier.dependantAnnotations.size(); i++) {
 						Annot aw = tier.dependantAnnotations.get(i);
 						Element we = txmDoc.createElement("w");
@@ -279,6 +279,7 @@ public class TeiToTxm extends TeiConverter {
 						}
 						u.appendChild(we);
 					}
+				}
 			}
 		}
 	}

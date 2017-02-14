@@ -458,8 +458,4 @@ public class AnnotatedUtterance {
 		}
 		return v;
 	}
-
-	public String getTeiLine(boolean b) {
-		return b ? nomarkerSpeech : speech;
-	}
 }

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -93,7 +94,16 @@ public class TeiCorpo extends GenericMain {
 			}
 		}
 		
-		String tempTEI = Utils.fullbasename(fileIn) + Utils.EXT;
+		String outputTEI = Utils.fullbasename(fileIn) + Utils.EXT;
+		// creates a true temp file.
+		String tempTEI;
+		try {
+			//create a temp file
+			File temp = File.createTempFile("teitempfile", ".tei_corpo.xml");
+			tempTEI = temp.getAbsolutePath();
+    	} catch(IOException e){
+    		tempTEI = Utils.pathname(fileIn) + "/tei" + Long.valueOf(new Date().getTime()) + Utils.EXT;
+    	}
 
 		// first from input to TEI
 		if (extIn.equals(Utils.EXT)) {
@@ -128,14 +138,19 @@ public class TeiCorpo extends GenericMain {
 		// then from TEI to output
 		if (extOut.equals(Utils.EXT)) {
 			// nothing but rename temp file
-			if (fileOut == null || !fileOut.isEmpty() || fileOut == tempTEI) {
-				// nothing. The temp file is the correct one !
-				return;
+			if (fileOut == null || fileOut.isEmpty() || fileOut == outputTEI) {
+				File of = new File(outputTEI);
+				// of.delete(); // if exist before.
+				File tmp = new File(tempTEI);
+				tmp.renameTo(of);
+				if (tp.verbose) System.out.println("Renamed to: " + outputTEI);
+			} else {
+				File of = new File(fileOut);
+				// of.delete(); // if exist before.
+				File tmp = new File(tempTEI);
+				tmp.renameTo(of);
+				if (tp.verbose) System.out.println("Renamed to: " + fileOut);
 			}
-			File of = new File(fileOut);
-			of.delete(); // if exist before.
-			File tmp = new File(tempTEI);
-			tmp.renameTo(of);
 		} else {
 			switch(extOut) {
 			case ".cha":
@@ -174,6 +189,8 @@ public class TeiCorpo extends GenericMain {
 				System.err.printf("Format non implémenté dans TeiCorpo: %s%n", extOut);
 				break;
 			}
+			File of = new File(tempTEI);
+			// of.delete(); // delete temp file
 		}
 	}
 
