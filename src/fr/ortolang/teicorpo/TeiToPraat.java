@@ -167,9 +167,19 @@ public class TeiToPraat extends GenericMain {
 
 			int nk = 1;
 			for (Annot a : entry.getValue()) {
-				out.printf("        intervals [%d]:%n", nk);
 				double start = Double.parseDouble(a.start);
 				double end = Double.parseDouble(a.end);
+				/*
+				if (nk==1 && start != 0.0) {
+					// insert first an empty bloc
+					out.printf("        intervals [%d]:%n", nk);
+					out.printf("            xmin = %s%n", printDouble(0.0));
+					out.printf("            xmax = %s%n", printDouble(start));
+					out.printf("            text = \"\"%n");
+					nk++;
+				}
+				*/
+				out.printf("        intervals [%d]:%n", nk);
 				out.printf("            xmin = %s%n", printDouble(start));
 				out.printf("            xmax = %s%n", printDouble(end));
 				String str = a.getContent(ttp.optionsOutput.rawLine);

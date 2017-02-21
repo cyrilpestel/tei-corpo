@@ -301,7 +301,7 @@ public class TeiToClan extends TeiConverter {
 			eg = true;
 		} else {
 			if (tf.teiDoc.getElementsByTagName("div").getLength() > 1 && Utils.isNotEmptyOrNull(type)) {
-				out.println(type + " " + theme);
+				out.println("@G:\t" + type + " " + theme);
 			}
 		}
 		return eg;
