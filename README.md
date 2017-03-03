@@ -50,8 +50,9 @@ Paramètres complémentaires s'appliquant à toutes les commandes
   * -n niveau: niveau d'imbrication (1 pour lignes principales)
   * -a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)
   * -s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)
-  * -cleanline : produit des fichiers sans codes spécifiques de transcription orale
-  * -clearchat : produit des fichiers sans codes spécifiques de transcription orale
+  * -rawline : produit des fichiers sans codes spécifiques de transcription orale
+  * -normalize format : produit des fichiers à partir de sources "format" - format peut valoir "clan" (autres sources à venir)
+  * -target format : produit des fichiers vers le "format" - format peut valoir "praat" (autres destinations à venir)
 
 Paramètres supplémentaires pour les exports vers Txm et vers Lexico
   * -tv "type:valeur" : un champ type:valeur est ajouté dans les &lt;w&gt; de txm ou lexico ou le trameur

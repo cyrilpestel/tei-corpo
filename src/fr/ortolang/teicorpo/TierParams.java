@@ -92,8 +92,10 @@ class TierParams {
 	String normalize;
 	String target;
 	String model;
+	boolean noerror;
 
 	TierParams() {
+		noerror = false;
 		verbose = false;
 		input = new ArrayList<String>();
 		output = null;
@@ -227,10 +229,11 @@ class TierParams {
 		System.err.println("         :-n niveau: niveau d'imbrication (1 pour lignes principales)");
 		System.err.println("         :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
 		System.err.println("         :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
-		System.err.println("         :-rawLine : exporte des énoncés sans marqueurs spéficiques de l'oral");
+		System.err.println("         :-rawline : exporte des énoncés sans marqueurs spéficiques de l'oral");
 		System.err.println("         :-normalize format : normalisation réalisée à partir du format origine 'format' - options : clan");
 		System.err.println("         :-target format : normalisation réalisée en direction du format sortie si contradiction avec -to");
 		System.err.println("         :-short : les extensions fichiers autre que TEI_CORPO ne contiennent pas tei_corpo");
+		System.err.println("         :--noerror : considère les erreurs dans les paramètres comme des warnings");
 		System.err.println("         :--dtd cette option permet de vérifier que les fichiers Transcriber sont conformes à leur dtd");
 		System.err.println("            si cette option est spécifiée, la dtd (Trans-14.dtd) doit se trouver dans le même repertoire que le fichier Transcriber\n"
 						+ "\t\tTéléchargement de la DTD de Transcriber : http://sourceforge.net/p/trans/git/ci/master/tree/etc/trans-14.dtd");
@@ -288,7 +291,9 @@ class TierParams {
 			for (int i = 0; i < args.length; i++) {
 				String argument = args[i].toLowerCase();
 				try {
-					if (argument.equals("-i")) {
+					if (argument.equals("--noerror")) {
+						options.noerror = true;
+					} else if (argument.equals("-i")) {
 						i++;
 						continue;
 					} else if (argument.equals("-o")) {
@@ -350,13 +355,13 @@ class TierParams {
 					} else if (argument.equals("-p")) {
 						if (i+1 >= args.length) {
 							printUsageMessage(usage, ext1, ext2, style);
-							return false;
+							if (!options.noerror) return false; else break;
 						}
 						i++;
 						getTierParams(args[i], options.ldt, options);
 					} else if (argument.equals("-h") || argument.equals("-help") || argument.equals("-usage")) {
 						printUsageMessage(usage, ext1, ext2, style);
-						return false;
+						if (!options.noerror) return false;
 					} else {
 						continue;
 					}
@@ -412,7 +417,7 @@ class TierParams {
 						} catch(Exception e) {
 							System.err.println("Le paramètre -n n'est pas suivi d'un entier.");
 							// Utils.printUsageMessage(usage, ext1, ext2, style);
-							return false;
+							if (!options.noerror) return false; else break;
 						}
 					} else if (argument.equals("-c")) {
 						if (i+1 >= args.length) {
@@ -599,7 +604,7 @@ class TierParams {
 						d.type = args[i];
 						if (DescTier.whichType(args[i]) == null) {
 							System.err.println("le parametre -t ne contient pas un argument connu: " + args[i]);
-							return false;
+							if (!options.noerror) return false; else break;
 						}
 						i++;
 						d.parent = args[i];

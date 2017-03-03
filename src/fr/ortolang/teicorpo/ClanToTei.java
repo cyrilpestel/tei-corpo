@@ -52,6 +52,7 @@ public class ClanToTei extends GenericMain {
 	ArrayList<Element> timeElements;
 	Double maxTime = 0.0;
 	TierParams tparams;
+	int nbBG = 0; // stores depth of BG/EG
 
 	/**
 	 * Identifiant des éléments <strong>desc</strong> de <strong>text</strong>.
@@ -514,7 +515,9 @@ public class ClanToTei extends GenericMain {
 				break;
 			}
 		}
+		nbBG = 0;
 		buildTextDiv(div, i, extension, 0); // starts at first line
+		if (nbBG > 0) System.err.printf("missing @EG in the file%n");
 	}
 
 	/**
@@ -540,6 +543,7 @@ public class ClanToTei extends GenericMain {
 				String end = Integer.toString(cf.endMl(i));
 				if (cl.head.startsWith("@")) {
 					if (cl.head.toLowerCase().startsWith("@g")) {
+						//System.out.printf("@G: %d inGem%d%n", nbBG, inGem);
 						if (inGem == 1) {
 							// was in @G
 							// close the current div and continue
@@ -573,6 +577,7 @@ public class ClanToTei extends GenericMain {
 																			// gem
 						}
 					} else if (cl.head.toLowerCase().startsWith("@bg")) {
+						//System.out.printf("@BG: %d inGem%d%n", nbBG, inGem);
 						if (inGem == 1) {
 							// was in @G
 							// close the current div and continue
@@ -586,6 +591,7 @@ public class ClanToTei extends GenericMain {
 							// do not close the current div
 							// but creates a new one
 							// starts a div
+							nbBG++;
 							Element newdiv = addNewDiv(div, "BG", cl.tail);
 							i = buildTextDiv(newdiv, i + 1, extension, 2); // starts
 																			// a
@@ -596,6 +602,7 @@ public class ClanToTei extends GenericMain {
 																			// gem
 						} else {
 							// starts a div
+							nbBG++;
 							Element newdiv = addNewDiv(div, "BG", cl.tail);
 							i = buildTextDiv(newdiv, i + 1, extension, 2); // starts
 																			// a
@@ -606,16 +613,26 @@ public class ClanToTei extends GenericMain {
 																			// gem
 						}
 					} else if (cl.head.toLowerCase().startsWith("@eg")) {
+						// System.out.printf("@EG: %d inGem%d%n", nbBG, inGem);
 						if (inGem == 1) {
 							// close first the @G
 							return i;
 						} else {
+							nbBG--;
 							// close the current div and continue
 							// with inG true we are always with a sub call
 							// ends function
-							return i + 1;
+							if (nbBG>=0)
+								return i + 1;
+							// else ignore @EG
+							else {
+								System.err.printf("too many @EG at line %d%n", i);
+								nbBG = 0;
+								i++;
+							}
 						}
 					} else if (cl.head.toLowerCase().startsWith("@end")) {
+						//System.out.printf("End: %d inGem%d%n", nbBG, inGem);
 						i++; // could stop process if we wanted to - normal end
 								// of file
 					} else {
@@ -627,7 +644,7 @@ public class ClanToTei extends GenericMain {
 						i++;
 					}
 				} else {
-					//System.out.printf(">>%s%n", cl.head);
+					//System.out.printf(">>%s %d %d%n", cl.head, nbBG, inGem);
 					if (cl.head != null && tparams != null) {
 						if (tparams.isDontDisplay(cl.head.substring(1), 1)) {
 							i++;

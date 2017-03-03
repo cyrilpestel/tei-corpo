@@ -24,12 +24,13 @@ public abstract class GenericMain {
 	public void mainCommand(String[] args, String extensionIn, String extensionOut, String usageString, int style) throws IOException {
 		TierParams options = new TierParams();
 		// Parcours des arguments
-		if (!TierParams.processArgs(args, options, usageString, extensionIn, extensionOut, style))
-			return;
+		if (!TierParams.processArgs(args, options, usageString, extensionIn, extensionOut, style)) {
+			if (!options.noerror) return;
+		}
 
 		if (options.input.size() < 1) {
 			System.err.println("Il faut au moins un fichier entrée");
-			return;
+			return; // even with --noerror cannot do anything
 		}
 
 /*		if (options.input.size() > 1 && options.output != null) {
@@ -38,7 +39,7 @@ public abstract class GenericMain {
 */
 		if (options.concat == true && options.output == null) {
 			System.err.println("Si option concaténer alors un fichier unique en sortie");
-			return;
+			return; // even with --noerror cannot do anything
 		}
 		
 		if (options.concat == true && options.erase == true && options.eraseDone == false) {
@@ -47,7 +48,7 @@ public abstract class GenericMain {
 				if (f.isDirectory()) {
 					System.out.println("\n Erreur :" + options.output
 							+ " est un répertoire. Avec l'option -concat, ce doit être un fichier.\n");
-					return;
+					return; // even with --noerror cannot do anything
 				}
 				f.delete();
 			}
