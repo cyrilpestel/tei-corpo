@@ -373,7 +373,9 @@ class TierParams {
 			for (int i = 0; i < args.length; i++) {
 				String argument = args[i].toLowerCase();
 				try {
-					if (argument.equals("-i")) {
+					if (argument.equals("--noerror")) {
+						continue;
+					} else if (argument.equals("-i")) {
 						if (i+1 >= args.length) {
 							printUsageMessage(usage, ext1, ext2, style);
 							return false;

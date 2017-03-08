@@ -152,6 +152,7 @@ public class TeiCorpo extends GenericMain {
 				if (tp.verbose) System.out.println("Renamed to: " + fileOut);
 			}
 		} else {
+			// System.out.println("toLexico: " + extOut);
 			switch(extOut) {
 			case ".cha":
 				TeiToClan tc = new TeiToClan();
@@ -213,16 +214,17 @@ public class TeiCorpo extends GenericMain {
 			case "txm.xml":
 			case "txm":
 				return ".txm.xml";
-			case "txt":
-			case "text":
-				return ".txt";
 			case "srt":
 			case "soustitres":
 				return ".srt";
+			case "lex.txt":
 			case "tmr.txt":
 			case "letrameur":
 			case "lexico":
 				return ".lex.txt";
+			case "txt":
+			case "text":
+				return ".txt";
 			case "eaf":
 			case "elan":
 				return ".eaf";

@@ -538,10 +538,9 @@ public class TranscriberToTei extends GenericMain {
 					this.setU_Id(annotatedU);
 					Utils.setAttrAnnotationBloc(this.docTEI, annotatedU, "who", turn.getAttribute("speaker"));
 					this.set_AU_attributes(annotatedU, (Element) current);
-					this.setElementU((Element) current, annotatedU, div);
+					this.setElementUnique((Element) current, annotatedU, div);
 				} else {
-					Element annotatedU = Utils.createAnnotationBloc(this.docTEI);
-					this.setElementU((Element) current, annotatedU, div);
+					this.buildDecompoTurnMultiSpk((Element) current, div, speakers);
 				}
 			}
 		}
@@ -601,17 +600,13 @@ public class TranscriberToTei extends GenericMain {
 	 *            Le père de l'élément <strong>u</strong> (un élément
 	 *            <strong>div</strong>).
 	 */
-	public void setElementU(Element turn, Element annotatedU, Element div) {
+	public void setElementUnique(Element turn, Element annotatedU, Element div) {
 		NodeList children = turn.getChildNodes();
 		Element u = this.docTEI.createElement("u");
 		Element seg = docTEI.createElement("seg");
 		annotatedU.appendChild(u);
 		String sync = "-1";
 		Element spangrp = null;
-		if (turn.getElementsByTagName("Who").getLength() != 0) {
-			buildDecompoTurnMultiSpk(turn, div);
-			return;
-		}
 		for (int i = 0; i < children.getLength(); i++) {
 			Node elmt = children.item(i);
 			String elmtName = elmt.getNodeName();
@@ -648,17 +643,16 @@ public class TranscriberToTei extends GenericMain {
 		return spanGrp;
 	}
 
-	public void buildDecompoTurnMultiSpk(Element turn, Element div) {
-		String[] speakers = turn.getAttribute("speaker").split(" ");
+	public void buildDecompoTurnMultiSpk(Element turn, Element div, String [] speakers) {
 		ArrayList<Element> annotatedUs = new ArrayList<Element>();
 		ArrayList<Element> spanGrps = new ArrayList<Element>();
 		ArrayList<String> ids = new ArrayList<String>();
 		// Création d'un annotU par speaker
-		for (String spk : speakers) {
+		for (int i=0; i < speakers.length; i++) {
 			Element au = Utils.createAnnotationBloc(this.docTEI);
 			setU_Id(au);
 			ids.add(Utils.getAttrAnnotationBloc(au, "xml:id"));
-			Utils.setAttrAnnotationBloc(this.docTEI, au, "who", spk);
+			Utils.setAttrAnnotationBloc(this.docTEI, au, "who", speakers[i]);
 			div.appendChild(au);
 			annotatedUs.add(au);
 			set_AU_attributes(au, turn);
@@ -672,17 +666,23 @@ public class TranscriberToTei extends GenericMain {
 		Element currentAU;
 		Element currentSpanGrp;
 		try {
-			currentAU = annotatedUs.get(Integer.parseInt(firstWho.getAttribute("nb")) - 1);
-			currentSpanGrp = spanGrps.get(Integer.parseInt(firstWho.getAttribute("nb")) - 1);
+			String sFirstWho = firstWho.getAttribute("nb");
+			int nth = Integer.parseInt(sFirstWho) - 1;
+			currentAU = annotatedUs.get(nth);
+			currentSpanGrp = spanGrps.get(nth);
 		} catch (Exception e) {
 			currentAU = annotatedUs.get(0);
 			currentSpanGrp = spanGrps.get(0);
 		}
 		Element u = (Element) currentAU.getElementsByTagName("u").item(0);
 		NodeList turnChildren = turn.getChildNodes();
-		Element seg = docTEI.createElement("seg");
-		if (u.getElementsByTagName("seg").getLength() > 0) {
-			seg = (Element) u.getElementsByTagName("seg").item(u.getElementsByTagName("seg").getLength() - 1);
+		Element seg;
+		NodeList segs = u.getElementsByTagName("seg");
+		int nbseg = segs.getLength();
+		if (nbseg > 0) {
+			seg = (Element)(segs.item(nbseg-1));
+		} else {
+			seg = docTEI.createElement("seg");
 		}
 		// addLinks(ids, annotatedUs);
 		for (int i = 0; i < turnChildren.getLength(); i++) {
@@ -693,7 +693,7 @@ public class TranscriberToTei extends GenericMain {
 			if (elmtName == "Sync") {
 				sync = attrs.item(0).getNodeValue();
 			} else if (elmtName == "Who") {
-				int nb = Integer.parseInt(((Element) elmt).getAttribute("nb"));
+				int nb = Integer.parseInt(((Element) elmt).getAttribute("nb")) -1;
 				try {
 					currentAU = annotatedUs.get(nb);
 					currentSpanGrp = spanGrps.get(nb);
