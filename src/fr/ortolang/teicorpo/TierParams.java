@@ -87,12 +87,13 @@ class TierParams {
 	String defaultAge;
 	String situation;
 	boolean ignorePraatNumbering;
-	boolean conll;
 	String syntax;
 	String normalize;
 	String target;
 	String model;
 	boolean noerror;
+	String syntaxformat;
+	boolean sandhi;
 
 	TierParams() {
 		noerror = false;
@@ -127,11 +128,12 @@ class TierParams {
 		defaultAge = "40.01";
 		situation = null;
 		ignorePraatNumbering = false;
-		conll = false;
+		syntaxformat = "w";
 		syntax = "";
 		model = "";
 		normalize ="";
 		target ="";
+		sandhi = false;
 	}
 	void addCommand(String s) {
 		commands.add(s);
@@ -220,19 +222,23 @@ class TierParams {
 	}
 	
 	public static void printUsageMessage(String mess, String ext1, String ext2, int style) {
-		System.err.printf("%s%n", mess);
-		System.err.println("         :(sans option ou -i) nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir - les fichiers ont pour extension " + ext1);
+		System.err.printf(mess);
+		System.err.println("         :(sans option ou -i) nom du fichier ou repertoire où se trouvent les fichiers Tei à convertir.");
+		if (!ext1.isEmpty())
+			System.err.println("            Les fichiers ont pour extension " + ext1);
 		System.err.println("         :-o nom du fichier de sortie au format Elan (.eaf) ou du repertoire de résultats");
-		System.err.println("            si cette option n'est pas spécifié, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension " + ext2);
-		System.err.println("            si on donne un repertoire comme input et que cette option n'est pas spécifiée, les résultats seront stockés dans le même dossier que l'entrée.\"");
+		System.err.println("            -si cette option n'est pas spécifiée, le fichier de sortie aura le même nom que le fichier d'entrée avec l'extension qui correspond au format demandé");
+		System.err.println("            -si cette option est spécifiée, le fichier de sortie aura le même nom exact indiqué.");
+		System.err.println("            -si on donne un repertoire en entrée et que l'option -o n'est pas spécifiée, les résultats seront générés dans le même répertoire.");
+		System.err.println("            -sinon l'option -o doit désigner un nom  de répertoire.");
 		System.err.println("         :-p fichier_de_parametres: contient les paramètres sous leur format ci-dessous, un jeu de paramètre par ligne.");
 		System.err.println("         :-n niveau: niveau d'imbrication (1 pour lignes principales)");
 		System.err.println("         :-a name : le locuteur/champ name est produit en sortie (caractères génériques acceptés)");
 		System.err.println("         :-s name : le locuteur/champ name est suprimé de la sortie (caractères génériques acceptés)");
 		System.err.println("         :-rawline : exporte des énoncés sans marqueurs spéficiques de l'oral");
-		System.err.println("         :-normalize format : normalisation réalisée à partir du format origine 'format' - options : clan");
-		System.err.println("         :-target format : normalisation réalisée en direction du format sortie si contradiction avec -to");
-		System.err.println("         :-short : les extensions fichiers autre que TEI_CORPO ne contiennent pas tei_corpo");
+		System.err.println("         :-normalize format : normalisation réalisée à partir du format indiqué en paramètre - options possibles: clan");
+		System.err.println("         :-target format : normalisation réalisée en direction du format indiqué en paramètre");
+		System.err.println("         :-short : les extensions fichiers autres que TEI_CORPO ne contiennent pas tei_corpo");
 		System.err.println("         :--noerror : considère les erreurs dans les paramètres comme des warnings");
 		System.err.println("         :--dtd cette option permet de vérifier que les fichiers Transcriber sont conformes à leur dtd");
 		System.err.println("            si cette option est spécifiée, la dtd (Trans-14.dtd) doit se trouver dans le même repertoire que le fichier Transcriber\n"
@@ -241,8 +247,8 @@ class TierParams {
 			printImportPartitionMessage();
 		}
 		if (style == 4) {
-			System.err.println("         :-to format des fichiers input");
-			System.err.println("         :-from format des fichiers output");
+			System.err.println("         :-from format des fichiers input");
+			System.err.println("         :-to format des fichiers output");
 		}
 		if (style == 3) {
 			System.err.println("         *** paramètre pour édition de fichier TEI***");
@@ -253,17 +259,18 @@ class TierParams {
 			System.err.println("         :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm ou lexico ou le trameur");
 			System.err.println("         :-section : ajoute un indicateur de section en fin de chaque énoncé (pour lexico/le trameur)");
 			System.err.println("         :-syntax nom : choix pour la syntaxe à exporter");
+			System.err.println("         :-sandhi : information spécifique intégrées pour l'analyse des liaisons");
 		}
 		if (style == 6) {
 			System.err.println("         :-raw : exporte le texte sans aucune marqueurs de locuteur ni marqueurs spéficiques de l'oral");
 			System.err.println("         :-iramuteq : headers for iramuteq");
 			System.err.println("         *** paramètre pour export dans Iramuteq ***");
-			System.err.println("         :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <w> de txm ou lexico ou le trameur");
+			System.err.println("         :-tv \"type:valeur\" : un champ type:valeur est ajouté dans les <u> ou <w> de txm ou lexico ou le trameur");
 			System.err.println("         :-concat : concaténation des fichiers résultats for iramuteq");
 			System.err.println("         :-append : pas d'effacement préalable du fichier destination si concaténation");
 		}
 		if (style == 7) {
-			System.err.println("         :-conll : export syntaxique au format conll (vertical)");
+			System.err.println("         :-syntaxformat : format de l'export syntaxique (conll / ref / w");
 			System.err.println("         :-model nom : fichier modèle pour la syntaxe");
 			System.err.println("         :-syntax nom : choix pour la syntaxe à générer");
 		}
@@ -330,6 +337,9 @@ class TierParams {
 						i++;
 						continue;
 					} else if (argument.equals("-age")) {
+						i++;
+						continue;
+					} else if (argument.equals("-syntaxformat")) {
 						i++;
 						continue;
 					} else if (argument.equals("-syntax")) {
@@ -461,6 +471,14 @@ class TierParams {
 						}
 						i++;
 						options.syntax = args[i];
+					} else if (argument.equals("-syntaxformat")) {
+						if (i+1 >= args.length) {
+							System.err.println("le parametre -syntaxformat n'est pas suivi d'une valeur");
+							// Utils.printUsageMessage(usage, ext1, ext2, style);
+							return false;
+						}
+						i++;
+						options.syntaxformat = args[i];
 					} else if (argument.equals("-model")) {
 						if (i+1 >= args.length) {
 							System.err.println("le parametre -model n'est pas suivi d'une valeur");
@@ -559,14 +577,14 @@ class TierParams {
 					} else if (argument.equals("-concat")) {
 						options.concat = true;
 						continue;
-					} else if (argument.equals("-conll")) {
-						options.conll = true;
-						continue;
 					} else if (argument.equals("-short")) {
 						options.shortextension = true;
 						continue;
 					} else if (argument.equals("-append")) {
 						options.erase = false;
+						continue;
+					} else if (argument.equals("-sandhi")) {
+						options.sandhi = true;
 						continue;
 					} else if (argument.equals("-iramuteq")) {
 						options.iramuteq = true;

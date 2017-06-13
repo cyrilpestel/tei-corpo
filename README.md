@@ -57,6 +57,7 @@ Paramètres complémentaires s'appliquant à toutes les commandes
 Paramètres supplémentaires pour les exports vers Txm et vers Lexico
   * -tv "type:valeur" : un champ type:valeur est ajouté dans les &lt;w&gt; de txm ou lexico ou le trameur
   * -section : ajoute un indicateur de section en fin de chaque énoncé (pour lexico/le trameur)
+  * :-sandhi : information spécifique intégrées pour l'analyse des liaisons
 
 Paramètres supplémentaires pour les exports vers du texte
   * -raw seules les transcriptions sont produites sans information de locuteur ou autre
