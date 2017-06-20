@@ -165,15 +165,20 @@ public class TeiToPraat extends GenericMain {
 
 			double kmax = 0.0;
 			for (Annot a : entry.getValue()) {
-				if (a.timereftype.equals("time")) {
-					if (a.start == null || a.start.isEmpty()) continue;
-					double start = Double.parseDouble(a.start);
-					if (start > kmax)
-						kmax = start;
-					if (a.end == null || a.end.isEmpty()) continue;
-					double end = Double.parseDouble(a.end);
-					if (end > kmax)
-						kmax = end;
+				try {
+					if (a.timereftype.equals("time")) {
+						if (a.start == null || a.start.isEmpty()) continue;
+						double start = Double.parseDouble(a.start);
+						if (start > kmax)
+							kmax = start;
+						if (a.end == null || a.end.isEmpty()) continue;
+						double end = Double.parseDouble(a.end);
+						if (end > kmax)
+							kmax = end;
+					}
+				} catch(java.lang.NumberFormatException e) {
+					System.err.println("Attention: fichier praat probablement corrompu");
+					continue;
 				}
 			}
 
@@ -182,25 +187,30 @@ public class TeiToPraat extends GenericMain {
 
 			int nk = 1;
 			for (Annot a : entry.getValue()) {
-				double start = Double.parseDouble(a.start);
-				double end = Double.parseDouble(a.end);
-				/*
-				if (nk==1 && start != 0.0) {
-					// insert first an empty bloc
+				try {
+					double start = Double.parseDouble(a.start);
+					double end = Double.parseDouble(a.end);
+					/*
+					if (nk==1 && start != 0.0) {
+						// insert first an empty bloc
+						out.printf("        intervals [%d]:%n", nk);
+						out.printf("            xmin = %s%n", printDouble(0.0));
+						out.printf("            xmax = %s%n", printDouble(start));
+						out.printf("            text = \"\"%n");
+						nk++;
+					}
+					*/
 					out.printf("        intervals [%d]:%n", nk);
-					out.printf("            xmin = %s%n", printDouble(0.0));
-					out.printf("            xmax = %s%n", printDouble(start));
-					out.printf("            text = \"\"%n");
+					out.printf("            xmin = %s%n", printDouble(start));
+					out.printf("            xmax = %s%n", printDouble(end));
+					String str = a.getContent(ttp.optionsOutput.rawLine);
+					String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput);
+					out.printf("            text = \"%s\"%n", strNorm);
 					nk++;
+				} catch(java.lang.NumberFormatException e) {
+					System.err.println("Attention: fichier praat probablement corrompu");
+					continue;
 				}
-				*/
-				out.printf("        intervals [%d]:%n", nk);
-				out.printf("            xmin = %s%n", printDouble(start));
-				out.printf("            xmax = %s%n", printDouble(end));
-				String str = a.getContent(ttp.optionsOutput.rawLine);
-				String strNorm = NormalizeSpeech.parseText(str, ttp.originalFormat(), ttp.optionsOutput);
-				out.printf("            text = \"%s\"%n", strNorm);
-				nk++;
 			}
 		}
 	}
