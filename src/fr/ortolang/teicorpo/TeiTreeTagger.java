@@ -185,14 +185,22 @@ public class TeiTreeTagger extends GenericMain {
 				au.process(eAU, null, null, optionsOutput, false);
 				// mettre en place l'élément qui recevra l'analyse syntaxique.
 				Element syntaxGrp = teiDoc.createElement("spanGrp");
-				syntaxGrp.setAttribute("type", "treetagger");
+				if (optionsOutput.syntaxformat.equals("conll")) {
+					syntaxGrp.setAttribute("type", "conll");
+				} else if (optionsOutput.syntaxformat.equals("ref")) {
+					syntaxGrp.setAttribute("type", "treetagger");
+				}
 				numAU++;
 				syntaxGrp.setAttribute("id", "tt" + numAU);
 				syntaxGrp.setIdAttribute("id", true);
 				eAU.appendChild(syntaxGrp);
 				// préparer le fichier d'analyse syntaxique
 				out.printf("<%s>%n", "tt" + numAU);
-				String utt = au.nomarkerSpeech;
+				// System.err.print(u.toString());
+				String utt = "";
+				for (int s = 0; s < au.speeches.size(); s++) {
+					utt += au.speeches.get(s).getContent(optionsOutput.rawLine);
+				}
 				String parsedUtt = NormalizeSpeech.parseText(utt, TeiToPartition.getOriginalFormat(teiDoc), optionsOutput);
 				// decouper au.nomarkerSpeech
 				ArrayList<String> p = Tokenizer.splitTextTT(parsedUtt);
@@ -210,8 +218,11 @@ public class TeiTreeTagger extends GenericMain {
         		outputNameTemp };
         if (commande[0] == null || commande[4] == null) {
         	// cannot parse
-        	System.out.println("tree-tagger files not found: stop.");
+        	System.err.println("tree-tagger files not found: stop.");
         	return false;
+        } else {
+        	System.out.printf("using model %s.%n", commande[4]);
+        	System.out.printf("treetagger located at %s.%n", commande[0]);
         }
         ExternalCommand.command(commande, outputNameResults, optionsOutput.verbose);
 		/*
@@ -219,19 +230,21 @@ public class TeiTreeTagger extends GenericMain {
 		 * récupérer les résultats
 		 */
         // ajouter les informations de structure du document
-		if (optionsOutput.conll == true) {
+		if (optionsOutput.syntaxformat.equals("conll")) {
 			/*
 			 * version conll
 			 */
-			insertTemplate("treetagger", LgqType.SYMB_DIV, Utils.ANNOTATIONBLOC);
+			insertTemplate("conll", LgqType.SYMB_DIV, Utils.ANNOTATIONBLOC);
 			insertTemplate("word", LgqType.SYMB_ASSOC, "conll");
 			insertTemplate("pos", LgqType.SYMB_ASSOC, "conll");
 			insertTemplate("lemma", LgqType.SYMB_ASSOC, "conll");
-		} else {
+		} else if (optionsOutput.syntaxformat.equals("ref")) {
 			/*
-			 * version <w>
+			 * version <treetagger><ref><w>
 			 */
 			insertTemplate("treetagger", LgqType.SYMB_ASSOC, Utils.ANNOTATIONBLOC);
+		} else {
+			// format words : optionsOutput.syntaxformat === "w"
 		}
 		BufferedReader reader = null;
 		try {
@@ -322,17 +335,23 @@ public class TeiTreeTagger extends GenericMain {
 
 		}
 		spG.removeAttribute("id");
-		if (optionsOutput.conll == true) {
+		if (optionsOutput.syntaxformat.equals("conll")) {
 			/*
-			 * version conll
+			 * version <treetagger-conll>
 			 */
 			tu.createSpanConll(spG, teiDoc);
+		} else if (optionsOutput.syntaxformat.equals("ref")) {
+			/*
+			 * version <treetagger-tt><ref><w>
+			 */
+			Element elt = tu.createSpanW(teiDoc);
+			spG.appendChild(elt);
 		} else {
 			/*
 			 * version <w>
 			 */
-			Element elt = tu.createSpanW(teiDoc);
-			spG.appendChild(elt);
+			Node parent = spG.getParentNode();
+			tu.createUWords((Element)parent, teiDoc);
 		}
 		return true;
 	}

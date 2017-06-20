@@ -1,6 +1,7 @@
 package fr.ortolang.teicorpo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public class TeiToElan extends GenericMain {
 
 	// Constructeur à partir du nom du fichier TEI et du nom du fichier de
 	// sortie au format Elan
-	public void transform(String inputName, String outputName, TierParams optionsTei) {
+	public boolean transform(String inputName, String outputName, TierParams optionsTei) {
 		ttp = new TeiToPartition();
 		if (optionsTei == null) optionsTei = new TierParams();
 		DocumentBuilderFactory factory = null;
@@ -106,14 +107,18 @@ public class TeiToElan extends GenericMain {
 				}
 			});
 			ttp.init(xpath, teiDoc, optionsTei);
+		} catch(FileNotFoundException e) {
+			System.err.println("Le fichier " + inputName + " n'existe pas.");
+			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return;
+			return false;
 		}
 		this.inputName = inputName;
 		this.outputName = outputName;
 		outputWriter();
 		conversion();
+		return true;
 	}
 
 	// Ecriture du fichier de sortie
@@ -574,7 +579,7 @@ public class TeiToElan extends GenericMain {
 
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
-		transform(input, output, options);
+		if (!transform(input, output, options)) return;
 //		System.out.println("Reading " + input);
 		createOutput();
 //		System.out.println("New file created " + output);

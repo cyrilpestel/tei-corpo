@@ -504,8 +504,10 @@ public class ChatFile {
 			reader = new BufferedReader( new InputStreamReader(new FileInputStream(fn), inputEncoding) );
 			while((line = reader.readLine()) != null) {
 				// Traitement du flux de sortie de l'application si besoin est
-				if ( line.startsWith(" ") || line.startsWith("\t") ) {
+				if ( line.startsWith(" ") ) {
 					ml += line;
+				} else if ( line.startsWith("\t") ) {
+					ml += " " + line.substring(1);
 				} else {
 					// process previous line if not empty
 					if ( ! ml.equals("") ) {

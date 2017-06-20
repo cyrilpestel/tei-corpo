@@ -97,9 +97,9 @@ public class TeiToText extends TeiConverter {
 		ArrayList<TeiFile.Div> divs = tf.trans.divs;
 		for (Div d : divs) {
 			for (AnnotatedUtterance u : d.utterances) {
-				// u.print();
+//				System.err.println(u.toString());
 				if (Utils.isNotEmptyOrNull(u.type)) { // gead of a div
-					if (!u.start.isEmpty() && tf.optionsOutput.raw != true && tf.optionsOutput.level != 1) {
+					if (u.start != null && !u.start.isEmpty() && tf.optionsOutput.raw != true && tf.optionsOutput.level != 1) {
 						float start = Float.parseFloat(u.start);
 						out.printf("%f:%f\t", start, start+1);
 						String[] splitType = u.type.split("\t");

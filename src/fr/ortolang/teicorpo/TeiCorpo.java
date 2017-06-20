@@ -7,6 +7,7 @@
 package fr.ortolang.teicorpo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,7 +42,8 @@ public class TeiCorpo extends GenericMain {
 		return false;
 	}
 	
-	public static void process(String extIn, String extOut, String fileIn, String fileOut, TierParams tp) {
+	public static void process(String extIn, String extOut, String fileIn, String fileOut, TierParams tp)
+			throws FileNotFoundException {
 		// System.err.printf("Process: extIn: <%s> extOut: <%s> fileIn: <%s> fileOut: <%s>%n", extIn, extOut, fileIn, fileOut);
 		
 		// on regarde le type de la sortie
@@ -256,6 +258,15 @@ public class TeiCorpo extends GenericMain {
 	@Override
 	public void mainProcess(String input, String output, TierParams options) {
 //		System.err.println("mainProcess: " + input + " | " + output);
-		process(options.inputFormat, options.outputFormat, input, output, options);
+		try {
+			process(options.inputFormat, options.outputFormat, input, output, options);
+		} catch(FileNotFoundException e) {
+			System.err.println("Le fichier " + input + " n'existe pas.");
+			return;
+		} catch(Exception e) {
+			System.err.println("Impossible de traiter le fichier: " + input);
+			System.err.println("Erreur logicielle " + e.toString());
+			e.printStackTrace();
+		}
 	}
 }

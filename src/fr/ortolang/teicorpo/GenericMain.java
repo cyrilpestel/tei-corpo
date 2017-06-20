@@ -4,6 +4,7 @@
 package fr.ortolang.teicorpo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ public abstract class GenericMain {
 	 * option -c replace --> ne pas utiliser TT_EXT et mettre sameFile à vrai.
 	 */
 
-	public abstract void mainProcess(String input, String output, TierParams options);
+	public abstract void mainProcess(String input, String output, TierParams options) throws FileNotFoundException;
 	
 	public void mainCommand(String[] args, String extensionIn, String extensionOut, String usageString, int style) throws IOException {
 		TierParams options = new TierParams();

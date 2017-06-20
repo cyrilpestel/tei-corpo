@@ -1,6 +1,7 @@
 package fr.ortolang.teicorpo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -47,7 +48,7 @@ public class TeiToPraat extends GenericMain {
 
 	// Constructeur à partir du nom du fichier TEI et du nom du fichier de
 	// sortie au format Elan
-	public void transform(String inputName, String outputName, TierParams optionsTei) {
+	public boolean transform(String inputName, String outputName, TierParams optionsTei) throws FileNotFoundException {
 		if (optionsTei == null) optionsTei = new TierParams();
 		ttp = new TeiToPartition();
 		DocumentBuilderFactory factory = null;
@@ -55,8 +56,18 @@ public class TeiToPraat extends GenericMain {
 			File teiFile = new File(inputName);
 			factory = DocumentBuilderFactory.newInstance();
 			Utils.setDTDvalidation(factory, validation);
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			teiDoc = builder.parse(teiFile);
+			try {
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				teiDoc = builder.parse(teiFile);
+			} catch(FileNotFoundException e) {
+				System.err.println("Le fichier " + inputName + " n'existe pas.");
+				return false;
+			} catch(Exception e) {
+				System.err.println("Impossible de traiter le fichier: " + inputName);
+				System.err.println("Erreur logicielle " + e.toString());
+				e.printStackTrace();
+				return false;
+			}
 			xPathfactory = XPathFactory.newInstance();
 			xpath = xPathfactory.newXPath();
 			xpath.setNamespaceContext(new NamespaceContext() {
@@ -88,11 +99,13 @@ public class TeiToPraat extends GenericMain {
 			ttp.init(xpath, teiDoc, optionsTei);
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}
 		this.inputName = inputName;
 		this.outputName = outputName;
 		outputWriter();
 		conversion();
+		return true;
 	}
 
 	// Ecriture du fichier de sortie
@@ -153,9 +166,11 @@ public class TeiToPraat extends GenericMain {
 			double kmax = 0.0;
 			for (Annot a : entry.getValue()) {
 				if (a.timereftype.equals("time")) {
+					if (a.start == null || a.start.isEmpty()) continue;
 					double start = Double.parseDouble(a.start);
 					if (start > kmax)
 						kmax = start;
+					if (a.end == null || a.end.isEmpty()) continue;
 					double end = Double.parseDouble(a.end);
 					if (end > kmax)
 						kmax = end;
@@ -203,11 +218,9 @@ public class TeiToPraat extends GenericMain {
 	}
 
 	@Override
-	public void mainProcess(String input, String output, TierParams options) {
+	public void mainProcess(String input, String output, TierParams options) throws FileNotFoundException {
 		options.target = ".texgrid";
-		transform(input, output, options);
-//		System.out.println("Reading " + input);
+		if (!transform(input, output, options)) return;
 		createOutput();
-//		System.out.println("New file created " + output);
 	}
 }
