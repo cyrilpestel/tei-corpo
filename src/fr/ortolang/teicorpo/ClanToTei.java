@@ -338,12 +338,14 @@ public class ClanToTei extends GenericMain {
 		}
 
 		if (cf.location != null) {
-			Element place = docTEI.createElement("place");
 			Element placeName = docTEI.createElement("placeName");
+			Element place = docTEI.createElement("place");
+			Element listPlace = docTEI.createElement("listPlace");
+			listPlace.appendChild(place);
 			place.appendChild(placeName);
 			ChatLine cl = new ChatLine(cf.location);
 			placeName.setTextContent(cl.tail);
-			settingDesc.appendChild(place);
+			settingDesc.appendChild(listPlace);
 		}
 	}
 
@@ -353,6 +355,14 @@ public class ClanToTei extends GenericMain {
 	public Element setFirstDiv() {
 		Element settingDesc = (Element) docTEI.getElementsByTagName("settingDesc").item(0);
 		Element setting = docTEI.createElement("setting");
+
+		ChatLine cl = new ChatLine(cf.date);
+		if (Utils.isNotEmptyOrNull(cl.tail)) {
+			Element date = docTEI.createElement("date");
+			date.setTextContent(cl.tail);
+			setting.appendChild(date);
+		}
+
 		Element activity = docTEI.createElement("activity");
 		setting.appendChild(activity);
 		setting.setAttribute("xml:id", "d" + descID);
@@ -361,7 +371,7 @@ public class ClanToTei extends GenericMain {
 		body.appendChild(div);
 		div.setAttribute("subtype", "d" + descID);
 		if (cf.situation != null) {
-			ChatLine cl = new ChatLine(cf.situation);
+			cl = new ChatLine(cf.situation);
 			activity.setTextContent(cl.tail);
 			/*
 			String a = Utils.normaliseActivity(cl.tail);
@@ -1446,13 +1456,15 @@ public class ClanToTei extends GenericMain {
 	 */
 	public void setDurDate() {
 		Element recording = (Element) this.docTEI.getElementsByTagName("recording").item(0);
-		Element date = this.docTEI.createElement("date");
-		recording.appendChild(date);
-		ChatLine cl = new ChatLine(cf.date);
-		if (Utils.isNotEmptyOrNull(cl.tail)) {
-			date.setTextContent(cl.tail);
+		NodeList mediaList = recording.getElementsByTagName("media");
+		if (mediaList.getLength() > 0) {
+			Element media = (Element) recording.getElementsByTagName("media").item(0);
+			media.setAttribute("dur-iso", String.valueOf(maxTime));
+		} else {
+			Element media = docTEI.createElement("media");
+			recording.appendChild(media);
+			media.setAttribute("dur-iso", String.valueOf(maxTime));
 		}
-		date.setAttribute("dur", String.valueOf(maxTime));
 	}
 
 	public String getTimeValue(String timeId) {
