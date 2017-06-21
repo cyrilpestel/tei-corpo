@@ -805,7 +805,7 @@ public class Utils {
 				double y = Double.parseDouble(mm.group(1));
 				double m = Double.parseDouble(mm.group(2));
 				double d = Double.parseDouble(mm.group(3));
-				return Double.toString(y + (m*30.5 + d)/365.0);
+				return Double.toString(Math.floor((y + (m*30.5 + d)/365.0) * 100) / 100);
 			}
 			// case y;m
 			pp = Pattern.compile("(\\d+);(\\d+)");
@@ -814,7 +814,7 @@ public class Utils {
 			if (bb) {
 				double y = Double.parseDouble(mm.group(1));
 				double m = Double.parseDouble(mm.group(2));
-				return Double.toString(y + (m*30.5)/365.0);
+				return Double.toString(Math.floor((y + (m*30.5)/365.0) * 100) / 100);
 			}
 			// case y;m.
 			pp = Pattern.compile("(\\d+);(\\d+)\\.");
@@ -823,7 +823,7 @@ public class Utils {
 			if (bb) {
 				double y = Double.parseDouble(mm.group(1));
 				double m = Double.parseDouble(mm.group(2));
-				return Double.toString(y + (m*30.5)/365.0);
+				return Double.toString(Math.floor((y + (m*30.5)/365.0) * 100) / 100);
 			}
 			// case y;
 			pp = Pattern.compile("(\\d+);");
@@ -831,7 +831,7 @@ public class Utils {
 			bb = mm.matches();
 			if (bb) {
 				double y = Double.parseDouble(mm.group(1));
-				return Double.toString(y);
+				return Double.toString(Math.floor(y * 100) / 100);
 			}
 			double d = Double.parseDouble(age);
 			if (d < 0.0 || d > 120.0) {

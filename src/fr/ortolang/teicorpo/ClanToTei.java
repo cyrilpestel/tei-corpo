@@ -457,11 +457,6 @@ public class ClanToTei extends GenericMain {
 				langKnowledge.appendChild(langKnown);
 				person.appendChild(langKnowledge);
 			}
-			if (Utils.isNotEmptyOrNull(part.age)) {
-				person.setAttribute("age", Utils.normaliseAge(part.age));
-			} else {
-				person.setAttribute("age", Utils.normaliseAge(tparams.defaultAge));
-			}
 			if (Utils.isNotEmptyOrNull(part.sex)) {
 				if (part.sex.toLowerCase().substring(0, 1).equals("m")) {
 					person.setAttribute("sex", "1");
@@ -473,6 +468,17 @@ public class ClanToTei extends GenericMain {
 			}
 			if (Utils.isNotEmptyOrNull(part.role)) {
 				person.setAttribute("role", part.role);
+			}
+			if (Utils.isNotEmptyOrNull(part.age)) {
+				Element age = docTEI.createElement("age");
+				age.setTextContent(part.age);
+				age.setAttribute("value", Utils.normaliseAge(part.age));
+				person.appendChild(age);
+			} else {
+				Element age = docTEI.createElement("age");
+				age.setTextContent(tparams.defaultAge);
+				age.setAttribute("value", Utils.normaliseAge(tparams.defaultAge));
+				person.appendChild(age);
 			}
 			if (Utils.isNotEmptyOrNull(part.SES)) {
 				Element socecStatus = docTEI.createElement("socecStatus");
