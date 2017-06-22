@@ -185,7 +185,9 @@ public class HT_ToTei {
 		Element titleStmt = (Element) this.docTEI.getElementsByTagName("titleStmt").item(0);
 		Element title = this.docTEI.createElement("title");
 		titleStmt.appendChild(title);
-		title.setTextContent("Fichier TEI obtenu à partir du fichier Transcriber " + ht.fileName);
+		Element desc = docTEI.createElement("desc");
+		title.appendChild(desc);
+		desc.setTextContent("Fichier TEI obtenu à partir du fichier " + ht.fileName);
 
 		// Ajout notesStmt
 		Element notesStmt = (Element) this.docTEI.getElementsByTagName("notesStmt").item(0);

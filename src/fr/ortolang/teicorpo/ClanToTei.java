@@ -243,7 +243,9 @@ public class ClanToTei extends GenericMain {
 		Element titleStmt = (Element) this.docTEI.getElementsByTagName("titleStmt").item(0);
 		Element title = docTEI.createElement("title");
 		titleStmt.appendChild(title);
-		title.setTextContent("Fichier TEI obtenu à partir du fichier CLAN " + new File(cf.filename()).getName());
+		Element desc = docTEI.createElement("desc");
+		title.appendChild(desc);
+		desc.setTextContent("Fichier TEI obtenu à partir du fichier CLAN " + new File(cf.filename()).getName());
 
 		// sourceDesc
 		Element sourceDesc = (Element) this.docTEI.getElementsByTagName("sourceDesc").item(0);
