@@ -27,6 +27,8 @@ public class AnnotatedUtterance {
 	public String start;
 	//// Temps de fin(chaîne de caractère, unité = secondes)
 	public String end;
+	
+	// working elements (copied and organized in speeches)
 	// Code utilisé pour le locuteur
 	public String speakerCode;
 	// Nom du locuteur
@@ -35,13 +37,18 @@ public class AnnotatedUtterance {
 	public String speech;
 	// Enoncé pur
 	public String nomarkerSpeech;
+	// mor line for clan
+	public String morClan;
+	
 	// Marque de div: si l'utterance marque le début d'un div, le type de
 	// div est spécifié dans ce champ
 	// Servira à repérer les divisions dans la transcription
 	public String type;
+	
+	// organized structure
 	// Commentaires additionnels hors tiers
 	public ArrayList<String> coms;
-	// Liste d'énoncés
+	// Liste d'énoncés - one Annot per <u>
 	public ArrayList<Annot> speeches;
 	// Liste de tiers
 	public ArrayList<Annot> tiers;
@@ -73,6 +80,7 @@ public class AnnotatedUtterance {
 
 	public boolean process(Element annotatedU, TeiTimeline teiTimeline, TransInfo transInfo, TierParams options, boolean doSpan) {
 		optionsTEI = options;
+		morClan = "";
 		this.teiTimeline = teiTimeline;
 		// Initialisation des variables d'instances
 		if (options != null && options.outputFormat == ".cha") {
@@ -145,6 +153,7 @@ public class AnnotatedUtterance {
 				} else if (nodeName.equals("spanGrp") && doSpan == true) {
 					// Ajout des tiers
 					String type = annotUEl.getAttribute("type");
+					// if the tier should not be displayed, skip them
 					if (options != null) {
 						if (options.level == 1)
 							continue;
@@ -153,49 +162,60 @@ public class AnnotatedUtterance {
 						if (!options.isDoDisplay(type, 2))
 							continue;
 					}
-					if (type.equals("conll") || type.equals("treetagger")) {
-						Annot at = new Annot();
-						at.name = type;
-						at.dependantAnnotations = new ArrayList<Annot>();
+					if (type.equals("conll")) {
+						String conll = "";
 						NodeList spans = annotUEl.getChildNodes();
 						for (int k=0; k<spans.getLength(); k++) {
+							String conllLine = "";
 							Node n = spans.item(k);
 							if (n.getNodeName().equals("span")) {
-								Annot w = new Annot();
-								w.dependantAnnotations = new ArrayList<Annot>();
-								w.name = "wordcatlemma";
-								w.setContent(Utils.getText((Element)n));
 								NodeList spanElts = n.getChildNodes();
 								for (int l=0; l<spanElts.getLength(); l++) {
 									Node m = spanElts.item(l);
 									if (m.getNodeName().equals("spanGrp")) {
 										String text = m.getTextContent();
-										String attr = ((Element)m).getAttribute("type");
-										Annot e = new Annot();
-										e.name = attr;
-										e.setContent(text);
-										w.dependantAnnotations.add(e);
+										// String attr = ((Element)m).getAttribute("type");
+										conllLine += (conllLine.isEmpty()) ? text.trim() : "|" + text.trim();
 									}
 								}
-								at.dependantAnnotations.add(w);
+							}
+							conll += (conll.isEmpty()) ? conllLine : " " + conllLine;
+						}
+						tiers.add(new Annot("conll", conll));
+					} else if (type.equals("treetagger")) {
+						// ref.
+						// skip the ref element and go directly to w elements
+						String morpho = "";
+						NodeList refs = annotUEl.getElementsByTagName("w");
+						for (int x = 0; x < refs.getLength(); x++) {
+							Node w = refs.item(x);
+							if (w.getNodeType() == Node.ELEMENT_NODE) {
+								Element we = (Element)w;
+//								System.err.println(w.toString() + "++" + w.getTextContent());
+								if (!morpho.isEmpty()) morpho += " ";
+								morpho += we.getAttribute("ana") + "_";
+								morpho += we.getAttribute("lemma") + "_";
+								morpho += w.getTextContent();
 							}
 						}
-						tiers.add(at);
+						tiers.add(new Annot("morpho", morpho));
 					} else {
 						NodeList spans = annotUEl.getElementsByTagName("span");
 						for (int y = 0; y < spans.getLength(); y++) {
 							Element span = (Element) spans.item(y);
 							tiers.add(new Annot(type, processSpan(span)));
-							tierTypes.add(type);//
 							if (!type.equals("pho") && !type.equals("act") && !type.equals("sit") && !type.equals("com")
 									&& !type.equals("morpho")) {
 								tierTypes.add("other");
-							}
+							} else
+								tierTypes.add(type);
 						}
 					}
 				}
 			}
 		}
+		if (!morClan.isEmpty())
+			tiers.add(new Annot("mor", morClan));
 		return true;
 	}
 
@@ -209,24 +229,13 @@ public class AnnotatedUtterance {
 				if (!spanContent.isEmpty()) spanContent += " ";
 				spanContent += elt.getTextContent();
 				// text.
-			} else if (elt.getNodeType() == Node.ELEMENT_NODE && elt.getNodeName() == "ref") {
-				NodeList refs = elt.getChildNodes();
-				for (int x = 0; x < refs.getLength(); x++) {
-					Node w = refs.item(x);
-					if (w.getNodeType() == Node.ELEMENT_NODE) {
-						Element we = (Element)w;
-//						System.err.println(w.toString() + "++" + w.getTextContent());
-						if (!spanContent.isEmpty()) spanContent += " ";
-						spanContent += we.getAttribute("ana") + "_";
-						spanContent += we.getAttribute("lemma") + "_";
-						spanContent += w.getTextContent();
-					}
-				}
-				// ref.
 			} else {
 				// not text.
 				// spanContent += " " + elt.getTextContent();
-				// this should be processed in including spanGrp and span						
+				// this should be processed in including spanGrp and span
+				// add all content without special analysis (but special analysis could be interesting in some cases)
+				if (!spanContent.isEmpty()) spanContent += " ";
+				spanContent += elt.getTextContent();
 			}
 		}
 		return spanContent;
@@ -382,6 +391,21 @@ public class AnnotatedUtterance {
 					}
 					tiers.add(new Annot(tierName, tierMorpho));
 					tierTypes.add("morpho");
+				}
+				// Splitted into <w> "w"
+				else if (segChildName.equals("w")) {
+					String ana = segChildEl.getAttribute("ana");
+					String lemma = segChildEl.getAttribute("lemma");
+					String w = segChildEl.getTextContent();
+					speech += (lemma.isEmpty())
+							? w 
+							: " " + w;
+					nomarkerSpeech += w + " ";
+					morClan += lemma + "|" + ana + " ";
+				}
+				else {
+					speech += segChildEl.getTextContent() + " ";
+					nomarkerSpeech += segChildEl.getTextContent() + " ";
 				}
 			} else if (segChild.getNodeName().equals("#text")) {
 				String content = segChild.getTextContent() + " ";

@@ -95,6 +95,7 @@ public class TeiToClan extends TeiConverter {
 	}
 
 	String toAge(String age) {
+		if (age == null || age.isEmpty()) return "";
 		double dage = Double.parseDouble(age);
 		int y = (int)dage;
 		double d = (dage - (double)y) * 365.0;
