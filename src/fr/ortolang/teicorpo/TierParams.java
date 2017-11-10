@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeMap;
 
+import fr.ortolang.teicorpo.Codes;
+
 /**
  * local temporary structures description of relation between tiers
  */
@@ -94,6 +96,7 @@ class TierParams {
 	boolean noerror;
 	String syntaxformat;
 	boolean sandhi;
+	Codes codes;
 
 	TierParams() {
 		noerror = false;
@@ -134,6 +137,8 @@ class TierParams {
 		normalize ="";
 		target ="";
 		sandhi = false;
+		codes = new Codes();
+		codes.standardCodes();
 	}
 	void addCommand(String s) {
 		commands.add(s);
@@ -249,6 +254,8 @@ class TierParams {
 		if (style == 4) {
 			System.err.println("         :-from format des fichiers input");
 			System.err.println("         :-to format des fichiers output");
+			System.err.println("         :-stdevent format ascci standard des événements en mode texte");
+			System.err.println("         :-advevent format unicode avancé des événements en mode texte");
 		}
 		if (style == 3) {
 			System.err.println("         *** paramètre pour édition de fichier TEI***");
@@ -526,14 +533,10 @@ class TierParams {
 						i++;
 						continue;
 					} else if (argument.equals("-stdevent")) {
-						Utils.leftBracket = "<"; // 27EA - "❮"; // "⟨" 27E8 - "❬" 
-						Utils.rightBracket = ">"; // 27EB - "❯"; // "⟩" 27E9 - "❭" - 276C à 2771 ❬ ❭ ❮ ❯ ❰ ❱ 
-						Utils.leftEvent = "[=! "; // 27E6 - "『"; // 300E - "⌈"; // u2308 
-						Utils.rightEvent = "]"; // 27E7 - "』"; // 300F - "⌋"; // u230b
-						Utils.leftParent = "[% "; // 2045 // "⁘"; // 2058 // "⁑" // 2051
-						Utils.rightParent = "]"; // 2046 // "⁘"; // 2058
-						Utils.leftCode = "[% "; // 231C - "⁌"; // 204C
-						Utils.rightCode = "]"; // 231F - "⁍"; // 204D
+						options.codes.standardCodes();
+						continue;
+					} else if (argument.equals("-advevent")) {
+						options.codes.advancedCodes();
 						continue;
 					} else if (argument.equals("-rawline")) {
 						options.rawLine = true;

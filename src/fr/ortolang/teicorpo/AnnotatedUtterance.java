@@ -14,10 +14,15 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import fr.ortolang.teicorpo.Codes;
+
 /**
  * Représentation des objets Utterance
  */
 public class AnnotatedUtterance {
+	// codes for utterance display
+	public Codes codes;
+	
 	// Element annotatedU
 	public Element annotU;
 	// Identifiant
@@ -61,6 +66,11 @@ public class AnnotatedUtterance {
 
 	public TeiTimeline teiTimeline;
 	public TierParams optionsTEI = null;
+	
+	AnnotatedUtterance() {
+		codes = new Codes();
+		codes.standardCodes();
+	}
 
 	/**
 	 * Impression des utterances : liste des énoncés
@@ -280,37 +290,37 @@ public class AnnotatedUtterance {
 					String st = segChildEl.getAttribute("subtype");
 					String val = getIncidentDesc(segChildEl);
 					if (segChildEl.getAttribute("type").equals("pronounce")) {
-						String ann = Utils.leftEvent + val;
+						String ann = codes.leftEvent + val;
 						if (Utils.isNotEmptyOrNull(st))
-							ann += " /" + st + "/PHO" + Utils.rightEvent + " ";
+							ann += " /" + st + "/PHO" + codes.rightEvent + " ";
 						else
-							ann += Utils.rightEvent + " ";
+							ann += codes.rightEvent + " ";
 						speech += ann;
 					} else if (segChildEl.getAttribute("type").equals("language")) {
-						String ann = Utils.leftCode;
+						String ann = codes.leftCode;
 						if (Utils.isNotEmptyOrNull(st))
 							ann += "/" + st;
 						if (Utils.isNotEmptyOrNull(val))
-							ann += "/LG:" + val + Utils.rightCode + " ";
+							ann += "/LG:" + val + codes.rightCode + " ";
 						else
-							ann += "/LG" + Utils.rightCode + " ";
+							ann += "/LG" + codes.rightCode + " ";
 						speech += ann;
 					} else if (segChildEl.getAttribute("type").equals("noise")) {
-						String ann = Utils.leftEvent + val;
+						String ann = codes.leftEvent + val;
 						ann += " /";
 						if (Utils.isNotEmptyOrNull(st))
 							ann += st + "/";
-						ann += "N" + Utils.rightEvent + " ";
+						ann += "N" + codes.rightEvent + " ";
 						speech += ann;
 					} else if (segChildEl.getAttribute("type").equals("comment")) {
-						String ann = Utils.leftEvent + val;
+						String ann = codes.leftEvent + val;
 						ann += " /";
 						if (Utils.isNotEmptyOrNull(st))
 							ann += st + "/";
-						ann += "COM" + Utils.rightEvent + " ";
+						ann += "COM" + codes.rightEvent + " ";
 						speech += ann;
 					} else if (segChildEl.getAttribute("type").equals("background")) {
-						String ann = Utils.leftEvent + val;
+						String ann = codes.leftEvent + val;
 						String tm = getIncidentDescAttr(segChildEl, "time");
 						if (tm != null && teiTimeline != null)
 							tm = teiTimeline.getTimeValue(tm);
@@ -324,10 +334,10 @@ public class AnnotatedUtterance {
 						ann += "/";
 						if (Utils.isNotEmptyOrNull(lv))
 							ann += lv;
-						ann += "/B" + Utils.rightEvent + " ";
+						ann += "/B" + codes.rightEvent + " ";
 						speech += ann;
 					} else {
-						String ann = Utils.leftCode + val;
+						String ann = codes.leftCode + val;
 						if (Utils.isNotEmptyOrNull(st))
 							ann += " /" + st;
 						ann += "/";
@@ -339,7 +349,7 @@ public class AnnotatedUtterance {
 							ann += "NE";
 							break;
 						}
-						ann += Utils.rightCode + " ";
+						ann += codes.rightCode + " ";
 						speech += ann;
 					}
 				} else if (segChildName.equals("vocal")) {
@@ -348,7 +358,7 @@ public class AnnotatedUtterance {
 						vocal += segChildEl.getElementsByTagName("desc").item(0).getTextContent();
 					} finally {
 						nomarkerSpeech += vocal + " ";
-						speech += Utils.leftCode + vocal + "/VOC " + Utils.rightCode;
+						speech += codes.leftCode + vocal + "/VOC " + codes.rightCode;
 					}
 				} else if (segChildName.equals("seg")) {
 					processSeg(segChildEl.getChildNodes());

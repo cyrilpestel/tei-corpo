@@ -104,6 +104,7 @@ public abstract class TeiConverter extends GenericMain {
 	 *            L'utterance à écrire
 	 */
 	public void writeUtterance(AnnotatedUtterance u) {
+		// u.codes = optionsOutput.codes; // done in TeiFile.
 		/*
 		 * Chaque utterance a une liste d'énoncé, dans un format spécifique:
 		 * start;end__speech
@@ -152,8 +153,9 @@ public abstract class TeiConverter extends GenericMain {
 			writeSpeech(u.speakerCode, speech, start, end);
 		}
 		// écriture des tiers
-		for (Annot tier : u.tiers)
+		for (Annot tier : u.tiers) {
 			writeTier(u, tier);
+		}
 		writeAddInfo(u);
 	}
 }

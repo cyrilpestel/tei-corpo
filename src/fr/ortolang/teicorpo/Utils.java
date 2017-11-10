@@ -46,8 +46,8 @@ public class Utils {
 	public static String EXT_PUBLISH = ".tei_corpo";
 	public static String ANNOTATIONBLOC = "annotationBlock";
 	public static String versionTEI = "0.9";
-	public static String versionSoft = "1.33"; // full version with Elan, Clan, Transcriber and Praat
-	public static String versionDate = "27/10/2017 18:00";
+	public static String versionSoft = "1.34"; // full version with Elan, Clan, Transcriber and Praat
+	public static String versionDate = "11/11/2017 18:00";
 	public static String TEI_ALL = "http://www.tei-c.org/Vault/P5/current/xml/tei/custom/schema/dtd/tei_all.dtd";
 	public static String TEI_CORPO_DTD = "http://ct3.ortolang.fr/tei-corpo/tei_corpo.dtd";
 	public static boolean teiStylePure = false;
@@ -60,15 +60,6 @@ public class Utils {
 	public static String longPauseCha = " (..) ";
 	public static String veryLongPauseCha = " (...) ";
 	public static String specificPauseCha = "(%s)";
-	
-	public static String leftBracket = "⟪"; // 27EA - "❮"; // "⟨" 27E8 - "❬" 
-	public static String rightBracket = "⟫"; // 27EB - "❯"; // "⟩" 27E9 - "❭" - 276C à 2771 ❬ ❭ ❮ ❯ ❰ ❱ 
-	public static String leftEvent = "⟦"; // 27E6 - "『"; // 300E - "⌈"; // u2308 
-	public static String rightEvent = "⟧"; // 27E7 - "』"; // 300F - "⌋"; // u230b
-	public static String leftParent = "⁅"; // 2045 // "⁘"; // 2058 // "⁑" // 2051
-	public static String rightParent = "⁆"; // 2046 // "⁘"; // 2058
-	public static String leftCode = "⌜"; // 231C - "⁌"; // 204C
-	public static String rightCode = "⌟"; // 231F - "⁍"; // 204D
 
 	public static String teiCorpoDtd() {
 		// return teiStylePure == true ? TEI_ALL : TEI_CORPO_DTD;

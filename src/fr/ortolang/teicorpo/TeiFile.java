@@ -7,11 +7,8 @@ package fr.ortolang.teicorpo;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -21,7 +18,6 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -237,6 +233,7 @@ public class TeiFile {
 							}
 						} else {
 							AnnotatedUtterance utt = new AnnotatedUtterance();
+							utt.codes = optionsOutput.codes;
 							utt.process(el, teiTimeline, transInfo, optionsOutput, true);
 							// Si c'est le premier u, on lui ajoute le type du
 							// div
