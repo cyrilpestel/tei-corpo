@@ -407,6 +407,7 @@ public class ChatFile {
 					startTime = -1;
 					endTime = -1;
 					mainLine = ml;
+					mainLine = mainLine.replaceAll("\\p{C}", "");
 				}
 			}
 			mainCleaned = ConventionsToChat.clean(mainLine);
